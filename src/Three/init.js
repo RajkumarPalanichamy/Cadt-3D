@@ -4,11 +4,14 @@ class ThreeScene {
   constructor(container) {
     this.container = container;
     this.scene = new THREE.Scene();
+    this.scene.background=new THREE.Color('white')
     this.camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
     this.camera.position.z = 5;
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setSize(container.clientWidth, container.clientHeight);
+    // this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+
     container.appendChild(this.renderer.domElement);
 
     this.cube = new THREE.Mesh(
