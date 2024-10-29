@@ -1,43 +1,42 @@
 <template>
-  <div ref="threeContainer" class="three-container"></div>
-  <button @click="threeDim">3d</button>
+  <div ref="threeContainer" class="three-container">
+    <button @click="create()">3D</button>
+  </div>
 </template>
 
-<script setup>
-import { onMounted, onBeforeUnmount, ref } from 'vue';
-import ThreeScene from '../Three/init.js';
+<script>
+import { ref, onBeforeUnmount } from 'vue';
+import ThreeScene from '../Three/three.js';
 
-const threeContainer = ref(null);
-let threeScene = null;
-
-const threeDim = () =>{
-  threeScene = new ThreeScene(threeContainer.value); 
-  handleResize(); 
-  window.addEventListener('resize', handleResize);
-
-}
-const handleResize = () => {
-  if (threeScene) {
-    threeScene.resize();
+export default {
+  name: 'ThreeSceneComponent',
+  data() {
+    return {
+      threeContainer: null,
+      threeScene: null,
+    };
+  },
+  mounted() {
+    this.threeContainer = this.$refs.threeContainer;
+    this.threeScene = new ThreeScene(this.threeContainer);
+  },
+  beforeUnmount() {
+    if (this.threeScene) {
+      this.threeScene.dispose();
+      this.threeScene = null;
+    }
+  },
+  methods:{
+    create(){
+      this.threeScene.updateCamera()
+    }
   }
 };
-
-onMounted(() => {
-  threeDim()
-});
-
-onBeforeUnmount(() => {
-  if (threeScene) {
-    threeScene.cleanup();
-  }
-  window.removeEventListener('resize', handleResize);
-});
 </script>
 
-<style scoped>
+<style>
 .three-container {
-  width: 500%;
+  width: 100%;
   height: 75vh;
-  overflow: hidden;
 }
 </style>
