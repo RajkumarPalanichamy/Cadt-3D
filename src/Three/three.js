@@ -223,7 +223,7 @@ console.log('shape',shape);
     Wallcubes(wallPoints) {
       let point1 = new THREE.Vector3();
       let point2 = new THREE.Vector3();
-      let height = this.extrudeSettings.depth//+0.5
+      let height = this.extrudeSettings.depth+0.5
       let thickness = 0.2;
       this.group = new THREE.Group();
 
@@ -232,7 +232,7 @@ console.log('shape',shape);
           point1.set(wallPoints[i].x, 1, wallPoints[i].z);
           point2.set(wallPoints[i + 1].x, 1, wallPoints[i + 1].z);
   
-          const length = point1.distanceTo(point2)//+0.19
+          const length = point1.distanceTo(point2)+0.19
           
           const geometry = new THREE.BoxGeometry(length, height, thickness);
           console.log('geometry',geometry);

@@ -1,17 +1,22 @@
 <template>
-  <div id="app">
+    <v-app>
+        <RouterView />
+    </v-app>
+  <!-- <div id="app">
     <Home />
-  </div>
+     <Createproject />
+  </div> -->
 </template>
 
 <script>
-import Home from './views/HomeView.vue';
-
+// import Home from './views/HomeView.vue';
+// import Createproject from './views/Createproject.vue';
 export default {
   name: 'App',
-  components: {
-    Home,
-  },
+  // components: {
+  //   Home,
+  //   Createproject
+  // },
 };
 </script>
 
