@@ -1,11 +1,23 @@
-<script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './views/HomeView.vue'
-</script>
-
 <template>
-  <!-- <RouterView /> -->
-   <HelloWorld />
+  <div id="app">
+    <Home />
+  </div>
 </template>
 
-  
+<script>
+import Home from './views/HomeView.vue';
+
+export default {
+  name: 'App',
+  components: {
+    Home,
+  },
+};
+</script>
+
+<style>
+#app {
+  width:100%;
+  height:100vh;
+}
+</style>
