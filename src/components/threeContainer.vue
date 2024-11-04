@@ -1,11 +1,12 @@
+<!-- Changes in Style -->
 <template>
   <div ref="threeContainer" class="three-container">
-    <button @click="create()">3D</button>
+    <!-- <button @click="create()">3D</button> -->
   </div>
 </template>
 
 <script>
-import { ref, onBeforeUnmount } from 'vue';
+// import { ref, onBeforeUnmount } from 'vue';
 import ThreeScene from '../Three/three.js';
 
 export default {
@@ -37,6 +38,6 @@ export default {
 <style>
 .three-container {
   width: 100%;
-  height: 75vh;
+  height: 100vh;
 }
 </style>
