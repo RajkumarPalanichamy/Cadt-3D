@@ -1,15 +1,15 @@
 <template>
-  <v-card>
+  <v-container fluid class="py-0 px-0">
     <v-toolbar density="compact" color="#274e76" flat>
       <v-card-title>
         <v-icon>mdi mdi-cube</v-icon>
         BLUE 3D
       </v-card-title>
-      <v-btn icon @click="back">
+      <v-btn icon @click="backToHome">
         <v-icon>mdi-menu-left</v-icon>
       </v-btn>
 
-      <v-btn icon>
+      <v-btn icon @click="undo">
         <v-icon>mdi-arrow-left-top</v-icon>
       </v-btn>
       <v-btn icon>
@@ -21,9 +21,6 @@
         <v-icon>mdi-video-3d</v-icon>
       </v-btn>
       <v-spacer></v-spacer>
-      <v-btn icon @click="toggleVisibility">
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn>
 
       <v-btn icon>
         <v-icon>mdi-theme-light-dark</v-icon>
@@ -33,72 +30,160 @@
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </v-toolbar>
-  </v-card>
-  <v-card class="d-flex">
-    <ThreeScene ref="threeSceneComponent" />
     <v-card
-    
-      style="top: 230px !important; right: 10px"
-      class="d-flex flex-column justify-center position px-2 py-2"
+      class="d-flex"
+      @dragover.prevent="onDragOver"
+      @drop="onDrop"
+      style="cursor: pointer"
     >
-      <v-icon v-for="(item, index) in sideBar" :key="index" 
-      @click="toggleVisibility"
-      class="mt-2" size="1.3em" color="grey">{{
-        item
-      }}</v-icon>
-    </v-card>
-    <v-card
-      v-if="isVisible"
-      height="85vh"
-      width="300px"
-      class="mr-6 pt-2 pb-2 position"
-    >
-      <v-row class="d-flex align-center">
-        <v-col>
-          <v-card-title class="text-h6">Search</v-card-title>
-        </v-col>
-        <v-col class="d-flex justify-end mr-6">
-          <v-icon class="text-error" @click="toggleVisibility"
-            >mdi-window-close</v-icon
-          >
-        </v-col>
-      </v-row>
-
-      <v-row class="pl-2 pr-2">
-        <v-col>
-          <v-text-field label="Search Model" color="primary" clearable>
-          </v-text-field>
-        </v-col>
-      </v-row>
-      <v-row class="mt-0">
-        <v-col>
-          <v-card-subtitle class="text-center text-primary"
-            >Models </v-card-subtitle
-          >
-        </v-col>
-        <v-col>
-          <v-card-subtitle class="text-center">Categories</v-card-subtitle>
-        </v-col>
-      </v-row>
-      <v-divider class="mt-2"></v-divider>
-      <v-card height="61vh" flat class="overflow pl-2 pr-2 mb-4 grid mt-3">
-        <v-card
-          v-for="(model, index) in modelsList"
+      <ThreeScene ref="threeSceneComponent" />
+      <v-card
+        style="top: 230px !important; right: 10px"
+        class="d-flex flex-column justify-center position px-2 py-2"
+      >
+        <v-icon
+          v-for="(item, index) in sideBar"
           :key="index"
-          width="130px"
-          height="170px"
-          @click="selectedCategory(model)"
+          @click="toggleVisibility(item)"
+          class="mt-2"
+          size="1.7em"
+          color="grey"
+          >{{ item }}</v-icon
         >
-          <v-img :src="model.modelimg"></v-img>
-          <v-card-text class="text-center +">{{ model.modelname }}</v-card-text>
+      </v-card>
+      <v-card
+        v-if="isVisible"
+        height="85vh"
+        width="300px"
+        class="mr-6 pt-2 pb-2 position"
+      >
+        <v-row class="d-flex align-center">
+          <v-col>
+            <v-card-title class="text-h6">Search</v-card-title>
+          </v-col>
+          <v-col class="d-flex justify-end mr-6">
+            <v-icon class="text-error" @click="cancel">mdi-window-close</v-icon>
+          </v-col>
+        </v-row>
+
+        <v-row class="pl-2 pr-2">
+          <v-col>
+            <v-text-field
+              variant="underlined"
+              label="Search Models"
+              density="compact"
+              append-inner-icon="mdi-magnify"
+              clearable
+              color="#274E76"
+            />
+          </v-col>
+        </v-row>
+        <v-list v-if="!isModelCard">
+          <v-list-subheader class="text-blue-darken-4 m"
+            >REACENT ACTIVITIES</v-list-subheader
+          >
+        </v-list>
+
+        <!-- model card -->
+        <v-card
+          height="62vh"
+          flat
+          class="overflow pl-2 pr-2 mb-4"
+          v-if="isModelCard"
+        >
+          <v-row class="pb-2" v-if="categories">
+            <v-col>
+              <v-card-subtitle
+                @click="setView('categories')"
+                class="text-center cursor-pointer"
+                :class="{ 'text-blue-darken-4': !isModel }"
+                >Categories</v-card-subtitle
+              >
+            </v-col>
+            <v-col>
+              <v-card-subtitle
+                @click="setView('models')"
+                class="text-center cursor-pointer"
+                :class="{ 'text-blue-darken-4': isModel }"
+                >Models</v-card-subtitle
+              >
+            </v-col>
+          </v-row>
+          <v-divider class="mb-2"></v-divider>
+          <v-card v-if="!isModel" class="grid" flat>
+            <v-card
+              v-for="(model, index) in showCard"
+              :key="index"
+              width="130px"
+              height="170px"
+              @click="selectedCategory(model)"
+            >
+              <v-img :src="model.modelimg"></v-img>
+              <v-card-text class="text-center text-blue-darken-4">{{
+                model.modelname
+              }}</v-card-text>
+            </v-card>
+          </v-card>
+
+          <v-card v-if="isModel" flat>
+            <v-list v-if="modelList">
+              <v-list-subheader class="text-blue-darken-4">
+                Available Models Are</v-list-subheader
+              >
+              <v-list-item-group>
+                <v-list-item
+                  v-for="(item, index) in models"
+                  :key="index"
+                  class="mb-1 ml-4 mr-4 models"
+                  @click="selectedModel(item.name)"
+                >
+                  <template v-slot:prepend>
+                    <v-icon :icon="item.icon"></v-icon>
+                  </template>
+                  <v-list-item-title class="ml-6">
+                    {{ item.name }}</v-list-item-title
+                  >
+                </v-list-item>
+              </v-list-item-group>
+            </v-list>
+            <!-- model Display -->
+            <v-card v-if="clickModel">
+              <v-card-text
+                ><v-icon @click="back()" class="mr-2 text-red"
+                  >mdi-arrow-left</v-icon
+                >
+                {{ totalmodel }} Model Available</v-card-text
+              >
+              <v-card class="grid">
+                <v-card
+                  v-for="(model, index) in availabelModels"
+                  :key="index"
+                  @dragstart="onDragStart(model._id)"
+                  draggable="true"
+                  class="ma-2 pt-2"
+                  outlined
+                  style="cursor: grab"
+                >
+                  <v-img
+                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
+                  >
+                  </v-img>
+                  <v-card-text class="text-center">{{
+                    model.FurnituresImagesArraywithGltf[0].furnitureName
+                  }}</v-card-text>
+                </v-card>
+              </v-card>
+            </v-card>
+          </v-card>
         </v-card>
       </v-card>
     </v-card>
-  </v-card>
+  </v-container>
 </template>
 
 <script>
 import ThreeScene from "@/components/threeContainer.vue";
+import axios from "axios";
 
 export default {
   name: "createProject",
@@ -108,6 +193,24 @@ export default {
   data() {
     return {
       isVisible: false,
+      isModel: false,
+      modelList: true,
+      isModelCard: false,
+      categories: false,
+      showCard: [],
+      clickModel: false,
+      availabelModels: [],
+      models: [
+        { name: "Door", icon: "mdi-door" },
+        { name: "Window", icon: "mdi-window-closed" },
+        { name: "Table", icon: "mdi-table" },
+        { name: "Sofas", icon: "mdi-sofa" },
+        { name: "Beds", icon: "mdi-bed" },
+        { name: "Chairs", icon: "mdi-seat" },
+        { name: "Plants", icon: "mdi-flower" },
+        { name: "Curtains", icon: "mdi-curtains" },
+        { name: "Musical Instrument", icon: "mdi-music" },
+      ],
       modelsList: [
         {
           modelname: "Living Room",
@@ -130,41 +233,70 @@ export default {
           modelimg: new URL("@/assets/Balcony.jpeg", import.meta.url).href,
         },
       ],
-      sideBar: ["mdi-magnify", "mdi-magnify"],
+      drawList: [
+        {
+          modelname: "Draw",
+          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+        },
+      ],
+      sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
     };
   },
   methods: {
-    back() {
-      this.$router.push("/");
+    setView(view) {
+      this.isModel = view === "models" ? true : false;
     },
-    triggerCreate() {
-      this.$refs.threeSceneComponent.create();
-    },
-    toggleVisibility() {
-      this.isVisible = !this.isVisible;
-    },
-    selectedCategory(category) {
-      alert(category.modelname);
-    },
-    async loadModels() {
-      this.group = [];
+    async selectedModel(selectedmodel) {
+      this.availabelModels = [];
       try {
         const response = await axios.get("http://localhost:3000/getfurnitures");
         response.data.forEach((eachModel) => {
-          if (this.selectedModel == eachModel.modelType) {
-            this.group.push(eachModel);
+          if (selectedmodel == eachModel.modelType) {
+            this.availabelModels.push(eachModel);
           }
+          this.modelList = false;
+          this.clickModel = true;
         });
       } catch (err) {
         console.log(err);
       }
     },
-    async getFurniture(modelId) {
-      const loader = new GLTFLoader();
+    backToHome() {
+      this.$router.push("/homeview");
+    },
+    back() {
+      this.modelList = true;
+      this.clickModel = false;
+    },
+    cancel() {
+      this.isVisible = false;
+    },
+    triggerCreate() {
+      this.$refs.threeSceneComponent.create();
+    },
+    toggleVisibility(selectedValue) {
+      this.isVisible = true;
+      if (selectedValue == "mdi-table-furniture") {
+        this.isModelCard = true;
+        this.categories = true;
+        this.showCard = this.modelsList;
+      } else if (selectedValue == "mdi-magnify") {
+        this.isModelCard = false;
+      } else {
+        (this.isModelCard = true), (this.categories = false);
+        this.showCard = this.drawList;
+      }
+    },
+    selectedCategory(category) {
+      alert(category.modelname);
+    },
+    async loadModel(modelId) {
       try {
         const response = await axios.get(
           `http://localhost:3000/getfurnitures`,
-          { responseType: "json" }
+          {
+            responseType: "json",
+          }
         );
         const models = response.data;
         let modelLink;
@@ -174,12 +306,31 @@ export default {
               eachModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
           }
         });
-        loader.load(modelLink, (gltf) => {
-          this.scene.add(gltf.scene);
-        });
+        this.$refs.threeSceneComponent.gltfLoader(modelLink);
       } catch (error) {
         console.error("Error loading model:", error);
       }
+    },
+    onDragStart(modelId) {
+      const draggedModel = modelId;
+      event.dataTransfer.setData("text/plain", draggedModel);
+    },
+    onDragOver(event) {
+      this.isVisible = false;
+      event.preventDefault();
+    },
+    onDrop(event) {
+      const droppedText = event.dataTransfer.getData("text/plain");
+      this.loadModel(droppedText);
+      this.isVisible = true;
+    },
+    undo() {
+      this.$refs.threeSceneComponent.undoEvent();
+    },
+  },
+  computed: {
+    totalmodel() {
+      return this.availabelModels.length;
     },
   },
 };
@@ -200,6 +351,12 @@ export default {
   z-index: 2;
   position: absolute;
   top: 20px;
-  right: 30px;
+  right: 60px;
+}
+.cursor-pointer {
+  cursor: pointer;
+}
+.models:hover {
+  color: #274e76;
 }
 </style>
