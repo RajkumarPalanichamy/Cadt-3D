@@ -1,33 +1,32 @@
 <template>
-  <v-card>
-    <v-card flat>
-      <v-toolbar density="compact" color="#274e76" flat>
-        <v-card-title>
-          <v-icon >mdi mdi-cube</v-icon>
-          BLUE 3D</v-card-title
-        >
-        <v-btn icon>
-          <v-icon>mdi-magnify</v-icon>
-        </v-btn>
+  <v-card rounded="0">
+    <v-toolbar density="compact" color="#274e76" flat>
+      <v-card-title>
+        <v-icon>mdi mdi-cube-outline</v-icon>
+        BLUE 3D
+      </v-card-title>
+      <v-spacer></v-spacer>
 
-        <v-spacer></v-spacer>
+      <v-btn icon>
+        <v-icon>mdi-theme-light-dark</v-icon>
+      </v-btn>
 
-        <v-btn icon>
-          <v-icon>mdi-theme-light-dark</v-icon>
-        </v-btn>
-
-        <v-btn icon>
-          <v-icon>mdi-dots-vertical</v-icon>
-        </v-btn>
-      </v-toolbar>
-    </v-card>
-    <v-card class="d-flex">
-      <v-card height="100vh" class="overflow pl-2" width="18%">
+      <v-btn icon>
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </v-toolbar>
+    <v-card class="d-flex" height="95vh">
+      <v-card class="overflow pl-2 sidebar" width="20%">
         <v-list>
-          <v-list-subheader>Home</v-list-subheader>
-          <v-spacer></v-spacer>
+          <v-list-subheader>Dashboard</v-list-subheader>
+          <v-spacer class="mt-4"></v-spacer>
 
-          <v-list-item class="hover" v-for="(item, i) in items" :key="i">
+          <v-list-item
+            class="hover mt-2"
+            v-for="(item, i) in items"
+            :key="i"
+            @click="sideBar(item.text)"
+          >
             <template v-slot:prepend>
               <v-icon :icon="item.icon"></v-icon>
             </template>
@@ -35,69 +34,52 @@
             <v-list-item-title>{{ item.text }}</v-list-item-title>
           </v-list-item>
         </v-list>
+        <v-row>
+          <v-col>
+            <v-btn
+              variant="outlined"
+              @click="logout"
+              block
+              class="mt-16"
+              color="#274E76"
+              >Logout</v-btn
+            >
+          </v-col>
+        </v-row>
       </v-card>
-      <v-card width="82%" color="#F6F6F6">
-        <v-card class="grid pl-4 mt-4 pr-4" color="#F6F6F6" flat>
-          <v-card
-            class="d-flex flex-column align-center justify-center"
-            @click="createProject"
-          >
-            <v-icon color="#274e76" size="2em">mdi-plus</v-icon>
-            <v-card-title>Create Project</v-card-title>
-          </v-card>
-          <v-card
-            class="d-flex flex-column align-center justify-center"
-            width="260px"
-            height="230px"
-            v-for="(item, index) in savedModels"
-            :key="index"
-          >
-            {{ item }}
-          </v-card>
-        </v-card>
-        <v-card-text class="d-flex justify-center mt-5"
-          >See More <v-icon>mdi-menu-down</v-icon></v-card-text
-        >
+      <v-card width="100%" >
+        <Home v-if="$route.path === '/homeview'" />
+        <router-view />
       </v-card>
     </v-card>
   </v-card>
 </template>
 
 <script>
+import Home from "./Home.vue";
 export default {
   name: "App",
-  data: () => ({
-    items: [
-      { text: "Real-Time", icon: "mdi-clock" },
-      { text: "Audience", icon: "mdi-account" },
-      { text: "Conversions", icon: "mdi-flag" },
-      { text: "Real-Time", icon: "mdi-clock" },
-      { text: "Audience", icon: "mdi-account" },
-      { text: "Conversions", icon: "mdi-flag" },
-    ],
-    savedModels: [" Model1", " Model2", " Model3 ", "Model 4 ", " Model 5"],
-  }),
+  components: {
+    Home,
+  },
+  data() {
+    return {
+      items: [
+        { text: "Home", icon: "mdi-clock" },
+        { text: "My Profile", icon: "mdi-account" },
+        { text: "Glb Models", icon: "mdi-table-furniture" },
+        { text: "Textures", icon: "mdi-texture" },
+      ],
+    };
+  },
   methods: {
-    createProject() {
-      this.$router.push("/createproject");
+    sideBar(clickedValue) {
+      const value = clickedValue.split(" ").join("").toLowerCase();
+      this.$router.push(`/homeview/${value}`);
+    },
+    logout() {
+      this.$router.push("/");
     },
   },
 };
 </script>
-
-<style scoped>
-.overflow {
-  overflow-y: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(218, 218, 218) white;
-}
-.grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-.hover:hover {
-  cursor: pointer;
-  color: #274e76;
-}
-</style>

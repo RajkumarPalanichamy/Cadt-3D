@@ -1,15 +1,13 @@
 <template>
-  <div ref="threeContainer" class="three-container">
-    <button @click="create()">3D</button>
-  </div>
+  <div ref="threeContainer" class="three-container"></div>
 </template>
 
 <script>
-import { ref, onBeforeUnmount } from 'vue';
-import ThreeScene from '../Three/three.js';
+import ThreeScene from "../Three/three.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export default {
-  name: 'ThreeSceneComponent',
+  name: "ThreeSceneComponent",
   data() {
     return {
       threeContainer: null,
@@ -20,23 +18,42 @@ export default {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new ThreeScene(this.threeContainer);
   },
-  beforeUnmount() {
-    if (this.threeScene) {
-      this.threeScene.dispose();
-      this.threeScene = null;
+  // beforeUnmount() {
+  //   if (this.threeScene) {
+  //     this.threeScene.dispose();
+  //     this.threeScene = null;
+  //   }
+  // },
+  methods: {
+    create() {
+      // this.threeScene.cam=!this.threeScene.cam
+      this.threeScene.updateCamera();
+    },
+    gltfLoader(modelLink) {
+      const loader = new GLTFLoader();
+      loader.load(modelLink, (gltf) => {
+
+        this.threeScene.scene.add(gltf.scene);
+      });
+    },
+    undoEvent() {
+      const sceneModels = this.threeScene.scene.children;
+      for (let i = 0; i < sceneModels.length; i++) {
+        if (sceneModels[i].type == "Group" && i == sceneModels.length - 1) {
+          this.threeScene.scene.remove(sceneModels[i]);
+        }
+      }
+    },
+    redoEvent(){
+
     }
   },
-  methods:{
-    create(){
-      this.threeScene.updateCamera()
-    }
-  }
 };
 </script>
 
 <style>
 .three-container {
   width: 100%;
-  height: 75vh;
+  height: 95vh;
 }
 </style>
