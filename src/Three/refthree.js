@@ -6,8 +6,6 @@ import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-import { Sky } from "three/addons/objects/Sky.js";
-import { MathUtils, Vector3 } from "three";
 
 export default class ThreeScene {
   constructor(container) {
@@ -20,8 +18,8 @@ export default class ThreeScene {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
     this.intersects = null;
-    this.controlPoints = [];
-    this.controlPointss = [];
+    this.smallArray = [];
+    this.bigArray = [];
     this.plane = null;
     this.controls = null;
     this.spheres = [];
@@ -33,10 +31,11 @@ export default class ThreeScene {
     this.tempLine = null;
     this.Dragcontrols = null;
     this.isDrawing = false;
+    this.clickIndex = 0;
 
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
-    // this.mouseover = this.mouseover.bind(this);
+    this.mouseover = this.mouseover.bind(this);
     this.init();
   }
 
@@ -70,20 +69,6 @@ export default class ThreeScene {
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
-    const sky = new Sky();
-    sky.scale.setScalar(450000);
-
-    const phi = MathUtils.degToRad(80);
-    const theta = MathUtils.degToRad(180);
-    const sunPosition = new Vector3().setFromSphericalCoords(1, phi, theta);
-
-    sky.material.uniforms.sunPosition.value = sunPosition;
-    sky.material.uniforms.rayleigh.value = 1;
-    sky.material.uniforms.turbidity.value = 0;
-
-    console.log("sky.material.uniforms", sky.material.uniforms);
-
-    this.scene.add(sky);
 
     this.animate();
   }
@@ -119,7 +104,7 @@ export default class ThreeScene {
   }
 
   removeListeners() {
-    // this.renderer.domElement.addEventListener("mouseover", this.mouseover);
+    this.renderer.domElement.addEventListener("click", this.mouseover);
     if (this.listenersActive) {
       this.renderer.domElement.removeEventListener(
         "mousemove",
@@ -212,71 +197,23 @@ export default class ThreeScene {
     this.camera.lookAt(0, 0, 0);
   }
   predefined() {
-    this.controlPoints = [
+    this.smallArray = [
       { x: -5, y: 0, z: -3 },
       { x: 5, y: 0, z: -3 },
       { x: 5, y: 9, z: 3 },
       { x: -5, y: 0, z: 3 },
       { x: -5, y: 0, z: -3 },
     ];
-    this.finalizePolygon(this.controlPoints);
+    this.finalizePolygon(this.smallArray);
   }
 
   mesh() {
-    const vertexShader = `
-    varying vec2 vUv;
-    void main() {
-        vUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-`;
-    const fragmentShader = `
-    varying vec2 vUv;
-
-    void main() {
-        // Parameters for the small grid
-        float smallLineThickness = 0.013; // Thickness of small grid lines
-        float smallGridFrequency = 300.0; // Frequency of small grid
-
-        // Parameters for the large grid
-        float largeLineThickness = 0.010; // Thickness of large grid lines
-        float largeGridFrequency = 100.0; // Frequency of large grid
-
-        // Small grid calculations
-        float smallGridX = step(smallLineThickness, abs(mod(vUv.x * smallGridFrequency, 1.0) - 0.5));
-        float smallGridY = step(smallLineThickness, abs(mod(vUv.y * smallGridFrequency, 1.0) - 0.5));
-        float smallGrid = smallGridX * smallGridY;
-
-        // Large grid calculations
-        float largeGridX = step(largeLineThickness, abs(mod(vUv.x * largeGridFrequency, 1.0) - 0.5));
-        float largeGridY = step(largeLineThickness, abs(mod(vUv.y * largeGridFrequency, 1.0) - 0.5));
-        float largeGrid = largeGridX * largeGridY;
-
-        // Combine the grids (small grid overlaid on the large grid)
-        float grid = min(smallGrid, largeGrid);
-
-        // Set grid color
-vec3 backgroundColor = vec3(1.0);         // Background color (white)
-vec3 lineColor = vec3(0.5, 0.5, 0.5);     // Grid line color (light gray)
-
-vec3 gridColor = mix(lineColor, backgroundColor, grid); // Interpolates between background and grid color
-gl_FragColor = vec4(gridColor, 1.0);
-    }
-`;
-    const material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      // transparent: true
-    });
-    this.gridHeight = 1000;
-    this.gridWidth = 1000;
+    let planeGeom = new THREE.PlaneGeometry(100, 100);
+    planeGeom.rotateX(-Math.PI / 2);
     this.plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(this.gridHeight, this.gridWidth),
-      material
+      planeGeom,
+      new THREE.MeshStandardMaterial({ visible: false, color: "red" })
     );
-    this.plane.rotation.x = -Math.PI / 2;
-    this.plane.position.y = -0.1;
-    this.scene.add(this.plane);
   }
   raycastDefined(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -294,13 +231,14 @@ gl_FragColor = vec4(gridColor, 1.0);
 
     if (this.intersects.length > 0) {
       let point = this.intersects[0].point.clone();
-      this.controlPoints.push(point);
-      this.controlPointss.push(point);
+      this.smallArray.push(point);
+      this.bigArray[this.clickIndex] = this.smallArray;
+      console.log(this.bigArray);
 
       this.addControlPoint(point);
 
-      if (this.controlPoints.length > 1) {
-        this.addLine(this.controlPoints[this.controlPoints.length - 2], point);
+      if (this.smallArray.length > 1) {
+        this.addLine(this.smallArray[this.smallArray.length - 2], point);
       }
     }
   }
@@ -330,6 +268,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     if (this.isClosedPolygon()) {
       this.stopDrawing();
       this.finalizePolygon();
+      this.clickIndex += 1;
     }
   }
 
@@ -345,20 +284,20 @@ gl_FragColor = vec4(gridColor, 1.0);
     cp.position.copy(point);
     this.scene.add(cp);
     this.spheres.push(cp);
-    cp.userData.index = this.controlPoints.length - 1;
+    cp.userData.index = this.smallArray.length - 1;
   }
 
   finalizePolygon() {
-    if (this.controlPoints.length < 3) return;
+    if (this.smallArray.length < 3) return;
 
     let firstSphere = this.spheres.shift();
     this.scene.remove(firstSphere);
 
     let shape = new THREE.Shape();
 
-    for (let i = 0; i < this.controlPoints.length - 1; i++) {
-      shape.moveTo(this.controlPoints[i].x, this.controlPoints[i].z);
-      shape.lineTo(this.controlPoints[i + 1].x, this.controlPoints[i + 1].z);
+    for (let i = 0; i < this.smallArray.length - 1; i++) {
+      shape.moveTo(this.smallArray[i].x, this.smallArray[i].z);
+      shape.lineTo(this.smallArray[i + 1].x, this.smallArray[i + 1].z);
     }
 
     let loader = new THREE.TextureLoader();
@@ -378,18 +317,18 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.polygonMesh.position.y = 0.01;
     this.scene.add(this.polygonMesh);
     this.threeDimension();
-    this.controlPoints = [];
+    this.smallArray = [];
   }
 
   isClosedPolygon() {
     return (
-      this.controlPoints.length > 2 &&
-      Math.floor(this.controlPoints[0].x) ===
-        Math.floor(this.controlPoints[this.controlPoints.length - 1].x) &&
-      Math.floor(this.controlPoints[0].y) ===
-        Math.floor(this.controlPoints[this.controlPoints.length - 1].y) &&
-      Math.floor(this.controlPoints[0].z) ===
-        Math.floor(this.controlPoints[this.controlPoints.length - 1].z)
+      this.smallArray.length > 2 &&
+      Math.floor(this.smallArray[0].x) ===
+        Math.floor(this.smallArray[this.smallArray.length - 1].x) &&
+      Math.floor(this.smallArray[0].y) ===
+        Math.floor(this.smallArray[this.smallArray.length - 1].y) &&
+      Math.floor(this.smallArray[0].z) ===
+        Math.floor(this.smallArray[this.smallArray.length - 1].z)
     );
   }
 
@@ -405,9 +344,9 @@ gl_FragColor = vec4(gridColor, 1.0);
     let points = [];
 
     points.push(
-      this.controlPoints[this.controlPoints.length - 1].x,
-      this.controlPoints[this.controlPoints.length - 1].y,
-      this.controlPoints[this.controlPoints.length - 1].z
+      this.smallArray[this.smallArray.length - 1].x,
+      this.smallArray[this.smallArray.length - 1].y,
+      this.smallArray[this.smallArray.length - 1].z
     );
     points.push(newPoint.x, newPoint.y, newPoint.z);
 
@@ -424,17 +363,17 @@ gl_FragColor = vec4(gridColor, 1.0);
     line.computeLineDistances();
     this.scene.add(line);
     this.tempLine = line;
-    this.addMeasurementLabel(
-      this.controlPoints[this.controlPoints.length - 1],
-      newPoint
-    );
+    // this.addMeasurementLabel(
+    //   this.smallArray[this.smallArray.length - 1],
+    //   newPoint
+    // );
   }
 
   updateExistingTemporaryLine(newPoint) {
     let points = [
-      this.controlPoints[this.controlPoints.length - 1].x,
-      this.controlPoints[this.controlPoints.length - 1].y,
-      this.controlPoints[this.controlPoints.length - 1].z,
+      this.smallArray[this.smallArray.length - 1].x,
+      this.smallArray[this.smallArray.length - 1].y,
+      this.smallArray[this.smallArray.length - 1].z,
       newPoint.x,
       newPoint.y,
       newPoint.z,
@@ -444,10 +383,10 @@ gl_FragColor = vec4(gridColor, 1.0);
 
     this.tempLine.geometry.attributes.position.needsUpdate = true;
 
-    this.addMeasurementLabel(
-      this.controlPoints[this.controlPoints.length - 1],
-      newPoint
-    );
+    // this.addMeasurementLabel(
+    //   this.smallArray[this.smallArray.length - 1],
+    //   newPoint
+    // );
   }
 
   addMeasurementLabel(point1, point2) {
@@ -490,17 +429,24 @@ gl_FragColor = vec4(gridColor, 1.0);
     });
   }
   onControlPointDrag(sphere) {
-    let index = sphere.userData.index;
-    this.controlPointss[index].copy(sphere.position);
+      let index = sphere.userData.index;
+      for (let i = 0; i < this.bigArray.length; i++) {
+          if (index == i) {
+               this.bigArray[i][index].copy(sphere.position);
+          }
+          
+      }
+    
 
     if (this.polygonMesh) {
       let vertices = this.polygonMesh.geometry.attributes.position.array;
-
-      for (let i = 0; i < this.controlPoints.length; i++) {
-        vertices[i * 3] = this.controlPoints[i].x;
-        vertices[i * 3 + 1] = 0;
-        vertices[i * 3 + 2] = this.controlPoints[i].z;
-      }
+        for (let i = 0; i < this.bigArray.length; i++) {
+            for (let j = 0; j < this.bigArray[i].length - 1; j++) {
+                vertices[i * 3] = this.bigArray[i][j].x;
+                vertices[i * 3 + 1] = 0;
+                vertices[i * 3 + 2] = this.bigArray[i][j].z;
+            }
+        }
 
       this.polygonMesh.geometry.attributes.position.needsUpdate = true;
     }
@@ -508,63 +454,68 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.updateLines();
     this.updateShapeGeometry();
     this.updateWalls();
-    this.updateMeasurementLabels();
+    // this.updateMeasurementLabels();
   }
   updateWalls() {
     // Remove existing walls
     this.walls.forEach((wall) => this.scene.remove(wall));
     this.walls = [];
-
+      let point1
+      let  point2 
     let height = 2;
     let thickness = 0.1;
+      for (let i = 0; i < this.bigArray.length - 1; i++) {
+          for (let j = 0; j < this.bigArray[i].length - 1; j++) {
+              point1 = new THREE.Vector3(this.bigArray[i][j].x, 1, this.bigArray[i][j].z)
+              point2 = new THREE.Vector3(this.bigArray[i][j + 1].x, 1, this.bigArray[i][j + 1].z)
+              console.log(point1);
+              console.log(point2);
+          }
+      
 
-    for (let i = 0; i < this.controlPointss.length - 1; i++) {
-      let point1 = this.controlPointss[i];
-      let point2 = this.controlPointss[i + 1];
+          let length = point1.distanceTo(point2);
+          let direction = new THREE.Vector3()
+              .subVectors(point2, point1)
+              .normalize();
 
-      let length = point1.distanceTo(point2);
-      let direction = new THREE.Vector3()
-        .subVectors(point2, point1)
-        .normalize();
+          let loader = new THREE.TextureLoader();
+          let texture = loader.load("./images/images.jpg", () => {
+              texture.wrapS = THREE.RepeatWrapping;
+              texture.wrapT = THREE.RepeatWrapping;
+              texture.repeat.set(1, 1);
+          });
 
-      let loader = new THREE.TextureLoader();
-      let texture = loader.load("./images/images.jpg", () => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(1, 1);
-      });
+          let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
+          let material = [
+              new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+              new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+              new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+              new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+              new THREE.MeshLambertMaterial({ map: texture }),
+              new THREE.MeshLambertMaterial({ color: "white" }),
+          ];
+          geometry.rotateY(Math.PI / 2);
 
-      let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
-      let material = [
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ map: texture }),
-        new THREE.MeshLambertMaterial({ color: "white" }),
-      ];
-      geometry.rotateY(Math.PI / 2);
+          let wall = new THREE.Mesh(geometry, material);
+          wall.position.copy(
+              new THREE.Vector3().addVectors(point1, point2).divideScalar(2)
+          );
+          wall.lookAt(point2);
 
-      let wall = new THREE.Mesh(geometry, material);
-      wall.position.copy(
-        new THREE.Vector3().addVectors(point1, point2).divideScalar(2)
-      );
-      wall.lookAt(point2);
-
-      this.scene.add(wall);
-      this.walls.push(wall);
-    }
+          this.scene.add(wall);
+          this.walls.push(wall);
+      }
   }
   updateShapeGeometry() {
     if (this.polygonMesh) {
       this.scene.remove(this.polygonMesh);
     }
 
-    if (this.controlPointss.length < 3) return;
+    if (this.bigArray.length < 3) return;
 
     let shape = new THREE.Shape();
-    for (let i = 0; i < this.controlPointss.length; i++) {
-      const point = this.controlPointss[i];
+    for (let i = 0; i < this.bigArray.length; i++) {
+      const point = this.bigArray[i];
       if (i === 0) {
         shape.moveTo(point.x, point.z);
       } else {
@@ -592,21 +543,31 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.lines.forEach((line, i) => {
       let point1, point2;
 
-      if (i < this.controlPointss.length - 1) {
-        point1 = this.controlPointss[i];
-        point2 = this.controlPointss[i + 1];
-      } else {
-        point1 = this.controlPointss[i];
-        point2 = this.controlPointss[0];
-      }
+    
+        for (let i = 0; i < this.bigArray.length; i++) {
+          for (let j = 0; j < this.bigArray[i].length - 1; j++) {
+            if (i < this.bigArray.length - 1) {
+              point1 = this.bigArray[i][j];
+              point2 = this.bigArray[i][j + 1];
+            } else {
+                console.log(this.bigArray[i][0]);
+                
+              point1 = this.bigArray[i][j];
+              point2 = this.bigArray[i][0];
+            }
 
-      let positions = [];
-      positions.push(point1.x, point1.y, point1.z);
-      positions.push(point2.x, point2.y, point2.z);
+            console.log(point1);
+            console.log(point2);
 
-      line.geometry.dispose();
-      line.geometry = new LineGeometry();
-      line.geometry.setPositions(positions);
+            let positions = [];
+            positions.push(point1.x, point1.y, point1.z);
+            positions.push(point2.x, point2.y, point2.z);
+
+            line.geometry.dispose();
+            line.geometry = new LineGeometry();
+            line.geometry.setPositions(positions);
+          }
+        }
     });
   }
 
@@ -614,11 +575,11 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.tempLines.forEach((arc) => this.scene.remove(arc));
     this.tempLines = [];
 
-    if (this.controlPoints.length > 2) {
-      for (let i = 0; i < this.controlPoints.length - 2; i++) {
-        let P1 = this.controlPoints[i];
-        let P2 = this.controlPoints[i + 1];
-        let P3 = this.controlPoints[i + 2];
+    if (this.smallArray.length > 2) {
+      for (let i = 0; i < this.smallArray.length - 2; i++) {
+        let P1 = this.smallArray[i];
+        let P2 = this.smallArray[i + 1];
+        let P3 = this.smallArray[i + 2];
         this.createArcBetweenLines(P1, P2, P3);
       }
     }
@@ -642,13 +603,13 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.scene.add(line);
     this.lines.push(line);
 
-    this.addMeasurementLabel(point1, point2);
+    // this.addMeasurementLabel(point1, point2);
     this.updateshape();
 
-    // if (this.controlPoints.length > 2) {
-    //   let P1 = this.controlPoints[this.controlPoints.length - 3];
-    //   let P2 = this.controlPoints[this.controlPoints.length - 2];
-    //   let P3 = this.controlPoints[this.controlPoints.length - 1];
+    // if (this.smallArray.length > 2) {
+    //   let P1 = this.smallArray[this.smallArray.length - 3];
+    //   let P2 = this.smallArray[this.smallArray.length - 2];
+    //   let P3 = this.smallArray[this.smallArray.length - 1];
     //   this.createArcBetweenLines(P1, P2, P3);
     // }
   }
@@ -688,61 +649,66 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
     this.textMeshes = [];
 
-    for (let i = 0; i < this.controlPointss.length - 1; i++) {
-      this.addMeasurementLabel(
-        this.controlPointss[i],
-        this.controlPointss[i + 1]
-      );
-    }
+    // for (let i = 0; i < this.bigArray.length - 1; i++) {
+    //   this.addMeasurementLabel(this.bigArray[i], this.bigArray[i + 1]);
+    // }
   }
 
-  threeDimension() {
-    let point1 = new THREE.Vector3();
-    let point2 = new THREE.Vector3();
-    let height = 2;
-    let thickness = 0.1;
+    threeDimension() {
+        console.log(this.bigArray.length);
+        
+        let point1 = new THREE.Vector3();
+        let point2 = new THREE.Vector3();
+        let height = 2;
+        let thickness = 0.1;
 
-    for (let i = 0; i < this.controlPoints.length - 1; i++) {
-      point1.set(this.controlPoints[i].x, 1, this.controlPoints[i].z);
-      point2.set(this.controlPoints[i + 1].x, 1, this.controlPoints[i + 1].z);
+        for (let i = 0; i < this.bigArray.length ; i++) {
+            for (let j = 0; j < this.bigArray[i].length-1; j++) {
+              point1.set(this.bigArray[i][j].x, 1, this.bigArray[i][j].z);
+              point2.set(this.bigArray[i][j + 1].x,1,this.bigArray[i][j + 1].z );
 
-      let length = point1.distanceTo(point2);
-      let direction = new THREE.Vector3()
-        .subVectors(point2, point1)
-        .normalize();
-      let loader = new THREE.TextureLoader();
-      let texture = loader.load("./images/images.jpg", () => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(1, 1);
-      });
-      let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
-      let material = [
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({
-          map: texture,
-        }),
-        new THREE.MeshLambertMaterial({ color: "white" }),
-      ];
-      geometry.rotateY(Math.PI / 2);
+              let length = point1.distanceTo(point2);
+              let direction = new THREE.Vector3()
+                .subVectors(point2, point1)
+                .normalize();
+              let loader = new THREE.TextureLoader();
+              let texture = loader.load("./images/images.jpg", () => {
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set(1, 1);
+              });
+              let geometry = new THREE.BoxGeometry(
+                length + 0.08,
+                height,
+                thickness
+              );
+              let material = [
+                new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+                new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+                new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+                new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+                new THREE.MeshLambertMaterial({
+                  map: texture,
+                }),
+                new THREE.MeshLambertMaterial({ color: "white" }),
+              ];
+              geometry.rotateY(Math.PI / 2);
 
-      let wall = new THREE.Mesh(geometry, material);
+              let wall = new THREE.Mesh(geometry, material);
 
-      let midpoint = new THREE.Vector3()
-        .addVectors(point1, point2)
-        .divideScalar(2);
+              let midpoint = new THREE.Vector3()
+                .addVectors(point1, point2)
+                .divideScalar(2);
 
-      wall.position.copy(midpoint);
+              wall.position.copy(midpoint);
 
-      wall.lookAt(point2);
+              wall.lookAt(point2);
 
-      this.scene.add(wall);
-      this.walls.push(wall);
+              this.scene.add(wall);
+              this.walls.push(wall);
+            }
+        }
     }
-  }
 
   animate() {
     requestAnimationFrame(() => this.animate());
