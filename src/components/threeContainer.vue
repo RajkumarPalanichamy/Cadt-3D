@@ -26,8 +26,13 @@ export default {
   // },
   methods: {
     create() {
-      // this.threeScene.cam=!this.threeScene.cam
+      this.threeScene.createListener();
+    },
+    update(){
+      this.threeScene.cam=!this.threeScene.cam
+
       this.threeScene.updateCamera();
+
     },
     gltfLoader(modelLink) {
       const loader = new GLTFLoader();

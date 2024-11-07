@@ -272,7 +272,7 @@ export default {
       this.isVisible = false;
     },
     triggerCreate() {
-      this.$refs.threeSceneComponent.create();
+      this.$refs.threeSceneComponent.update();
     },
     toggleVisibility(selectedValue) {
       this.isVisible = true;
@@ -288,12 +288,19 @@ export default {
       }
     },
     selectedCategory(category) {
-      alert(category.modelname);
+      if(category.modelname=="Draw"){
+        this.isVisible=false
+        setTimeout(()=>{
+          this.$refs.threeSceneComponent.create();
+
+        },500)
+
+      }
     },
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-          `http://localhost:3000/getfurnitures`,
+          "http://localhost:3000/getfurnitures",
           {
             responseType: "json",
           }
