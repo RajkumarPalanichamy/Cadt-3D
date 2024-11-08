@@ -15,7 +15,7 @@
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </v-toolbar>
-    <v-card class="d-flex" height="95vh">
+    <v-card class="d-flex" height="93vh">
       <v-card class="overflow pl-2 sidebar" width="20%">
         <v-list>
           <v-list-subheader>Dashboard</v-list-subheader>
@@ -42,12 +42,12 @@
               block
               class="mt-16"
               color="#274E76"
-              >Logout</v-btn
+              > Logout<v-icon class="ml-2">mdi-logout</v-icon></v-btn
             >
           </v-col>
         </v-row>
       </v-card>
-      <v-card width="100%" >
+      <v-card width="100%">
         <Home v-if="$route.path === '/homeview'" />
         <router-view />
       </v-card>
@@ -83,3 +83,13 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.hover:hover {
+  color: #274e76;
+}
+.hover:active {
+  color: #274e76;
+  border-left: 2px solid #274e76;
+}
+</style>

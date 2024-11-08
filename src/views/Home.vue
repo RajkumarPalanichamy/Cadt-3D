@@ -1,7 +1,7 @@
 <template>
-  <v-container class="py-5 px-10" fluid="true">
+  <v-container class="py-5 px-0" fluid="true">
     <v-card class="d-flex align-center justify-center" flat>
-      <v-row class="mt-1">
+      <v-row class="mt-1 mx-4">
         <v-col cols="8">
           <v-text-field
             v-model="searchedValue"
@@ -35,7 +35,11 @@
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
       <v-card-title>No data found</v-card-title>
     </v-card>
-    <v-card class="grid mt-1 px-2 py-2 savedprojects" flat>
+    <v-card
+      height="80vh"
+      class="grid-project mt-1 px-8 py-2 savedprojects overflow"
+      flat
+    >
       <v-card
         class="d-flex flex-column align-center justify-center"
         @click="createProject"
@@ -165,10 +169,15 @@ export default {
 </script>
 
 <style scoped>
-.grid {
+.grid-project {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 40px;
+}
+.overflow {
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(206, 206, 206) white;
 }
 
 .seemore {
