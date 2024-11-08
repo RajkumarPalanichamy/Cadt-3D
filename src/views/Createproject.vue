@@ -69,7 +69,8 @@
         <v-row class="pl-2 pr-2">
           <v-col>
             <v-text-field
-              variant="underlined"
+              rounded
+              variant="outlined"
               label="Search Models"
               density="compact"
               append-inner-icon="mdi-magnify"

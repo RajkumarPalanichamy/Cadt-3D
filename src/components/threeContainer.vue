@@ -12,6 +12,7 @@ export default {
     return {
       threeContainer: null,
       threeScene: null,
+      undoModels: [],
     };
   },
   mounted() {
@@ -32,7 +33,6 @@ export default {
     gltfLoader(modelLink) {
       const loader = new GLTFLoader();
       loader.load(modelLink, (gltf) => {
-
         this.threeScene.scene.add(gltf.scene);
       });
     },
@@ -40,13 +40,15 @@ export default {
       const sceneModels = this.threeScene.scene.children;
       for (let i = 0; i < sceneModels.length; i++) {
         if (sceneModels[i].type == "Group" && i == sceneModels.length - 1) {
+          this.undoModels.push(sceneModels[i]);
           this.threeScene.scene.remove(sceneModels[i]);
         }
       }
+      
     },
-    redoEvent(){
-
-    }
+    redoEvent() {
+      console.log(this.undoModels);
+    },
   },
 };
 </script>
