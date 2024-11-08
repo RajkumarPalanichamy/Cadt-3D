@@ -18,7 +18,7 @@
 
       <v-spacer></v-spacer>
       <v-btn icon class="mr-16" @click="triggerCreate">
-        <v-icon>mdi-video-3d</v-icon>
+        <v-icon>{{ is3DView ? 'mdi-video-2d' : 'mdi-video-3d' }}</v-icon>
       </v-btn>
       <v-spacer></v-spacer>
 
@@ -193,6 +193,7 @@ export default {
   },
   data() {
     return {
+      is3DView:false,
       isVisible: false,
       isModel: false,
       modelList: true,
@@ -273,6 +274,7 @@ export default {
       this.isVisible = false;
     },
     triggerCreate() {
+      this.is3DView = !this.is3DView
       this.$refs.threeSceneComponent.update();
     },
     toggleVisibility(selectedValue) {

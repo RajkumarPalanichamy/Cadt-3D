@@ -37,7 +37,9 @@
           :type="show1 ? 'text' : 'password'"
           @click:append-inner="show1 = !show1"
         ></v-text-field>
-        <v-card-text class="text-red py-0" v-if="errMsg">* Data Doesn't Match</v-card-text>
+        <v-card-text class="text-red py-0" v-if="errMsg"
+          >* Data Doesn't Match</v-card-text
+        >
         <v-row>
           <v-col class="d-flex" cols="6">
             <v-checkbox></v-checkbox>
@@ -47,9 +49,12 @@
             <v-card-text class="text-primary">Forgot Password?</v-card-text>
           </v-col>
         </v-row>
-        <v-btn 
-        :disabled="!isForm"
-        @click="handleLogin" block color="#274E76" :loading="isLoading"
+        <v-btn
+          :disabled="!isForm"
+          @click="handleLogin"
+          block
+          color="#274E76"
+          :loading="isLoading"
           >Login</v-btn
         >
       </v-form>
@@ -69,7 +74,7 @@ export default {
         required: (value) => !!value || "Field is required",
       },
       show1: false,
-      isForm:false,
+      isForm: false,
       password: "",
       username: "",
       isLoading: false,
@@ -108,11 +113,11 @@ export default {
           }
         } catch (error) {
           this.isLoading = false;
-          setTimeout(()=>{
+          setTimeout(() => {
             this.errMsg = false;
-            this.username = null 
-            this.password = null
-          },2000)
+            this.username = null;
+            this.password = null;
+          }, 2000);
           this.errMsg = true;
           console.error(error);
         }
