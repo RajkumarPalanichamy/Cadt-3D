@@ -4,7 +4,6 @@
 
 <script>
 import ThreeScene from "../Three/three.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export default {
   name: "ThreeSceneComponent",
@@ -35,11 +34,15 @@ export default {
       this.threeScene.updateCamera();
 
     },
+    modelLoad(model){
+console.log('model',model);
+this.threeScene.predefined(model.cordinates);
+
+
+    },
     gltfLoader(modelLink) {
-      const loader = new GLTFLoader();
-      loader.load(modelLink, (gltf) => {
-        this.threeScene.scene.add(gltf.scene);
-      });
+      this.threeScene.gltfLoader(modelLink);
+
     },
     undoEvent() {
       const sceneModels = this.threeScene.scene.children;

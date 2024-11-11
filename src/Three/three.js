@@ -8,6 +8,7 @@ import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { MathUtils, Vector3 } from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export default class ThreeScene {
   constructor(container) {
@@ -33,14 +34,18 @@ export default class ThreeScene {
     this.tempLine = null;
     this.Dragcontrols = null;
     this.isDrawing = false;
-
+    this.gltf=[]
+this.dragObjects=[]
+this.mainArray=[]
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     // this.mouseover = this.mouseover.bind(this);
+
     this.init();
   }
 
   init() {
+
     if (this.renderer) {
       this.container.removeChild(this.renderer.domElement);
     }
@@ -64,7 +69,6 @@ export default class ThreeScene {
 
     this.mesh();
     this.updateCamera();
-    this.predefined();
     window.addEventListener("resize", () => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
@@ -132,7 +136,6 @@ export default class ThreeScene {
       this.listenersActive = false;
     }
   }
-
   updateCamera() {
     if (this.controls) {
       this.controls.dispose();
@@ -190,6 +193,16 @@ export default class ThreeScene {
       );
     }
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // const dragControls = new DragControls(this.gltf, this.camera, this.renderer.domElement);
+
+    // dragControls.addEventListener('dragstart', (event) => {
+    //   this.controls.enabled = false;                 // Disable orbit controls
+    // });
+    
+    // dragControls.addEventListener('dragend', (event) => {
+    //   this.controls.enabled = true;  
+    //             // Re-enable orbit controls
+    // });
 
     if (this.camera.isPerspectiveCamera) {
       this.controls.minDistance = 0.2;
@@ -200,25 +213,21 @@ export default class ThreeScene {
       this.camera.position.set(5, 5, 5);
     } else {
       this.camera.zoom = 1;
-      this.controls.enableZoom = true;
       this.controls.minZoom = 0.2;
       this.controls.maxZoom = 3.0;
       this.controls.enableZoom = true;
       this.controls.enableRotate = false;
       this.controls.enablePan = true;
       this.camera.position.y = 5;
+  
     }
 
     this.camera.lookAt(0, 0, 0);
   }
-  predefined() {
-    this.controlPoints = [
-      { x: -5, y: 0, z: -3 },
-      { x: 5, y: 0, z: -3 },
-      { x: 5, y: 9, z: 3 },
-      { x: -5, y: 0, z: 3 },
-      { x: -5, y: 0, z: -3 },
-    ];
+  predefined(model) {
+    console.log('model',model);
+    
+    this.controlPoints = model
     this.finalizePolygon(this.controlPoints);
   }
 
@@ -235,11 +244,11 @@ export default class ThreeScene {
 
     void main() {
         // Parameters for the small grid
-        float smallLineThickness = 0.013; // Thickness of small grid lines
+        float smallLineThickness = 0.003; // Thickness of small grid lines
         float smallGridFrequency = 300.0; // Frequency of small grid
 
         // Parameters for the large grid
-        float largeLineThickness = 0.010; // Thickness of large grid lines
+        float largeLineThickness = 0.005; // Thickness of large grid lines
         float largeGridFrequency = 100.0; // Frequency of large grid
 
         // Small grid calculations
@@ -317,14 +326,14 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
   }
 
-  mouseover(e) {
-    this.raycastDefined(e);
-    if (this.intersects.length > 0) {
-      if (!this.Dragcontrols) {
-        this.setupDragControls();
-      }
-    }
-  }
+  // mouseover(e) {
+  //   this.raycastDefined(e);
+  //   if (this.intersects.length > 0) {
+  //     if (!this.Dragcontrols) {
+  //       this.setupDragControls();
+  //     }
+  //   }
+  // }
 
   updateshape() {
     if (this.isClosedPolygon()) {
@@ -337,7 +346,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     let cp = new THREE.Mesh(
       new THREE.SphereGeometry(0.2, 20, 20),
       new THREE.MeshBasicMaterial({
-        color: "yellow",
+        color: "blue",
         transparent: true,
         opacity: 0.3,
       })
@@ -378,6 +387,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.polygonMesh.position.y = 0.01;
     this.scene.add(this.polygonMesh);
     this.threeDimension();
+    this.mainArray.push(this.controlPoints)
     this.controlPoints = [];
   }
 
@@ -415,7 +425,9 @@ gl_FragColor = vec4(gridColor, 1.0);
     geometry.setPositions(points);
 
     let material = new LineMaterial({
-      color: "green",
+      color: "blue",
+      transparent:true,
+      opacity:0.5,
       linewidth: 10,
       resolution: new THREE.Vector2(this.width, this.height),
     });
@@ -475,154 +487,7 @@ gl_FragColor = vec4(gridColor, 1.0);
       }
     );
   }
-  setupDragControls() {
-    this.Dragcontrols = new DragControls(
-      this.spheres,
-      this.camera,
-      this.renderer.domElement
-    );
-    this.Dragcontrols.addEventListener("dragstart", () => {
-      this.controls.enabled = false;
-    });
-    this.Dragcontrols.addEventListener("dragend", (event) => {
-      this.controls.enabled = true;
-      this.onControlPointDrag(event.object);
-    });
-  }
-  onControlPointDrag(sphere) {
-    let index = sphere.userData.index;
-    this.controlPointss[index].copy(sphere.position);
-
-    if (this.polygonMesh) {
-      let vertices = this.polygonMesh.geometry.attributes.position.array;
-
-      for (let i = 0; i < this.controlPoints.length; i++) {
-        vertices[i * 3] = this.controlPoints[i].x;
-        vertices[i * 3 + 1] = 0;
-        vertices[i * 3 + 2] = this.controlPoints[i].z;
-      }
-
-      this.polygonMesh.geometry.attributes.position.needsUpdate = true;
-    }
-
-    this.updateLines();
-    this.updateShapeGeometry();
-    this.updateWalls();
-    this.updateMeasurementLabels();
-  }
-  updateWalls() {
-    // Remove existing walls
-    this.walls.forEach((wall) => this.scene.remove(wall));
-    this.walls = [];
-
-    let height = 2;
-    let thickness = 0.1;
-
-    for (let i = 0; i < this.controlPointss.length - 1; i++) {
-      let point1 = this.controlPointss[i];
-      let point2 = this.controlPointss[i + 1];
-
-      let length = point1.distanceTo(point2);
-      let direction = new THREE.Vector3()
-        .subVectors(point2, point1)
-        .normalize();
-
-      let loader = new THREE.TextureLoader();
-      let texture = loader.load("./images/images.jpg", () => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(1, 1);
-      });
-
-      let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
-      let material = [
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ map: texture }),
-        new THREE.MeshLambertMaterial({ color: "white" }),
-      ];
-      geometry.rotateY(Math.PI / 2);
-
-      let wall = new THREE.Mesh(geometry, material);
-      wall.position.copy(
-        new THREE.Vector3().addVectors(point1, point2).divideScalar(2)
-      );
-      wall.lookAt(point2);
-
-      this.scene.add(wall);
-      this.walls.push(wall);
-    }
-  }
-  updateShapeGeometry() {
-    if (this.polygonMesh) {
-      this.scene.remove(this.polygonMesh);
-    }
-
-    if (this.controlPointss.length < 3) return;
-
-    let shape = new THREE.Shape();
-    for (let i = 0; i < this.controlPointss.length; i++) {
-      const point = this.controlPointss[i];
-      if (i === 0) {
-        shape.moveTo(point.x, point.z);
-      } else {
-        shape.lineTo(point.x, point.z);
-      }
-    }
-
-    let geometry = new THREE.ShapeGeometry(shape);
-    geometry.rotateX(Math.PI / 2);
-    let texture = new THREE.TextureLoader().load("./images/download.jpg");
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-
-    let material = new THREE.MeshBasicMaterial({
-      map: texture,
-      side: THREE.DoubleSide,
-    });
-
-    this.polygonMesh = new THREE.Mesh(geometry, material);
-    this.polygonMesh.position.y = 0.01;
-    this.scene.add(this.polygonMesh);
-  }
-
-  updateLines() {
-    this.lines.forEach((line, i) => {
-      let point1, point2;
-
-      if (i < this.controlPointss.length - 1) {
-        point1 = this.controlPointss[i];
-        point2 = this.controlPointss[i + 1];
-      } else {
-        point1 = this.controlPointss[i];
-        point2 = this.controlPointss[0];
-      }
-
-      let positions = [];
-      positions.push(point1.x, point1.y, point1.z);
-      positions.push(point2.x, point2.y, point2.z);
-
-      line.geometry.dispose();
-      line.geometry = new LineGeometry();
-      line.geometry.setPositions(positions);
-    });
-  }
-
-  updateArcs() {
-    this.tempLines.forEach((arc) => this.scene.remove(arc));
-    this.tempLines = [];
-
-    if (this.controlPoints.length > 2) {
-      for (let i = 0; i < this.controlPoints.length - 2; i++) {
-        let P1 = this.controlPoints[i];
-        let P2 = this.controlPoints[i + 1];
-        let P3 = this.controlPoints[i + 2];
-        this.createArcBetweenLines(P1, P2, P3);
-      }
-    }
-  }
+ 
 
   addLine(point1, point2) {
     let positions = [];
@@ -632,7 +497,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     let geometry = new LineGeometry();
     geometry.setPositions(positions);
     let goodMaterial = new LineMaterial({
-      color: "green",
+      color: "grey",
       linewidth: 10,
       resolution: new THREE.Vector2(this.width, this.height),
     });
@@ -645,44 +510,10 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.addMeasurementLabel(point1, point2);
     this.updateshape();
 
-    // if (this.controlPoints.length > 2) {
-    //   let P1 = this.controlPoints[this.controlPoints.length - 3];
-    //   let P2 = this.controlPoints[this.controlPoints.length - 2];
-    //   let P3 = this.controlPoints[this.controlPoints.length - 1];
-    //   this.createArcBetweenLines(P1, P2, P3);
-    // }
+   
   }
 
-  createArcBetweenLines(P1, P2, P3) {
-    let N = 50;
-    let arcPoints = [];
-
-    let radius = Math.min(P1.distanceTo(P2), P3.distanceTo(P2)) / 2;
-
-    let direction1 = new THREE.Vector3().subVectors(P1, P2).setLength(radius);
-    let direction2 = new THREE.Vector3().subVectors(P3, P2).setLength(radius);
-
-    let arcStart = new THREE.Vector3().addVectors(P2, direction1);
-    let arcEnd = new THREE.Vector3().addVectors(P2, direction2);
-
-    for (let i = 0; i <= N; i++) {
-      let t = i / N;
-      let point = new THREE.Vector3()
-        .lerpVectors(arcStart, arcEnd, t)
-        .sub(P2)
-        .setLength(radius)
-        .add(P2);
-      arcPoints.push(point);
-    }
-
-    let arc = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(arcPoints),
-      new THREE.LineBasicMaterial({ color: "royalblue" })
-    );
-    arc.position.y = 0.1;
-    this.scene.add(arc);
-    this.tempLines.push(arc);
-  }
+  
 
   updateMeasurementLabels() {
     this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
@@ -739,12 +570,36 @@ gl_FragColor = vec4(gridColor, 1.0);
 
       wall.lookAt(point2);
 
-      this.scene.add(wall);
-      this.walls.push(wall);
+      this.scene.add( wall );
+    
+      this.walls.push(  wall );
+    
     }
-  }
+console.log('this.mainArray',this.mainArray);
 
+  }
+  gltfLoader(modelLink) {
+    const loader = new GLTFLoader();
+    loader.load(modelLink, (gltf) => {
+      console.log(gltf);
+      
+      this.gltf.push(gltf.scene);
+      this.scene.add(gltf.scene);
+    });
+    this.dragSelect()
+
+    // const dragControls = new DragControls(this.gltf, this.camera, this.renderer.domElement);
+
+    // dragControls.addEventListener('dragstart', (event) => {
+    //   this.controls.enabled = false;                 // Disable orbit controls
+    // });
+    
+    // dragControls.addEventListener('dragend', (event) => {
+    //   this.controls.enabled = true;                  // Re-enable orbit controls
+    // });
+    }
   animate() {
+
     requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.render();
