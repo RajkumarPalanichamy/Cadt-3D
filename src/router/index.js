@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import Cookies from "js-cookie";
 import HomeView from "@/views/HomeView.vue";
 import Loginpage from "@/views/Loginpage.vue";
 import Glbmodels from "@/views/Glbmodels.vue";
@@ -6,6 +7,7 @@ import Home from "@/views/Home.vue";
 import Texture from "@/views/Texture.vue";
 import Profile from "@/views/Profile.vue";
 import Createproject from "@/views/Createproject.vue";
+import Employee from "@/views/Employee.vue"
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -18,6 +20,7 @@ const router = createRouter({
       path: "/homeview",
       name: "Homeview",
       component: HomeView,
+      meta: { requiresAuth: true },
       children: [
         {
           path: "home",
@@ -39,14 +42,32 @@ const router = createRouter({
           name: "texture",
           component: Texture,
         },
+        {
+          path: "employee",
+          name: "employee",
+          component: Employee,
+        },
       ],
     },
     {
       path: "/createproject",
       name: "createproject",
       component: Createproject,
+      meta: { requiresAuth: true },
     },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = Cookies.get("jwtToken");
+  if (
+    to.matched.some((record) => record.meta.requiresAuth) &&
+    !isAuthenticated
+  ) {
+    next("/");
+  } else {
+    next();
+  }
 });
 
 export default router;

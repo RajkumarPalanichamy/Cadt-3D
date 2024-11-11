@@ -29,7 +29,6 @@
           <v-table density="compact" height="80vh">
             <thead>
               <tr>
-                <th class="text-left"></th>
                 <th class="text-left">S.No</th>
                 <th class="text-left">Texture Image</th>
                 <th class="text-left">Texture Name</th>
@@ -40,9 +39,7 @@
             </thead>
             <tbody>
               <tr v-for="(texture, index) in textureData" :key="index">
-                <td>
-                  <v-checkbox density="" color="#274E76"></v-checkbox>
-                </td>
+                
                 <td>{{ index + 1 }}</td>
                 <td>
                   <v-img
