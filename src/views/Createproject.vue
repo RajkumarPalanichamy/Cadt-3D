@@ -18,7 +18,7 @@
 
       <v-spacer></v-spacer>
       <v-btn icon class="mr-16" @click="triggerCreate">
-        <v-icon>{{ is3DView ? 'mdi-video-2d' : 'mdi-video-3d' }}</v-icon>
+        <v-icon>{{ is3DView ? "mdi-video-2d" : "mdi-video-3d" }}</v-icon>
       </v-btn>
       <v-spacer></v-spacer>
 
@@ -37,6 +37,17 @@
       style="cursor: pointer"
     >
       <ThreeScene ref="threeSceneComponent" />
+      <V-row   
+       class="mr-1"
+      style="position:absolute;top: 30px !important; right: 10px;background-color:#274E76 ;border-radius: 50%;">
+        <v-col>
+          <v-btn-icon
+         
+          >
+            <v-icon size="1.7em" color="white">mdi-content-save-outline</v-icon>
+          </v-btn-icon>
+        </v-col>
+      </V-row>
       <v-card
         style="top: 230px !important; right: 10px"
         class="d-flex flex-column justify-center position px-2 py-2"
@@ -193,7 +204,7 @@ export default {
   },
   data() {
     return {
-      is3DView:false,
+      is3DView: false,
       isVisible: false,
       isModel: false,
       modelList: true,
@@ -274,7 +285,7 @@ export default {
       this.isVisible = false;
     },
     triggerCreate() {
-      this.is3DView = !this.is3DView
+      this.is3DView = !this.is3DView;
       this.$refs.threeSceneComponent.update();
     },
     toggleVisibility(selectedValue) {
@@ -291,13 +302,11 @@ export default {
       }
     },
     selectedCategory(category) {
-      if(category.modelname=="Draw"){
-        this.isVisible=false
-        setTimeout(()=>{
+      if (category.modelname == "Draw") {
+        this.isVisible = false;
+        setTimeout(() => {
           this.$refs.threeSceneComponent.create();
-
-        },500)
-
+        }, 500);
       }
     },
     async loadModel(modelId) {
