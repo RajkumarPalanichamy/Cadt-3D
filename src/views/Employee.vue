@@ -1,9 +1,9 @@
 <template>
   <v-container fluid="true" class="py-0 px-0">
-    <v-card-title class="text-h6">Employee</v-card-title>
+    <v-card-title class="text-h6">User</v-card-title>
     <v-row>
       <v-col>
-        <v-card-text>Employee List</v-card-text>
+        <v-card-text>Users List</v-card-text>
       </v-col>
     </v-row>
     <v-data-table-virtual height="500px" :items="items" density="compact">
