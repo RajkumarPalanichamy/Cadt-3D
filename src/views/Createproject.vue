@@ -33,7 +33,6 @@
     <v-card
       class="d-flex"
       @dragover.prevent="onDragOver"
-      @drop="onDrop"
       style="cursor: pointer"
     >
       <ThreeScene ref="threeSceneComponent" />
@@ -251,6 +250,15 @@ export default {
           modelname: "Draw",
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
+        {
+          modelname: "Square",
+          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+        },{
+        modelname: "Lcut",
+          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+        },
+
+
       ],
       sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
     };
@@ -301,12 +309,25 @@ export default {
         this.showCard = this.drawList;
       }
     },
-    selectedCategory(category) {
-      if (category.modelname == "Draw") {
-        this.isVisible = false;
-        setTimeout(() => {
+
+    async selectedCategory(category) {
+      if(category.modelname=="Draw"){
+        this.isVisible=false
+        setTimeout(()=>{
           this.$refs.threeSceneComponent.create();
         }, 500);
+      }
+      else{
+        const response = await axios.get(
+          "http://localhost:3000/api/getData")
+          response.data.forEach((model)=>{
+if(model.name==category.modelname){
+  this.$refs.threeSceneComponent.modelLoad(model);
+
+}
+
+          })
+          
       }
     },
     async loadModel(modelId) {
@@ -333,16 +354,17 @@ export default {
     onDragStart(modelId) {
       const draggedModel = modelId;
       event.dataTransfer.setData("text/plain", draggedModel);
+      this.loadModel(modelId);
+
     },
     onDragOver(event) {
       this.isVisible = false;
       event.preventDefault();
     },
-    onDrop(event) {
-      const droppedText = event.dataTransfer.getData("text/plain");
-      this.loadModel(droppedText);
-      this.isVisible = true;
-    },
+    // onDrop(event) {
+    //   const droppedText = event.dataTransfer.getData("text/plain");
+    //   this.isVisible = true;
+    // },
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },
