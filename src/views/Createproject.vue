@@ -18,7 +18,7 @@
 
       <v-spacer></v-spacer>
       <v-btn icon class="mr-16" @click="triggerCreate">
-        <v-icon>mdi-video-3d</v-icon>
+        <v-icon>{{ is3DView ? "mdi-video-2d" : "mdi-video-3d" }}</v-icon>
       </v-btn>
       <v-spacer></v-spacer>
 
@@ -33,10 +33,20 @@
     <v-card
       class="d-flex"
       @dragover.prevent="onDragOver"
-      @drop="onDrop"
       style="cursor: pointer"
     >
       <ThreeScene ref="threeSceneComponent" />
+      <V-row   
+       class="mr-1"
+      style="position:absolute;top: 30px !important; right: 10px;background-color:#274E76 ;border-radius: 50%;">
+        <v-col>
+          <v-btn-icon
+         
+          >
+            <v-icon size="1.7em" color="white">mdi-content-save-outline</v-icon>
+          </v-btn-icon>
+        </v-col>
+      </V-row>
       <v-card
         style="top: 230px !important; right: 10px"
         class="d-flex flex-column justify-center position px-2 py-2"
@@ -69,7 +79,8 @@
         <v-row class="pl-2 pr-2">
           <v-col>
             <v-text-field
-              variant="underlined"
+              rounded
+              variant="outlined"
               label="Search Models"
               density="compact"
               append-inner-icon="mdi-magnify"
@@ -192,6 +203,7 @@ export default {
   },
   data() {
     return {
+      is3DView: false,
       isVisible: false,
       isModel: false,
       modelList: true,
@@ -238,6 +250,15 @@ export default {
           modelname: "Draw",
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
+        {
+          modelname: "Square",
+          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+        },{
+        modelname: "Lcut",
+          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+        },
+
+
       ],
       sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
     };
@@ -272,7 +293,8 @@ export default {
       this.isVisible = false;
     },
     triggerCreate() {
-      this.$refs.threeSceneComponent.create();
+      this.is3DView = !this.is3DView;
+      this.$refs.threeSceneComponent.update();
     },
     toggleVisibility(selectedValue) {
       this.isVisible = true;
@@ -287,13 +309,31 @@ export default {
         this.showCard = this.drawList;
       }
     },
-    selectedCategory(category) {
-      alert(category.modelname);
+
+    async selectedCategory(category) {
+      if(category.modelname=="Draw"){
+        this.isVisible=false
+        setTimeout(()=>{
+          this.$refs.threeSceneComponent.create();
+        }, 500);
+      }
+      else{
+        const response = await axios.get(
+          "http://localhost:3000/api/getData")
+          response.data.forEach((model)=>{
+if(model.name==category.modelname){
+  this.$refs.threeSceneComponent.modelLoad(model);
+
+}
+
+          })
+          
+      }
     },
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-          `http://localhost:3000/getfurnitures`,
+          "http://localhost:3000/getfurnitures",
           {
             responseType: "json",
           }
@@ -314,16 +354,17 @@ export default {
     onDragStart(modelId) {
       const draggedModel = modelId;
       event.dataTransfer.setData("text/plain", draggedModel);
+      this.loadModel(modelId);
+
     },
     onDragOver(event) {
       this.isVisible = false;
       event.preventDefault();
     },
-    onDrop(event) {
-      const droppedText = event.dataTransfer.getData("text/plain");
-      this.loadModel(droppedText);
-      this.isVisible = true;
-    },
+    // onDrop(event) {
+    //   const droppedText = event.dataTransfer.getData("text/plain");
+    //   this.isVisible = true;
+    // },
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },

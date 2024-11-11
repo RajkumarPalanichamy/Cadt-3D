@@ -6,7 +6,6 @@
         BLUE 3D
       </v-card-title>
       <v-spacer></v-spacer>
-
       <v-btn icon>
         <v-icon>mdi-theme-light-dark</v-icon>
       </v-btn>
@@ -15,15 +14,16 @@
         <v-icon>mdi-dots-vertical</v-icon>
       </v-btn>
     </v-toolbar>
-    <v-card class="d-flex" height="95vh">
+    <v-card class="d-flex" height="93vh">
       <v-card class="overflow pl-2 sidebar" width="20%">
         <v-list>
-          <v-list-subheader>Dashboard</v-list-subheader>
+          <v-icon @clik="Back">mdi mdi-arrow-left</v-icon>
+          <v-list-subheader>{{ role }} DASHBOARD</v-list-subheader>
           <v-spacer class="mt-4"></v-spacer>
 
           <v-list-item
             class="hover mt-2"
-            v-for="(item, i) in items"
+            v-for="(item, i) in displaySidebarData"
             :key="i"
             @click="sideBar(item.text)"
           >
@@ -42,13 +42,14 @@
               block
               class="mt-16"
               color="#274E76"
-              >Logout</v-btn
+            >
+              Logout<v-icon class="ml-2">mdi-logout</v-icon></v-btn
             >
           </v-col>
         </v-row>
       </v-card>
-      <v-card width="100%" >
-        <Home v-if="$route.path === '/homeview'" />
+      <v-card width="100%">
+        <!-- <Home v-if="$route.path === '/homeview'" /> -->
         <router-view />
       </v-card>
     </v-card>
@@ -56,21 +57,37 @@
 </template>
 
 <script>
+import Cookies from "js-cookie";
+import VueJwtDecode from "vue-jwt-decode";
 import Home from "./Home.vue";
 export default {
   name: "App",
-  components: {
-    Home,
-  },
   data() {
     return {
-      items: [
+      userData: [
         { text: "Home", icon: "mdi-clock" },
         { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
       ],
+      adminData: [
+        { text: "Home", icon: "mdi-clock-outline" },
+        { text: "My Profile", icon: "mdi-account-outline" },
+        { text: "Glb Models", icon: "mdi-table-furniture" },
+        { text: "Textures", icon: "mdi-texture" },
+        {text:"Employee",icon:"mdi-account-group-outline"}
+      ],
+      displaySidebarData: [],
+      role: "",
     };
+  },
+  async mounted() {
+    this.$router.push("/homeview/home");
+    const data = Cookies.get("jwtToken");
+    const decodedToken = VueJwtDecode.decode(data);
+    this.role = decodedToken.role.toUpperCase();
+    this.displaySidebarData =
+      decodedToken.role == "admin" ? this.adminData : this.userData;
   },
   methods: {
     sideBar(clickedValue) {
@@ -80,6 +97,19 @@ export default {
     logout() {
       this.$router.push("/");
     },
+    Back() {
+      this.$router.go(-1);
+    },
   },
 };
 </script>
+
+<style scoped>
+.hover:hover {
+  color: #274e76;
+}
+.hover:active {
+  color: #274e76;
+  border-left: 2px solid #274e76;
+}
+</style>

@@ -16,7 +16,7 @@
     </v-card>
 
     <v-container class="mt-6 py-0 px-0 mr-0 ml-0" fluid="true">
-      <v-card v-if="showModels" rounded="0" flat>
+      <v-card v-if="showModels" rounded="0" flat  >
         <v-card v-if="models.length > 0">
           <!-- <v-data-table
             width="100%"
@@ -26,10 +26,9 @@
             :items-per-page="5"
           >
           </v-data-table> -->
-          <v-table density="compact">
+          <v-table density="compact" height="80vh">
             <thead>
               <tr>
-                <th class="text-left"></th>
                 <th class="text-left">S.No</th>
                 <th class="text-left">Texture Image</th>
                 <th class="text-left">Texture Name</th>
@@ -40,12 +39,14 @@
             </thead>
             <tbody>
               <tr v-for="(texture, index) in textureData" :key="index">
-                <td>
-                  <v-checkbox density="" color="#274E76"></v-checkbox>
-                </td>
+                
                 <td>{{ index + 1 }}</td>
                 <td>
-                  <v-img src="/images/login.png" width="40px" class="hover"></v-img>
+                  <v-img
+                    src="/images/login.png"
+                    width="40px"
+                    class="hover"
+                  ></v-img>
                 </td>
                 <td>{{ texture.texturename }}</td>
                 <td>{{ texture.type }}</td>
@@ -125,42 +126,84 @@ export default {
       models: [""],
       textureData: [
         {
-          sno: 1,
           textureimage: "Image 1",
           modelname: "Door",
           type: "Bump",
           date: "2024-01-01",
         },
         {
-          sno: 2,
           textureimage: "Image 2",
           texturename: "Window",
           type: "",
           date: "2024-02-01",
         },
         {
-          sno: 3,
           textureimage: "Image 3",
           texturename: "Plant",
           type: "",
           date: "2024-03-01",
         },
         {
-          sno: 4,
           textureimage: "Image 4",
           texturename: "Table",
           type: "",
           date: "2024-04-01",
         },
         {
-          sno: 5,
           textureimage: "Image 5",
           texturename: "All",
           type: "",
           date: "2024-05-01",
         },
         {
-          sno: 6,
+          textureimage: "Image 6",
+          texturename: "Cupboard",
+          type: "",
+          date: "2024-06-01",
+        },
+        {
+          textureimage: "Image 3",
+          texturename: "Plant",
+          type: "",
+          date: "2024-03-01",
+        },
+        {
+          textureimage: "Image 4",
+          texturename: "Table",
+          type: "",
+          date: "2024-04-01",
+        },
+        {
+          textureimage: "Image 5",
+          texturename: "All",
+          type: "",
+          date: "2024-05-01",
+        },
+        {
+          textureimage: "Image 6",
+          texturename: "Cupboard",
+          type: "",
+          date: "2024-06-01",
+        },
+        {
+          textureimage: "Image 3",
+          texturename: "Plant",
+          type: "",
+          date: "2024-03-01",
+        },
+        {
+          textureimage: "Image 4",
+          texturename: "Table",
+          type: "",
+          date: "2024-04-01",
+        },
+        {
+          textureimage: "Image 5",
+          texturename: "All",
+          type: "",
+          date: "2024-05-01",
+        },
+        {
           textureimage: "Image 6",
           texturename: "Cupboard",
           type: "",
@@ -194,8 +237,14 @@ export default {
   color: #274e76;
   border-bottom: 2px solid #274e76;
 }
-.hover:hover{
-    transition: all ease-in .5s;
-    transform: scale(4);
+/* .overflow {
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(206, 206, 206) white;
+} */
+.hover:hover {
+  /* transition: all ease-in .5s; */
+  transform: scale(5);
+  height: 200px;
 }
 </style>
