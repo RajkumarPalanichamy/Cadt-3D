@@ -9,7 +9,7 @@ import 'vuetify/styles';
 import '@mdi/font/css/materialdesignicons.css'
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
-import store from './store';
+import store from './Store';
 const vuetify = createVuetify({
     components,
     directives,

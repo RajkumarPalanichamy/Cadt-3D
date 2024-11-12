@@ -4,7 +4,7 @@
 
 <script>
 import ThreeScene from "../Three/three.js";
-
+// import Createproject from "@/views/Createproject.vue";
 export default {
   name: "ThreeSceneComponent",
   data() {
@@ -56,6 +56,14 @@ this.threeScene.predefined(model.cordinates);
     },
     redoEvent() {
       console.log(this.undoModels);
+    },
+    saveFile(){
+      this.threeScene.saveFile();
+    },
+    backHome(){
+      // this.$parent.methods.return()
+      console.log(this);
+      this.$emit('backHome');   
     },
   },
 };
