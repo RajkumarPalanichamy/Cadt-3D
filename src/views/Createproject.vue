@@ -35,13 +35,13 @@
       @dragover.prevent="onDragOver"
       style="cursor: pointer"
     >
-      <ThreeScene ref="threeSceneComponent" />
+      <ThreeScene ref="threeSceneComponent"  />
       <V-row   
        class="mr-1"
       style="position:absolute;top: 30px !important; right: 10px;background-color:#274E76 ;border-radius: 50%;">
         <v-col>
           <v-btn-icon
-         
+         @click="saveFile()"
           >
             <v-icon size="1.7em" color="white">mdi-content-save-outline</v-icon>
           </v-btn-icon>
@@ -195,7 +195,7 @@
 <script>
 import ThreeScene from "@/components/threeContainer.vue";
 import axios from "axios";
-
+import { mapState } from 'vuex';
 export default {
   name: "createProject",
   components: {
@@ -263,6 +263,26 @@ export default {
       sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
     };
   },
+  watch: {
+    triggerMethod(newValue) {
+      console.log('newValue',newValue);
+
+      if (newValue) {
+        console.log('newValue',newValue);
+        
+        this.handleBackHome();
+        this.$store.commit('setTriggerMethod', false); 
+      }
+    }
+  },
+  computed: {
+    ...mapState(['triggerMethod']),
+
+    totalmodel() {
+      return this.availabelModels.length;
+    },
+  },
+
   methods: {
     setView(view) {
       this.isModel = view === "models" ? true : false;
@@ -319,7 +339,7 @@ export default {
       }
       else{
         const response = await axios.get(
-          "http://localhost:3000/api/getData")
+          "http://localhost:3000/defaultscenevalues")
           response.data.forEach((model)=>{
 if(model.name==category.modelname){
   this.$refs.threeSceneComponent.modelLoad(model);
@@ -338,12 +358,14 @@ if(model.name==category.modelname){
             responseType: "json",
           }
         );
+
         const models = response.data;
         let modelLink;
         models.forEach((eachModel) => {
           if (eachModel._id == modelId) {
             modelLink =
               eachModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
+              
           }
         });
         this.$refs.threeSceneComponent.gltfLoader(modelLink);
@@ -368,11 +390,16 @@ if(model.name==category.modelname){
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },
-  },
-  computed: {
-    totalmodel() {
-      return this.availabelModels.length;
+    saveFile(){
+      this.$refs.threeSceneComponent.saveFile();
+
     },
+    handleBackHome(){
+      console.log('returing home');
+      console.log('triggerMethod2',this.triggerMethod);
+
+      this.$router.push('/homeview')
+    }
   },
 };
 </script>
