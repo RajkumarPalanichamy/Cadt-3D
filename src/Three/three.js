@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import axios from "axios";
 
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
@@ -11,7 +10,6 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-// import threeContainer from "@/components/threeContainer.vue";
 import store from "../Store/index.js";
 
 export default class ThreeScene {
@@ -92,8 +90,9 @@ this.modelLoad=[]
 
 
     this.scene.add(sky);
+    this.renderer.domElement.addEventListener("mousemove", this.selectingProperty.bind(this)); 
+
     // console.log('scene',this.scene);
-    
    this.scene.traverse((child)=>{
     if(child.type=='Mesh' ){
       console.log('mesh congoonee');
@@ -286,6 +285,30 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.plane.position.y = -0.1;
     this.scene.add(this.plane);
   }
+  selectingProperty(e){
+
+const rect = this.renderer.domElement.getBoundingClientRect();
+this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+this.raycaster.setFromCamera(this.mouse, this.camera);
+this.intersects = this.raycaster.intersectObjects(this.walls);
+
+if (this.intersects.length > 0) {
+  if (this.INTERSECTED) {
+    this.INTERSECTED.material[2]= this.INTERSECTED.material[2]
+  }
+  this.INTERSECTED = this.intersects[0].object;
+  this.INTERSECTED.material[2]=new THREE.MeshBasicMaterial({color:'green'})
+}else {
+  if (this.INTERSECTED) {
+    this.INTERSECTED.material[2]=new THREE.MeshLambertMaterial({ color: 0x3b3b3b })
+  }
+}
+}
+
+
+  
+
   raycastDefined(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
