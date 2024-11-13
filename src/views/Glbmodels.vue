@@ -15,10 +15,21 @@
       </v-card-title>
     </v-card>
 
-    <v-container class="mt-6">
+    <v-container class="px-0 py-0" fluid="true">
       <v-card v-if="showModels" rounded="0" flat>
-        <v-card v-if="models.length > 0">
-          <v-card-text class="text-center">Models Available</v-card-text>
+        <v-card v-if="modelData.length > 0" flat>
+          <v-data-table-virtual
+            :items="modelData"
+            density="compact"
+            item-value="name"
+          >
+            <template v-slot:item.SNO="{ index }">
+              {{ index + 1 }}
+            </template>
+            <template v-slot:item.Modelimage="{ item }">
+              <v-img src="/images/login.png" width="40px" class="hover"></v-img>
+            </template>
+          </v-data-table-virtual>
         </v-card>
         <v-card
           v-else
@@ -48,7 +59,10 @@
               variant="outlined"
               class="mb-6"
             ></v-text-field>
-            <v-btn color="#274E76" class="mr-3">Upload</v-btn>
+            <v-btn 
+            color="#274E76"
+            icon="mdi-pencil-outline" 
+            class="mr-3">Upload</v-btn>
             <v-btn @click="showModels = true">Back</v-btn>
           </v-form>
         </v-card>
@@ -85,7 +99,36 @@ export default {
   data() {
     return {
       showModels: true,
-      models: [],
+      modelData: [
+        {
+          SNO: true,
+          "Modelimage": true,
+          "Model Name": "Door",
+          type: "Bump",
+          date: "2024-01-01",
+        },
+        {
+          SNO: true,
+          "Model Image": true,
+          "Model Name": "Door",
+          type: "Bump",
+          date: "2024-01-01",
+        },
+        {
+          SNO: true,
+          "Model Image": true,
+          "Model Name": "Door",
+          type: "Bump",
+          date: "2024-01-01",
+        },
+        {
+          SNO: true,
+          "Model Image": true,
+          "Model Name": "Door",
+          type: "Bump",
+          date: "2024-01-01",
+        },
+      ],
     };
   },
   methods: {
@@ -102,7 +145,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .d-none {
   display: none;
 }
@@ -112,5 +155,10 @@ export default {
 .active {
   color: #274e76;
   border-bottom: 2px solid #274e76;
+}
+.hover:hover {
+  /* transition: all ease-in .5s; */
+  transform: scale(5);
+  height: 200px;
 }
 </style>
