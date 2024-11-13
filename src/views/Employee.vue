@@ -228,6 +228,8 @@ export default {
     deleteAlert(id) {
       this.isDelete = true;
       this.userId = id;
+      console.log("sjdn");
+      
     },
     async deleteUser() {
       try {
