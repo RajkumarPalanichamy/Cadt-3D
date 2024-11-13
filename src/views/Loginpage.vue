@@ -96,7 +96,7 @@ export default {
 
       if (this.username && this.password) {
         try {
-          const response = await axios.post("http://localhost:3000/login", {
+          const response = await axios.post("https://ebf4-14-194-187-129.ngrok-free.app/login", {
             username: this.username,
             password: this.password,
           });

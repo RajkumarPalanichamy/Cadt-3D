@@ -7,14 +7,15 @@ const store = createStore({
   mutations: {
     async setTriggerMethod(state, payload) {
       // state.triggerMethod = payload;
+      console.log('payload',payload);
+      
       try {
         const response = await axios.post('http://localhost:3000/dynamicscene', payload);
-        console.log(response);
+        console.log('fromstore',response);
       } catch (error) {
         console.log(error);
       }
       state.triggerMethod = true;
-     console.log('entered');
      
     } 
 
