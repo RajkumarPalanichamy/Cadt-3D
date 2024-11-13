@@ -290,7 +290,7 @@ export default {
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
-        const response = await axios.get("http://localhost:3000/getfurnitures");
+        const response = await axios.get("https://51a3-14-194-187-129.ngrok-free.app/getfurnitures");
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
             this.availabelModels.push(eachModel);
@@ -339,7 +339,7 @@ export default {
       }
       else{
         const response = await axios.get(
-          "http://localhost:3000/defaultscenevalues")
+          "https://51a3-14-194-187-129.ngrok-free.app/defaultscenevalues")
           response.data.forEach((model)=>{
 if(model.name==category.modelname){
   this.$refs.threeSceneComponent.modelLoad(model);
@@ -353,7 +353,7 @@ if(model.name==category.modelname){
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-          "http://localhost:3000/getfurnitures",
+          "https://51a3-14-194-187-129.ngrok-free.app/getfurnitures",
           {
             responseType: "json",
           }

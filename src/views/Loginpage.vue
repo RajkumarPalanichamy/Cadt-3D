@@ -96,7 +96,7 @@ export default {
 
       if (this.username && this.password) {
         try {
-          const response = await axios.post("http://localhost:3000/login", {
+          const response = await axios.post("https://51a3-14-194-187-129.ngrok-free.app/login", {
             username: this.username,
             password: this.password,
           });
@@ -126,7 +126,7 @@ export default {
     async fetchUserFurnitures(token) {
       try {
         const response = await axios.get(
-          "http://localhost:3000/getfurnitures",
+          "https://51a3-14-194-187-129.ngrok-free.app/getfurnitures",
           {
             headers: { Authorization: `Bearer ${token}` },
           }

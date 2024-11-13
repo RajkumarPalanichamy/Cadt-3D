@@ -8,7 +8,9 @@ const store = createStore({
     async setTriggerMethod(state, payload) {
       // state.triggerMethod = payload;
       try {
-        const response = await axios.post('http://localhost:3000/dynamicscene', payload);
+        const response = await axios.post("https://slow-camels-peel.loca.lt/dynamicscene",
+          payload
+        );
         console.log(response);
       } catch (error) {
         console.log(error);
