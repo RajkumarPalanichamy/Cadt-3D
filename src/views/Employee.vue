@@ -162,6 +162,7 @@
 </template>
 <script>
 import axios from "axios";
+import { mapState } from "vuex";
 export default {
   name: "employeePage",
   data() {
@@ -183,10 +184,12 @@ export default {
       this.userDetails = [];
       try {
         this.isLoading = true;
-        const user = await axios.get("http://localhost:3000/clients");
+        const user = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/clients`
+        );
         if (user.status == "200") {
           this.isLoading = false;
-          user.data.forEach((eachUser, index) => {
+          user.data.forEach((eachUser) => {
             if (eachUser.role == "user") {
               const displayObject = {
                 SNO: true,
@@ -211,9 +214,8 @@ export default {
       };
       try {
         this.isDialog = false;
-
         const user = await axios.post(
-          "http://localhost:3000/register",
+          `${import.meta.env.VITE_API_LINK}/register`,
           newUserDetails
         );
         if (user.status == "200") {
@@ -230,8 +232,9 @@ export default {
     async deleteUser() {
       try {
         const response = await axios.delete(
-          `http://localhost:3000/clients/${this.userId}`
+          `${import.meta.env.VITE_API_LINK}/clients/${this.userId}`
         );
+
         if (response.status == "200") {
           this.getUserDetails();
           this.isDelete = false;

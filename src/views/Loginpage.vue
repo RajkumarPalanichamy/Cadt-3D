@@ -84,19 +84,9 @@ export default {
   methods: {
     async handleLogin() {
       this.isLoading = true;
-      // this.errors.username = null;
-      // this.errors.password = null;
-
-      // if (!this.username) {
-      //   this.errors.username = "Username is required.";
-      // }
-      // if (!this.password) {
-      //   this.errors.password = "Password is required.";
-      // }
-
       if (this.username && this.password) {
         try {
-          const response = await axios.post("http://localhost:3000/login",{
+          const response = await axios.post(`${import.meta.env.VITE_API_LINK}/login`,{
               username: this.username,
               password: this.password,}
           );
@@ -125,7 +115,7 @@ export default {
     },
     async fetchUserFurnitures(token) {
       try {
-        const response = await axios.get("http://localhost:3000/furnitures", {
+        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/furnitures`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Furniture data:", response.data);
