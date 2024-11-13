@@ -36,13 +36,18 @@
       style="cursor: pointer"
     >
       <ThreeScene ref="threeSceneComponent" />
-      <V-row   
-       class="mr-1"
-      style="position:absolute;top: 30px !important; right: 10px;background-color:#274E76 ;border-radius: 50%;">
+      <V-row
+        class="mr-1"
+        style="
+          position: absolute;
+          top: 30px !important;
+          right: 10px;
+          background-color: #274e76;
+          border-radius: 50%;
+        "
+      >
         <v-col>
-          <v-btn-icon
-         
-          >
+          <v-btn-icon>
             <v-icon size="1.7em" color="white">mdi-content-save-outline</v-icon>
           </v-btn-icon>
         </v-col>
@@ -253,12 +258,11 @@ export default {
         {
           modelname: "Square",
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
-        },{
-        modelname: "Lcut",
+        },
+        {
+          modelname: "Lcut",
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
-
-
       ],
       sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
     };
@@ -270,7 +274,9 @@ export default {
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
-        const response = await axios.get("http://localhost:3000/getfurnitures");
+        const response = await axios.get(
+          "http://localhost:3000/getfurnitures"
+        );
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
             this.availabelModels.push(eachModel);
@@ -311,23 +317,20 @@ export default {
     },
 
     async selectedCategory(category) {
-      if(category.modelname=="Draw"){
-        this.isVisible=false
-        setTimeout(()=>{
+      if (category.modelname == "Draw") {
+        this.isVisible = false;
+        setTimeout(() => {
           this.$refs.threeSceneComponent.create();
         }, 500);
-      }
-      else{
+      } else {
         const response = await axios.get(
-          "http://localhost:3000/api/getData")
-          response.data.forEach((model)=>{
-if(model.name==category.modelname){
-  this.$refs.threeSceneComponent.modelLoad(model);
-
-}
-
-          })
-          
+          "http://localhost:3000/api/getData"
+        );
+        response.data.forEach((model) => {
+          if (model.name == category.modelname) {
+            this.$refs.threeSceneComponent.modelLoad(model);
+          }
+        });
       }
     },
     async loadModel(modelId) {
@@ -355,7 +358,6 @@ if(model.name==category.modelname){
       const draggedModel = modelId;
       event.dataTransfer.setData("text/plain", draggedModel);
       this.loadModel(modelId);
-
     },
     onDragOver(event) {
       this.isVisible = false;
