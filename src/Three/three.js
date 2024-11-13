@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
@@ -9,6 +10,7 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import store from "../Store/index.js";
 
 export default class ThreeScene {
   constructor(container) {
@@ -37,6 +39,7 @@ export default class ThreeScene {
     this.gltf=[]
 this.dragObjects=[]
 this.mainArray=[]
+this.modelLoad=[]
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     // this.mouseover = this.mouseover.bind(this);
@@ -85,9 +88,19 @@ this.mainArray=[]
     sky.material.uniforms.rayleigh.value = 1;
     sky.material.uniforms.turbidity.value = 0;
 
-    console.log("sky.material.uniforms", sky.material.uniforms);
 
     this.scene.add(sky);
+    this.renderer.domElement.addEventListener("mousemove", this.selectingProperty.bind(this)); 
+
+    // console.log('scene',this.scene);
+   this.scene.traverse((child)=>{
+    if(child.type=='Mesh' ){
+      console.log('mesh congoonee');
+      
+    }
+    
+   })
+    
 
     this.animate();
   }
@@ -112,18 +125,14 @@ this.mainArray=[]
   }
 
   addListeners() {
-    if (!this.listenersActive) {
-      this.renderer.domElement.addEventListener(
-        "mousemove",
-        this.onPointerMove
-      );
+    if (!this.listenersActive) 
+      {this.renderer.domElement.addEventListener("mousemove", this.onPointerMove  );
       this.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
       this.listenersActive = true;
     }
   }
 
   removeListeners() {
-    // this.renderer.domElement.addEventListener("mouseover", this.mouseover);
     if (this.listenersActive) {
       this.renderer.domElement.removeEventListener(
         "mousemove",
@@ -193,16 +202,6 @@ this.mainArray=[]
       );
     }
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    // const dragControls = new DragControls(this.gltf, this.camera, this.renderer.domElement);
-
-    // dragControls.addEventListener('dragstart', (event) => {
-    //   this.controls.enabled = false;                 // Disable orbit controls
-    // });
-    
-    // dragControls.addEventListener('dragend', (event) => {
-    //   this.controls.enabled = true;  
-    //             // Re-enable orbit controls
-    // });
 
     if (this.camera.isPerspectiveCamera) {
       this.controls.minDistance = 0.2;
@@ -225,7 +224,6 @@ this.mainArray=[]
     this.camera.lookAt(0, 0, 0);
   }
   predefined(model) {
-    console.log('model',model);
     
     this.controlPoints = model
     this.finalizePolygon(this.controlPoints);
@@ -287,6 +285,30 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.plane.position.y = -0.1;
     this.scene.add(this.plane);
   }
+  selectingProperty(e){
+
+const rect = this.renderer.domElement.getBoundingClientRect();
+this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+this.raycaster.setFromCamera(this.mouse, this.camera);
+this.intersects = this.raycaster.intersectObjects(this.walls);
+
+if (this.intersects.length > 0) {
+  if (this.INTERSECTED) {
+    this.INTERSECTED.material[2]= this.INTERSECTED.material[2]
+  }
+  this.INTERSECTED = this.intersects[0].object;
+  this.INTERSECTED.material[2]=new THREE.MeshBasicMaterial({color:'green'})
+}else {
+  if (this.INTERSECTED) {
+    this.INTERSECTED.material[2]=new THREE.MeshLambertMaterial({ color: 0x3b3b3b })
+  }
+}
+}
+
+
+  
+
   raycastDefined(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -579,24 +601,27 @@ console.log('this.mainArray',this.mainArray);
 
   }
   gltfLoader(modelLink) {
+    console.log('modelLink',modelLink);
+    
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
-      console.log(gltf);
+      console.log('gg',gltf.scene);
       
       this.gltf.push(gltf.scene);
+      gltf.scene.position.x=5
+      const saveModel={gltfLink:modelLink,gltfScene:gltf.scene.position}
+      this.modelLoad.push(saveModel)
+      
       this.scene.add(gltf.scene);
     });
-    this.dragSelect()
 
-    // const dragControls = new DragControls(this.gltf, this.camera, this.renderer.domElement);
+    }
+   async saveFile(){
+    const saveModel={coordinates:this.mainArray,gltfObjects:this.modelLoad}
+    store.commit('setTriggerMethod', saveModel);          
 
-    // dragControls.addEventListener('dragstart', (event) => {
-    //   this.controls.enabled = false;                 // Disable orbit controls
-    // });
-    
-    // dragControls.addEventListener('dragend', (event) => {
-    //   this.controls.enabled = true;                  // Re-enable orbit controls
-    // });
+          this.mainArray=[]
+          this.modelLoad=[]
     }
   animate() {
 
