@@ -10,8 +10,10 @@ const store = createStore({
       console.log('payload',payload);
       
       try {
+
         const response = await axios.post(
           `${import.meta.env.VITE_API_LINK}/dynamicscene`,
+
           payload
         );
         console.log(response);

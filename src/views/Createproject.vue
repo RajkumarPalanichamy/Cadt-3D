@@ -323,7 +323,9 @@ export default {
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
+
         const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getfurnitures`);
+
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
             this.availabelModels.push(eachModel);
@@ -371,6 +373,7 @@ export default {
         }, 500);
       } else {
         const response = await axios.get(
+
           `${import.meta.env.VITE_API_LINK}/defaultscenevalues`
         );
         response.data.forEach((model) => {
@@ -378,12 +381,15 @@ export default {
             this.$refs.threeSceneComponent.modelLoad(model);
           }
         });
+
       }
     },
     async loadModel(modelId) {
       try {
         const response = await axios.get(
+
           `${import.meta.env.VITE_API_LINK}/getfurnitures`,
+
           {
             responseType: "json",
           }
