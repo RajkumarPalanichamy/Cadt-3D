@@ -2,7 +2,7 @@
   <v-container fluid class="py-0 px-0">
     <v-toolbar density="compact" color="#274e76" flat>
       <v-card-title>
-        <v-icon>mdi mdi-cube</v-icon>
+        <v-icon>mdi mdi-cube-outline</v-icon>
         BLUE 3D
       </v-card-title>
       <v-btn icon @click="backToHome">
@@ -35,14 +35,43 @@
       @dragover.prevent="onDragOver"
       style="cursor: pointer"
     >
-      <ThreeScene ref="threeSceneComponent"  />
-      <V-row   
-       class="mr-1"
-      style="position:absolute;top: 30px !important; right: 10px;background-color:#274E76 ;border-radius: 50%;">
+      <ThreeScene ref="threeSceneComponent" />
+      <!-- Save Btn Dialog -->
+      <v-dialog v-model="isSave" activator="#activator-target" max-width="450">
+        <v-card
+          class="px-4"
+          prepend-icon="mdi-bullseye-arrow"
+          title="Enter Your Project Name ?"
+        >
+          <v-text-field
+            class="mt-4 mb-4"
+            v-model="projectName"
+            variant="outlined"
+            hint="Eg : Mininum 6 Characters"
+            label="Project Name"
+             :rules="[rules.required,rules.length]"
+          ></v-text-field>
+          <template v-slot:actions>
+            <v-spacer></v-spacer>
+            <v-btn @click="saveFile()" color="#274E76"> Save Project  </v-btn>
+            <v-btn @click="isSave = false" color="red"> Don't Save </v-btn>
+          </template>
+        </v-card>
+      </v-dialog>
+
+      <V-row
+        class="mr-1"
+        @click="isSave = true"
+        style="
+          position: absolute;
+          top: 30px !important;
+          right: 10px;
+          background-color: #274e76;
+          border-radius: 50%;
+        "
+      >
         <v-col>
-          <v-btn-icon
-         @click="saveFile()"
-          >
+          <v-btn-icon>
             <v-icon size="1.7em" color="white">mdi-content-save-outline</v-icon>
           </v-btn-icon>
         </v-col>
@@ -195,7 +224,7 @@
 <script>
 import ThreeScene from "@/components/threeContainer.vue";
 import axios from "axios";
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 export default {
   name: "createProject",
   components: {
@@ -203,12 +232,17 @@ export default {
   },
   data() {
     return {
+      rules: {
+        required: value => !!value || 'Field is required',
+        length:value => value.length>6 ||"length greater than 6"
+      },
       is3DView: false,
       isVisible: false,
       isModel: false,
       modelList: true,
       isModelCard: false,
       categories: false,
+      isSave: false,
       showCard: [],
       clickModel: false,
       availabelModels: [],
@@ -253,30 +287,29 @@ export default {
         {
           modelname: "Square",
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
-        },{
-        modelname: "Lcut",
+        },
+        {
+          modelname: "Lcut",
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
-
-
       ],
       sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
     };
   },
   watch: {
     triggerMethod(newValue) {
-      console.log('newValue',newValue);
+      console.log("newValue", newValue);
 
       if (newValue) {
-        console.log('newValue',newValue);
-        
+        console.log("newValue", newValue);
+
         this.handleBackHome();
-        this.$store.commit('setTriggerMethod', false); 
+        this.$store.commit("setTriggerMethod", false);
       }
-    }
+    },
   },
   computed: {
-    ...mapState(['triggerMethod']),
+    ...mapState(["triggerMethod"]),
 
     totalmodel() {
       return this.availabelModels.length;
@@ -290,7 +323,9 @@ export default {
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
-        const response = await axios.get("https://51a3-14-194-187-129.ngrok-free.app/getfurnitures");
+
+        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getfurnitures`);
+
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
             this.availabelModels.push(eachModel);
@@ -331,29 +366,30 @@ export default {
     },
 
     async selectedCategory(category) {
-      if(category.modelname=="Draw"){
-        this.isVisible=false
-        setTimeout(()=>{
+      if (category.modelname == "Draw") {
+        this.isVisible = false;
+        setTimeout(() => {
           this.$refs.threeSceneComponent.create();
         }, 500);
-      }
-      else{
+      } else {
         const response = await axios.get(
-          "https://51a3-14-194-187-129.ngrok-free.app/defaultscenevalues")
-          response.data.forEach((model)=>{
-if(model.name==category.modelname){
-  this.$refs.threeSceneComponent.modelLoad(model);
 
-}
+          `${import.meta.env.VITE_API_LINK}/defaultscenevalues`
+        );
+        response.data.forEach((model) => {
+          if (model.name == category.modelname) {
+            this.$refs.threeSceneComponent.modelLoad(model);
+          }
+        });
 
-          })
-          
       }
     },
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-          "https://51a3-14-194-187-129.ngrok-free.app/getfurnitures",
+
+          `${import.meta.env.VITE_API_LINK}/getfurnitures`,
+
           {
             responseType: "json",
           }
@@ -365,7 +401,6 @@ if(model.name==category.modelname){
           if (eachModel._id == modelId) {
             modelLink =
               eachModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
-              
           }
         });
         this.$refs.threeSceneComponent.gltfLoader(modelLink);
@@ -377,7 +412,6 @@ if(model.name==category.modelname){
       const draggedModel = modelId;
       event.dataTransfer.setData("text/plain", draggedModel);
       this.loadModel(modelId);
-
     },
     onDragOver(event) {
       this.isVisible = false;
@@ -390,16 +424,16 @@ if(model.name==category.modelname){
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },
-    saveFile(){
+    saveFile() {
       this.$refs.threeSceneComponent.saveFile();
-
     },
-    handleBackHome(){
-      console.log('returing home');
-      console.log('triggerMethod2',this.triggerMethod);
 
-      this.$router.push('/homeview')
-    }
+    handleBackHome() {
+      console.log("returing home");
+      console.log("triggerMethod2", this.triggerMethod);
+
+      this.$router.push("/homeview");
+    },
   },
 };
 </script>

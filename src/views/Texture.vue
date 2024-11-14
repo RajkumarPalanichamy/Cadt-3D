@@ -16,47 +16,25 @@
     </v-card>
 
     <v-container class="mt-6 py-0 px-0 mr-0 ml-0" fluid="true">
-      <v-card v-if="showModels" rounded="0" flat  >
-        <v-card v-if="models.length > 0">
-          <!-- <v-data-table
-            width="100%"
-            density="compact"
-            :headers="headers"
+      <v-card v-if="showModels" rounded="0" flat>
+        <v-card v-if="textureData.length > 0">
+          <v-data-table-virtual
             :items="textureData"
-            :items-per-page="5"
+            density="compact"
+            item-value="name"
           >
-          </v-data-table> -->
-          <v-table density="compact" height="80vh">
-            <thead>
-              <tr>
-                <th class="text-left">S.No</th>
-                <th class="text-left">Texture Image</th>
-                <th class="text-left">Texture Name</th>
-                <th class="text-left">Type</th>
-                <th class="text-left">Date</th>
-                <th class="text-left">View</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(texture, index) in textureData" :key="index">
-                
-                <td>{{ index + 1 }}</td>
-                <td>
-                  <v-img
-                    src="/images/login.png"
-                    width="40px"
-                    class="hover"
-                  ></v-img>
-                </td>
-                <td>{{ texture.texturename }}</td>
-                <td>{{ texture.type }}</td>
-                <td>{{ texture.date }}</td>
-                <td>
-                  <v-icon color="grey">mdi-eye-outline</v-icon>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+            <template v-slot:item.SNO="{ index }">
+              {{ index + 1 }}
+            </template>
+            <template v-slot:item.Image="{ item }">
+              <v-img src="/images/login.png" width="40px" class="hover"></v-img>
+            </template>
+            <template v-slot:item.view="{ item }">
+              <v-icon color="grey" @click="viewTexture(item)"
+                >mdi-eye-outline</v-icon
+              >
+            </template>
+          </v-data-table-virtual>
         </v-card>
         <v-card
           v-else
@@ -75,6 +53,7 @@
           <v-form>
             <v-card-title>Upload Model</v-card-title>
             <v-text-field
+            :focused="isFocused"
               label="Enter Model Categories"
               variant="outlined"
               hint="eg:Living Room,Bed Room..."
@@ -114,6 +93,59 @@
         </v-card>
       </v-card>
     </v-container>
+    <v-dialog v-model="isView" transition="dialog-top-transition" fullscreen>
+      <v-card class="px-2 py-2">
+        <v-icon @click="isView = false">mdi-close</v-icon>
+        <v-row class="mt-2 px-0 py-0">
+          <v-col cols="3">
+            <v-hover v-slot="{ isHovering, props }">
+              <v-img>
+                <v-img src="/images/login.png" width="300px"></v-img>
+              </v-img>
+            </v-hover>
+          </v-col>
+          <v-col cols="8">
+            <v-col>
+              <v-text-field
+                density="compact"
+                variant="underlined"
+                label="Texture Name"
+                v-model="textureName"
+                :disabled="disableInputs"
+              ></v-text-field>
+
+              <v-text-field
+                density="compact"
+                label="Texture Type"
+                variant="underlined"
+                v-model="textureType"
+                :disabled="disableInputs"
+              ></v-text-field>
+            </v-col>
+            <v-col class="d-flex" style="width: 400px; height: 70px">
+              <v-col style="background-color: green" class="mr-4"></v-col>
+              <v-col style="background-color: red" class="mr-4"></v-col>
+              <v-col style="background-color: yellow" class="mr-4"></v-col>
+              <v-col style="background-color: blue" class="mr-4"></v-col>
+              <v-col style="background-color: grey" class="mr-4"></v-col>
+              <v-col style="background-color: orange" class="mr-4"></v-col>
+            </v-col>
+            <v-col cols="4" class="mt-2 d-flex">
+              <v-btn 
+              @click="edit"
+              :disabled="!disableInputs"
+              block>Edit</v-btn>
+              <v-btn 
+              class="ml-3"
+              @click="cancel()"
+              :disabled="disableInputs"
+
+              block>Cancel</v-btn>
+            </v-col>
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -123,96 +155,58 @@ export default {
   data() {
     return {
       showModels: true,
-      models: [""],
+      isView: false,
+      textureName: "",
+      textureType: "",
+      disableInputs: true,
+      isFocused:true,
       textureData: [
         {
-          textureimage: "Image 1",
-          modelname: "Door",
+          SNO: true,
+          Image: true,
+          Name: "Door",
           type: "Bump",
           date: "2024-01-01",
+          view: true,
         },
         {
-          textureimage: "Image 2",
-          texturename: "Window",
-          type: "",
-          date: "2024-02-01",
+          SNO: true,
+          Image: true,
+          Name: "Door",
+          type: "Bump",
+          date: "2024-01-01",
+          view: true,
         },
         {
-          textureimage: "Image 3",
-          texturename: "Plant",
-          type: "",
-          date: "2024-03-01",
+          SNO: true,
+          Image: true,
+          Name: "Door",
+          type: "Bump",
+          date: "2024-01-01",
+          view: true,
         },
         {
-          textureimage: "Image 4",
-          texturename: "Table",
-          type: "",
-          date: "2024-04-01",
-        },
-        {
-          textureimage: "Image 5",
-          texturename: "All",
-          type: "",
-          date: "2024-05-01",
-        },
-        {
-          textureimage: "Image 6",
-          texturename: "Cupboard",
-          type: "",
-          date: "2024-06-01",
-        },
-        {
-          textureimage: "Image 3",
-          texturename: "Plant",
-          type: "",
-          date: "2024-03-01",
-        },
-        {
-          textureimage: "Image 4",
-          texturename: "Table",
-          type: "",
-          date: "2024-04-01",
-        },
-        {
-          textureimage: "Image 5",
-          texturename: "All",
-          type: "",
-          date: "2024-05-01",
-        },
-        {
-          textureimage: "Image 6",
-          texturename: "Cupboard",
-          type: "",
-          date: "2024-06-01",
-        },
-        {
-          textureimage: "Image 3",
-          texturename: "Plant",
-          type: "",
-          date: "2024-03-01",
-        },
-        {
-          textureimage: "Image 4",
-          texturename: "Table",
-          type: "",
-          date: "2024-04-01",
-        },
-        {
-          textureimage: "Image 5",
-          texturename: "All",
-          type: "",
-          date: "2024-05-01",
-        },
-        {
-          textureimage: "Image 6",
-          texturename: "Cupboard",
-          type: "",
-          date: "2024-06-01",
+          SNO: true,
+          Image: true,
+          Name: "Door",
+          type: "Bump",
+          date: "2024-01-01",
+          view: true,
         },
       ],
     };
   },
   methods: {
+    edit(){
+          this.disableInputs = false
+    },
+    cancel(){
+      this.disableInputs = true
+    },
+    viewTexture(viewFile) {
+      this.isView = true;
+      (this.textureName = viewFile.Name), (this.textureType = viewFile.type);
+    },
     triggerFileInput() {
       this.$refs.fileInput.click();
     },
@@ -237,11 +231,6 @@ export default {
   color: #274e76;
   border-bottom: 2px solid #274e76;
 }
-/* .overflow {
-  overflow-y: scroll;
-  scrollbar-width: thin;
-  scrollbar-color: rgb(206, 206, 206) white;
-} */
 .hover:hover {
   /* transition: all ease-in .5s; */
   transform: scale(5);

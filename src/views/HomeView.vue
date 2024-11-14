@@ -49,7 +49,6 @@
         </v-row>
       </v-card>
       <v-card width="100%">
-        <!-- <Home v-if="$route.path === '/homeview'" /> -->
         <router-view />
       </v-card>
     </v-card>
@@ -59,7 +58,6 @@
 <script>
 import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
-import Home from "./Home.vue";
 export default {
   name: "App",
   data() {
@@ -75,7 +73,7 @@ export default {
         { text: "My Profile", icon: "mdi-account-outline" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
-        {text:"Employee",icon:"mdi-account-group-outline"}
+        { text: "Employee", icon: "mdi-account-group-outline" },
       ],
       displaySidebarData: [],
       role: "",

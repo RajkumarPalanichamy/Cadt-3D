@@ -2,13 +2,18 @@ import { createStore } from "vuex";
 import axios from "axios";
 const store = createStore({
   state: {
-      triggerMethod:false
-    },
+    triggerMethod: false,
+  },
   mutations: {
     async setTriggerMethod(state, payload) {
       // state.triggerMethod = payload;
+      console.log('payload',payload);
+      
       try {
-        const response = await axios.post("https://slow-camels-peel.loca.lt/dynamicscene",
+
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_LINK}/dynamicscene`,
+
           payload
         );
         console.log(response);
@@ -16,7 +21,6 @@ const store = createStore({
         console.log(error);
       }
       state.triggerMethod = true;
-     console.log('entered');
      
     } 
 

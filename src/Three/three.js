@@ -24,7 +24,6 @@ export default class ThreeScene {
     this.mouse = new THREE.Vector2();
     this.intersects = null;
     this.controlPoints = [];
-    this.controlPointss = [];
     this.plane = null;
     this.controls = null;
     this.spheres = [];
@@ -36,14 +35,16 @@ export default class ThreeScene {
     this.Dragcontrols = null;
     this.isDrawing = false;
     this.gltf = [];
+
     this.dragObjects = [];
     this.mainArray = [];
     this.modelLoad = [];
     this.globalArray = [];
     this.group;
+
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
-    // this.mouseover = this.mouseover.bind(this);
+ 
    
     
 
@@ -91,10 +92,18 @@ export default class ThreeScene {
     sky.material.uniforms.turbidity.value = 0;
 
     this.scene.add(sky);
+
+      this.renderer.domElement.addEventListener(
+        "dblclick",
+        this.meshSelect.bind(this)
+      );
+  
+
     this.renderer.domElement.addEventListener(
       "mousemove",
       this.selectingProperty.bind(this)
     );
+
 
     // console.log('scene',this.scene);
     this.scene.traverse((child) => {
@@ -105,37 +114,7 @@ export default class ThreeScene {
 
     this.animate();
   }
-   zoomCameraToSelection( selection, fitOffset = 1.2 ) {
   
-  const box = new THREE.Box3();
-  
-  for( const object of selection ) box.expandByObject( object );
-  
-  const size = box.getSize( new THREE.Vector3() );
-  const center = box.getCenter( new THREE.Vector3() );
-  
-  const maxSize = Math.max( size.x, size.y, size.z );
-  const fitHeightDistance = maxSize / ( 2 * Math.atan( Math.PI * this.camera.fov / 360 ) );
-  const fitWidthDistance = fitHeightDistance / this.camera.aspect;
-  const distance = fitOffset * Math.max( fitHeightDistance, fitWidthDistance );
-  
-  const direction = this.controls.target.clone()
-    .sub( this.camera.position )
-    .normalize()
-    .multiplyScalar( distance );
-
-  this.controls.maxDistance = distance * 10;
-  this.controls.target.copy( center );
-  
-  this.camera.near = distance / 1000;
-  this.camera.far = distance * 1000;
-  this.camera.updateProjectionMatrix();
-
-  this.camera.position.copy( this.controls.target ).sub(direction);
-  
-  this.controls.update();
-  
-}
   createListener() {
     if (!this.listenersActive) {
       this.startDrawing();
@@ -182,6 +161,7 @@ export default class ThreeScene {
       this.listenersActive = false;
     }
   }
+
   updateCamera() {
         // this.setupDragControls();
 
@@ -217,15 +197,7 @@ export default class ThreeScene {
       );
       this.scene.add(this.gridHelper);
     } else {
-      // console.log("this", this.globalArray);
-      // this.group.children.forEach((child) => {
-      //   console.log("type", child.type);
-
-      //   if (child.type == "Line2") {
-      //     // this.group.remove(child)
-      //     this.scene.remove(child);
-      //   }
-      // });
+     
       this.scene.remove(this.gridHelper);
       this.scene.remove(this.plane);
       this.objects.pop(this.plane);
@@ -268,8 +240,23 @@ export default class ThreeScene {
     this.camera.lookAt(0, 0, 0);
   }
   predefined(model) {
-    this.controlPoints = model;
-    this.finalizePolygon(this.controlPoints);
+
+    if(model){
+      this.controlPoints = model;
+      this.finalizePolygon(this.controlPoints);
+  
+    }
+    else{
+      this.controlPoints = [{x:-5,y:0,z:-3},
+        {x:5,y:0,z:-3},
+        {x:5,y:9,z:3},
+        {x:-5,y:0,z:3},
+        {x:-5,y:0,z:-3}
+      ];
+      this.finalizePolygon(this.controlPoints);
+  
+    }
+
   }
 
   mesh() {
@@ -328,6 +315,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.plane.position.y = -0.1;
     this.scene.add(this.plane);
   }
+
   selectingProperty(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -352,6 +340,19 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
   }
 
+  meshSelect(e){
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    this.intersects = this.raycaster.intersectObjects(this.globalArray);
+
+    if (this.intersects.length > 0) {
+
+    }
+
+  }
+  
   raycastDefined(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -367,8 +368,10 @@ gl_FragColor = vec4(gridColor, 1.0);
 
     if (this.intersects.length > 0) {
       let point = this.intersects[0].point.clone();
+
       let snapThreshold = 1; 
       let snappedPoint = this.findNearestPoint(point, snapThreshold);
+
 
       if (snappedPoint) {
         this.updateTemporaryLine(snappedPoint);
@@ -409,6 +412,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
   }
 
+
   findNearestPoint(currentPoint, threshold) {
     for (let i = 0; i < this.controlPoints.length; i++) {
       if (currentPoint.distanceTo(this.controlPoints[i]) < threshold) {
@@ -418,14 +422,8 @@ gl_FragColor = vec4(gridColor, 1.0);
     return null;
   }
 
-  // mouseover(e) {
-  //   this.raycastDefined(e);
-  //   if (this.intersects.length > 0) {
-  //     if (!this.Dragcontrols) {
-  //       this.setupDragControls();
-  //     }
-  //   }
-  // }
+
+
   addControlPoint(point) {
     let cp = new THREE.Mesh(
       new THREE.SphereGeometry(0.2, 20, 20),
@@ -445,10 +443,12 @@ gl_FragColor = vec4(gridColor, 1.0);
     if (this.controlPoints.length < 3) return;
     this.group = new THREE.Group();
 
+
     this.spheres.forEach((sphere) => {
       this.group.attach(sphere);
       this.scene.remove(sphere);
     });
+
 
     let shape = new THREE.Shape();
 
@@ -473,46 +473,59 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.polygonMesh = new THREE.Mesh(geometry, material);
     this.polygonMesh.position.y = 0.01;
     this.group.add(this.polygonMesh);
-    this.threeDimension();
-    this.ceil(geometry);
 
-    this.lines.forEach((line) => {
-      this.group.attach(line);
-      this.scene.remove(line);
-    });
-    this.textMeshes.forEach((textMesh) => {
-      this.group.attach(textMesh);
-      this.scene.remove(textMesh);
-    });
+     this.threeDimension();
+     this.ceil(geometry);
+    
+      this.lines.forEach((line) => {
+        this.group.add(line);
+        this.scene.remove(line);
+      });
+      this.textMeshes.forEach((textMesh) => {
+        this.group.add(textMesh);
+        this.scene.remove(textMesh);
+      });
+  
     this.walls.forEach((wall) => {
-      this.group.attach(wall);
-      this.scene.remove(wall);
+      this.group.add(wall);
+      this.scene.remove(wall)
     });
+     
+     
     this.globalArray.push(this.group);
-    this.scene.add(this.group);
+      this.scene.add(this.group);
+  
+    this.mainArray.push(this.controlPoints);
 
     this.controlPoints = [];
     this.lines = [];
     this.walls = [];
     this.textMeshes = [];
+
     this.spheres = [];
 
     this.setupDragControls();
   }
+ 
   setupDragControls() {
+    
     this.Dragcontrols = new DragControls(
       [...this.globalArray],
       this.camera,
       this.renderer.domElement
     );
-    this.Dragcontrols.transformGroup = true;
+    this.Dragcontrols.transformGroup =true
     this.Dragcontrols.addEventListener("dragstart", () => {
       this.controls.enabled = false;
     });
     this.Dragcontrols.addEventListener("dragend", () => {
       this.controls.enabled = true;
+     
+      
     });
   }
+  
+ 
   ceil(geometry) {
     let loader = new THREE.TextureLoader();
     let texture = loader.load("./images/ceil.jpeg", () => {
@@ -533,7 +546,7 @@ gl_FragColor = vec4(gridColor, 1.0);
 
  
 
-  updateTemporaryLine(newPoint) {
+  updateTemporaryLine(newPoint) {    
     if (this.tempLine) {
       this.updateExistingTemporaryLine(newPoint);
     } else {
@@ -562,10 +575,12 @@ gl_FragColor = vec4(gridColor, 1.0);
       resolution: new THREE.Vector2(this.width, this.height),
     });
 
-    let line = new Line2(geometry, material);
-    line.computeLineDistances();
-    this.scene.add(line);
-    this.tempLine = line;
+    this.tempLine = new Line2(geometry, material);
+    this.tempLine.computeLineDistances();
+    this.scene.add(this.tempLine);
+    console.log('line',this.tempLine);
+    
+    // this.tempLine = line;
     this.addMeasurementLabel(
       this.controlPoints[this.controlPoints.length - 1],
       newPoint
@@ -613,7 +628,9 @@ gl_FragColor = vec4(gridColor, 1.0);
           .divideScalar(2);
         textMesh.position.set(midpoint.x, 0.3, midpoint.z);
         this.scene.add(textMesh);
+        
         this.textMeshes.push(textMesh);
+
       }
     );
   }
@@ -637,8 +654,6 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.lines.push(line);
 
     this.addMeasurementLabel(point1, point2);
-
-  }
 
   updateMeasurementLabels() {
     this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
@@ -697,6 +712,7 @@ gl_FragColor = vec4(gridColor, 1.0);
 
       this.scene.add(wall);
 
+
       this.walls.push(wall);
     }
     this.scene.remove(this.tempLine);
@@ -736,14 +752,16 @@ gl_FragColor = vec4(gridColor, 1.0);
         0,
         Math.random() * 10
       );
+
       const saveModel = { gltfLink: modelLink, gltfScene: gltf.scene.position };
       this.modelLoad.push(saveModel);
 
       this.scene.add(gltf.scene);
     });
-    // this.zoomCameraToSelection(this.gltf);
+
   }
   async saveFile() {
+    
     const saveModel = {
       coordinates: this.mainArray,
       gltfObjects: this.modelLoad,
@@ -762,6 +780,5 @@ gl_FragColor = vec4(gridColor, 1.0);
   render() {
     this.renderer.render(this.scene, this.camera);
 
-    //   console.log(this.scene);
   }
 }
