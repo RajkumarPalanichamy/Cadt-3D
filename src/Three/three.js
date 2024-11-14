@@ -654,7 +654,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.lines.push(line);
 
     this.addMeasurementLabel(point1, point2);
-
+  }
   updateMeasurementLabels() {
     this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
     this.textMeshes = [];

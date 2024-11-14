@@ -73,6 +73,7 @@
 <script>
 import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
+import axios from "axios";
 export default {
   name: "App",
   data() {
@@ -99,6 +100,12 @@ export default {
     };
   },
   async mounted() {
+    // await axios
+    // .get(`${import.meta.env.VITE_API_LINK}/getTextures`)
+    // .then((response)=>{
+    //   console.log('textures',response);
+      
+    // })
     this.$router.push("/homeview/home");
     const data = Cookies.get("jwtToken");
     const decodedToken = VueJwtDecode.decode(data);
