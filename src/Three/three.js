@@ -616,8 +616,8 @@ console.log('this.mainArray',this.mainArray);
     });
 
     }
-   async saveFile(){
-    const saveModel={coordinates:this.mainArray,gltfObjects:this.modelLoad}
+   async saveFile(projectname){
+    const saveModel={projectname:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
     store.commit('setTriggerMethod', saveModel);          
 
           this.mainArray=[]

@@ -1,7 +1,7 @@
 <template>
   <v-container style="color: #f7f8fa" fluid="true">
-    <v-card-title class="text-black">User Details</v-card-title>
-    <v-card class="d-flex" height="80vh">
+    <!-- <v-card-title class="text-black">User Details</v-card-title> -->
+    <v-card class="d-flex" height="90vh">
       <v-container class="elevation-1 py-0 px-0" fluid width="20%">
         <v-list>
           <v-spacer class="mt-4"></v-spacer>

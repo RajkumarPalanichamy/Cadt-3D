@@ -7,6 +7,8 @@ const store = createStore({
   mutations: {
     async setTriggerMethod(state, payload) {
       // state.triggerMethod = payload;
+      console.log(payload);
+      
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_API_LINK}/dynamicscene`,
