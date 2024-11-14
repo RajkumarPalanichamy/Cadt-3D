@@ -1,12 +1,7 @@
 <template>
   <v-container fluid="true" class="py-0 px-0">
-    <v-card-title class="text-h6">User</v-card-title>
-    <v-row>
-      <v-col>
-        <v-card-text>Users List</v-card-text>
-      </v-col>
-    </v-row>
     <v-data-table-virtual
+      class="mt-2"
       height="500px"
       :items="filteredUsers"
       density="compact"
@@ -18,19 +13,32 @@
             <v-text-field
               class="ml-2"
               variant="underlined"
-              label="Search"
+              label="Search By Name"
               v-model="searchText"
               clearable
               append-icon="mdi-magnify"
             ></v-text-field>
           </v-col>
-          <v-col cols="5" class="text-end">
+          <!-- <v-col cols="5" class="text-end">
             <v-btn
               prepend-icon="mdi-plus"
               color="#274E76"
               @click="isDialog = true"
               >Add Users</v-btn
             >
+          </v-col> -->
+        </v-row>
+        <v-row
+          @click="isUpload = true"
+          style="position: absolute; bottom: 50px; right: 80px"
+        >
+          <v-col>
+            <v-btn
+              @click="isDialog = true"
+              size="x-large"
+              icon="mdi-plus"
+              color="#274E76"
+            ></v-btn>
           </v-col>
         </v-row>
       </template>
@@ -50,7 +58,7 @@
             <v-card-title class="text-h6">Add User</v-card-title>
           </v-col>
           <v-col class="text-end">
-            <v-icon @click="isDialog = false">mdi-alpha-x</v-icon>
+            <v-icon @click="isDialog = false">mdi-close</v-icon>
           </v-col>
         </v-row>
         <v-divider class="mb-4"></v-divider>
@@ -162,7 +170,6 @@
 </template>
 <script>
 import axios from "axios";
-import { mapState } from "vuex";
 export default {
   name: "employeePage",
   data() {
@@ -228,8 +235,6 @@ export default {
     deleteAlert(id) {
       this.isDelete = true;
       this.userId = id;
-      console.log("sjdn");
-      
     },
     async deleteUser() {
       try {

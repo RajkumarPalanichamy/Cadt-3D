@@ -17,6 +17,8 @@ export default {
   mounted() {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new ThreeScene(this.threeContainer);
+    this.threeScene.predefined();
+
   },
   // beforeUnmount() {
   //   if (this.threeScene) {
@@ -57,8 +59,8 @@ this.threeScene.predefined(model.cordinates);
     redoEvent() {
       console.log(this.undoModels);
     },
-    saveFile(){
-      this.threeScene.saveFile();
+    saveFile(projectname){
+      this.threeScene.saveFile(projectname);
     },
     backHome(){
       // this.$parent.methods.return()

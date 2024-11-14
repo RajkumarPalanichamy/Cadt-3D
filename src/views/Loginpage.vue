@@ -86,10 +86,12 @@ export default {
       this.isLoading = true;
       if (this.username && this.password) {
         try {
+
           const response = await axios.post(`${import.meta.env.VITE_API_LINK}/login`,{
               username: this.username,
               password: this.password,}
           );
+
           if (response.status === 200) {
             const token = response.data.accessToken;
             if (token) {
@@ -115,14 +117,23 @@ export default {
     },
     async fetchUserFurnitures(token) {
       try {
+
         const response = await axios.get(`${import.meta.env.VITE_API_LINK}/furnitures`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         console.log("Furniture data:", response.data);
       } catch (error) {
         console.error("Error fetching furniture data:", error);
       }
     },
   },
+  mounted(){
+    const cookies = Cookies.get("jwtToken")
+   if(cookies){
+    this.$router.push("homeview/home")
+   }
+    
+  }
 };
 </script>

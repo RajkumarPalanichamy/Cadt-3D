@@ -37,78 +37,51 @@
     </v-card>
     <v-card
       height="80vh"
-      class="grid-project mt-1 px-8 py-2 savedprojects overflow"
+      class="grid-project mt-1 px-16 py-2 savedprojects overflow"
       flat
     >
       <v-card
-        class="d-flex flex-column align-center justify-center"
-        @click="createProject"
-        width="230px"
         v-if="isShow"
+        class="d-flex flex-column pt-8 align-center"
+        @click="createProject()"
       >
-        <v-icon color="#274e76" size="2em">mdi-plus</v-icon>
-        <v-card-title>Create Project</v-card-title>
+        <v-icon size="2em">mdi-plus</v-icon>
+        <v-card-text class="text-">Create Project</v-card-text>
       </v-card>
-      <v-hover
-        v-for="(item, index) in filteredModels"
+      <v-card
+        class="px-2 pt-2"
+        v-for="(model, index) in filteredModels"
+        width="240px"
+        height="220px"
         :key="index"
-        v-slot="{ isHovering, props }"
       >
-        <v-card
-          class="d-flex flex-column align-center justify-center"
-          width="230px"
-          height="210px"
-          elevation="3"
-          v-bind="props"
-        >
-          <v-card-text v-if="!isHovering">{{ item }}</v-card-text>
-
-          <v-expand-transition>
-            <v-card
-              v-if="isHovering"
-              class="d-flex justify-center align-center transition-fast-in-fast-out bg-grey-lighten-4 v-card--reveal text-h3"
-              style="height: 100%; width: 100%"
-            >
-              <v-btn
-                class="mr-3"
-                color="success"
-                text="Edit"
-                size="small"
-                prepend-icon="mdi-pencil"
-              >
-              </v-btn>
-              <v-btn
-                color="error"
-                outlined
-                @click="dialog = true"
-                size="small"
-                text="Delete"
-                prepend-icon="mdi-trash-can-outline"
-              >
-              </v-btn>
-
-              <v-dialog v-model="dialog" max-width="340">
-                <v-card>
-                  <v-card-title>Confirm Delete</v-card-title>
-                  <v-card-text>
-                    Are you sure you want to delete this project?
-                  </v-card-text>
-                  <v-card-actions>
-                    <v-btn text @click="dialog = false">Cancel</v-btn>
-                    <v-btn color="error" text @click="confirmDelete">
-                      Delete
-                    </v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-dialog>
-            </v-card>
-          </v-expand-transition>
-        </v-card>
-      </v-hover>
-      <v-card-text @click="seeMore" class="text-center text-blue seemore">
-        See More <v-icon>mdi-menu-down</v-icon>
-      </v-card-text>
+        <v-container class="bg-grey" height="75%"> </v-container>
+        {{ model }}
+        <v-row>
+          <v-col cols="10" class="text-grey">11-12-2004 ,17.56</v-col>
+          <v-col cols="2">
+            <!-- v-menu for menu list on dots icon hover -->
+            <v-menu transition="scale-transition" offset-y open-on-hover>
+              <template v-slot:activator="{ props }">
+                <v-icon v-bind="props" color="grey" style="cursor: pointer;">mdi-dots-vertical</v-icon>
+              </template>
+              <v-list>
+                <v-list-item v-for="(item, i) in hoverOptions" :key="i">
+                  <template v-slot:prepend>
+                    <v-icon :icon="item.icon"></v-icon>
+                  </template>
+                  <v-list-item-title>{{ item.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </v-col>
+        </v-row>
+      </v-card>
     </v-card>
+
+    <!-- <v-card-text @click="seeMore" class="text-center">
+      See More <v-icon>mdi-menu-down</v-icon>
+    </v-card-text> -->
   </v-container>
 </template>
 \
@@ -123,13 +96,25 @@ export default {
       { text: "Textures", icon: "mdi-texture" },
     ],
     savedModels: [
-      "Model1",
-      "Model2",
-      "Model3",
-      "Model4",
-      "Model5",
-      "Model 6",
-      "MOdel 7",
+      "Model Name 1",
+      "Model Name 2",
+      "Model Name 3",
+      "Model Name 4",
+      "Model Name 5",
+      "Model Name 6",
+      "Model Name 6",
+      "Model Name 1",
+      "Model Name 2",
+      "Model Name 3",
+      "Model Name 4",
+      "Model Name 5",
+      "Model Name 6",
+      "Model Name 6",
+    ],
+    hoverOptions: [
+      { text: "Open", icon: "mdi-open-in-new" },
+      { text: "Rename", icon: "mdi-rename" },
+      { text: "Delete", icon: "mdi-delete-empty-outline" },
     ],
     dialog: false,
     searchedValue: null,
@@ -149,6 +134,7 @@ export default {
     searchSavedModels() {
       this.isShow = !this.searchedValue;
       if (this.searchedValue) {
+        this.isShow = false;
         this.filteredModels = this.savedModels.filter((model) =>
           model.toLowerCase().includes(this.searchedValue.toLowerCase())
         );
@@ -156,14 +142,14 @@ export default {
         this.filteredModels = this.savedModels;
       }
     },
-    seeMore() {
-      const length = this.savedModels.length;
-      console.log(length);
+    // seeMore() {
+    //   const length = this.savedModels.length;
+    //   console.log(length);
 
-      for (let i = length; i < length + 20; i++) {
-        this.savedModels.push(`Model ${i}`);
-      }
-    },
+    //   for (let i = length; i < length + 20; i++) {
+    //     this.savedModels.push(`Model ${i}`);
+    //   }
+    // },
   },
 };
 </script>

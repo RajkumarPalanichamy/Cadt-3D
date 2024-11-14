@@ -24,7 +24,6 @@ export default class ThreeScene {
     this.mouse = new THREE.Vector2();
     this.intersects = null;
     this.controlPoints = [];
-    this.controlPointss = [];
     this.plane = null;
     this.controls = null;
     this.spheres = [];
@@ -32,23 +31,27 @@ export default class ThreeScene {
     this.gridSize = 100;
     this.lines = [];
     this.textMeshes = [];
-    this.tempLines = [];
     this.tempLine = null;
     this.Dragcontrols = null;
     this.isDrawing = false;
-    this.gltf=[]
-this.dragObjects=[]
-this.mainArray=[]
-this.modelLoad=[]
+    this.gltf = [];
+
+    this.dragObjects = [];
+    this.mainArray = [];
+    this.modelLoad = [];
+    this.globalArray = [];
+    this.group;
+
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
-    // this.mouseover = this.mouseover.bind(this);
+ 
+   
+    
 
     this.init();
   }
 
   init() {
-
     if (this.renderer) {
       this.container.removeChild(this.renderer.domElement);
     }
@@ -88,22 +91,30 @@ this.modelLoad=[]
     sky.material.uniforms.rayleigh.value = 1;
     sky.material.uniforms.turbidity.value = 0;
 
-
     this.scene.add(sky);
-    this.renderer.domElement.addEventListener("mousemove", this.selectingProperty.bind(this)); 
+
+      this.renderer.domElement.addEventListener(
+        "dblclick",
+        this.meshSelect.bind(this)
+      );
+  
+
+    this.renderer.domElement.addEventListener(
+      "mousemove",
+      this.selectingProperty.bind(this)
+    );
+
 
     // console.log('scene',this.scene);
-   this.scene.traverse((child)=>{
-    if(child.type=='Mesh' ){
-      console.log('mesh congoonee');
-      
-    }
-    
-   })
-    
+    this.scene.traverse((child) => {
+      if (child.type == "Mesh") {
+        console.log("mesh congoonee");
+      }
+    });
 
     this.animate();
   }
+  
   createListener() {
     if (!this.listenersActive) {
       this.startDrawing();
@@ -125,14 +136,19 @@ this.modelLoad=[]
   }
 
   addListeners() {
-    if (!this.listenersActive) 
-      {this.renderer.domElement.addEventListener("mousemove", this.onPointerMove  );
+    if (!this.listenersActive) {
+      this.renderer.domElement.addEventListener(
+        "mousemove",
+        this.onPointerMove
+      );
       this.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
       this.listenersActive = true;
     }
   }
 
   removeListeners() {
+    // this.renderer.domElement.removeEventListener("mouseover", this.mouseover);
+
     if (this.listenersActive) {
       this.renderer.domElement.removeEventListener(
         "mousemove",
@@ -145,7 +161,10 @@ this.modelLoad=[]
       this.listenersActive = false;
     }
   }
+
   updateCamera() {
+        // this.setupDragControls();
+
     if (this.controls) {
       this.controls.dispose();
     }
@@ -178,9 +197,7 @@ this.modelLoad=[]
       );
       this.scene.add(this.gridHelper);
     } else {
-      this.spheres.forEach((sphere) => this.scene.remove(sphere));
-      this.lines.forEach((line) => this.scene.remove(line));
-      this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
+     
       this.scene.remove(this.gridHelper);
       this.scene.remove(this.plane);
       this.objects.pop(this.plane);
@@ -218,15 +235,28 @@ this.modelLoad=[]
       this.controls.enableRotate = false;
       this.controls.enablePan = true;
       this.camera.position.y = 5;
-  
     }
 
     this.camera.lookAt(0, 0, 0);
   }
   predefined(model) {
-    
-    this.controlPoints = model
-    this.finalizePolygon(this.controlPoints);
+
+    if(model){
+      this.controlPoints = model;
+      this.finalizePolygon(this.controlPoints);
+  
+    }
+    else{
+      this.controlPoints = [{x:-5,y:0,z:-3},
+        {x:5,y:0,z:-3},
+        {x:5,y:9,z:3},
+        {x:-5,y:0,z:3},
+        {x:-5,y:0,z:-3}
+      ];
+      this.finalizePolygon(this.controlPoints);
+  
+    }
+
   }
 
   mesh() {
@@ -285,30 +315,44 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.plane.position.y = -0.1;
     this.scene.add(this.plane);
   }
-  selectingProperty(e){
 
-const rect = this.renderer.domElement.getBoundingClientRect();
-this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-this.raycaster.setFromCamera(this.mouse, this.camera);
-this.intersects = this.raycaster.intersectObjects(this.walls);
+  selectingProperty(e) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    this.intersects = this.raycaster.intersectObjects(this.walls);
 
-if (this.intersects.length > 0) {
-  if (this.INTERSECTED) {
-    this.INTERSECTED.material[2]= this.INTERSECTED.material[2]
+    if (this.intersects.length > 0) {
+      if (this.INTERSECTED) {
+        this.INTERSECTED.material[2] = this.INTERSECTED.material[2];
+      }
+      this.INTERSECTED = this.intersects[0].object;
+      this.INTERSECTED.material[2] = new THREE.MeshBasicMaterial({
+        color: "green",
+      });
+    } else {
+      if (this.INTERSECTED) {
+        this.INTERSECTED.material[2] = new THREE.MeshLambertMaterial({
+          color: 0x3b3b3b,
+        });
+      }
+    }
   }
-  this.INTERSECTED = this.intersects[0].object;
-  this.INTERSECTED.material[2]=new THREE.MeshBasicMaterial({color:'green'})
-}else {
-  if (this.INTERSECTED) {
-    this.INTERSECTED.material[2]=new THREE.MeshLambertMaterial({ color: 0x3b3b3b })
+
+  meshSelect(e){
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    this.intersects = this.raycaster.intersectObjects(this.globalArray);
+
+    if (this.intersects.length > 0) {
+
+    }
+
   }
-}
-}
-
-
   
-
   raycastDefined(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -316,6 +360,26 @@ if (this.intersects.length > 0) {
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
     this.intersects = this.raycaster.intersectObjects(this.objects);
+  }
+  onPointerMove(e) {
+    if (!this.isDrawing) return;
+
+    this.raycastDefined(e);
+
+    if (this.intersects.length > 0) {
+      let point = this.intersects[0].point.clone();
+
+      let snapThreshold = 1; 
+      let snappedPoint = this.findNearestPoint(point, snapThreshold);
+
+
+      if (snappedPoint) {
+        this.updateTemporaryLine(snappedPoint);
+      } else {
+        this.updateTemporaryLine(point);
+      }
+      this.updateMeasurementLabels();
+    }
   }
 
   onMouseDown(e) {
@@ -325,44 +389,40 @@ if (this.intersects.length > 0) {
 
     if (this.intersects.length > 0) {
       let point = this.intersects[0].point.clone();
-      this.controlPoints.push(point);
-      this.controlPointss.push(point);
+      if (
+        this.controlPoints.length > 0 &&
+        point.distanceTo(this.controlPoints[0]) < 1
+      ) {
+        point.copy(this.controlPoints[0]);
+        this.controlPoints.push(point);
+        this.addControlPoint(point);
+        this.finalizePolygon();
+        this.stopDrawing()
+      } else {
+        this.controlPoints.push(point);
+        this.addControlPoint(point);
 
-      this.addControlPoint(point);
-
-      if (this.controlPoints.length > 1) {
-        this.addLine(this.controlPoints[this.controlPoints.length - 2], point);
+        if (this.controlPoints.length > 1) {
+          this.addLine(
+            this.controlPoints[this.controlPoints.length - 2],
+            point
+          );
+        }
       }
     }
   }
 
-  onPointerMove(e) {
-    if (!this.isDrawing) return;
 
-    this.raycastDefined(e);
-
-    if (this.intersects.length > 0) {
-      let point = this.intersects[0].point.clone();
-      this.updateTemporaryLine(point);
-      this.updateMeasurementLabels();
+  findNearestPoint(currentPoint, threshold) {
+    for (let i = 0; i < this.controlPoints.length; i++) {
+      if (currentPoint.distanceTo(this.controlPoints[i]) < threshold) {
+        return this.controlPoints[i];
+      }
     }
+    return null;
   }
 
-  // mouseover(e) {
-  //   this.raycastDefined(e);
-  //   if (this.intersects.length > 0) {
-  //     if (!this.Dragcontrols) {
-  //       this.setupDragControls();
-  //     }
-  //   }
-  // }
 
-  updateshape() {
-    if (this.isClosedPolygon()) {
-      this.stopDrawing();
-      this.finalizePolygon();
-    }
-  }
 
   addControlPoint(point) {
     let cp = new THREE.Mesh(
@@ -381,9 +441,14 @@ if (this.intersects.length > 0) {
 
   finalizePolygon() {
     if (this.controlPoints.length < 3) return;
+    this.group = new THREE.Group();
 
-    let firstSphere = this.spheres.shift();
-    this.scene.remove(firstSphere);
+
+    this.spheres.forEach((sphere) => {
+      this.group.attach(sphere);
+      this.scene.remove(sphere);
+    });
+
 
     let shape = new THREE.Shape();
 
@@ -407,25 +472,81 @@ if (this.intersects.length > 0) {
 
     this.polygonMesh = new THREE.Mesh(geometry, material);
     this.polygonMesh.position.y = 0.01;
-    this.scene.add(this.polygonMesh);
-    this.threeDimension();
-    this.mainArray.push(this.controlPoints)
+    this.group.add(this.polygonMesh);
+
+     this.threeDimension();
+     this.ceil(geometry);
+    
+      this.lines.forEach((line) => {
+        this.group.add(line);
+        this.scene.remove(line);
+      });
+      this.textMeshes.forEach((textMesh) => {
+        this.group.add(textMesh);
+        this.scene.remove(textMesh);
+      });
+  
+    this.walls.forEach((wall) => {
+      this.group.add(wall);
+      this.scene.remove(wall)
+    });
+     
+     
+    this.globalArray.push(this.group);
+      this.scene.add(this.group);
+  
+    this.mainArray.push(this.controlPoints);
+
     this.controlPoints = [];
-  }
+    this.lines = [];
+    this.walls = [];
+    this.textMeshes = [];
 
-  isClosedPolygon() {
-    return (
-      this.controlPoints.length > 2 &&
-      Math.floor(this.controlPoints[0].x) ===
-        Math.floor(this.controlPoints[this.controlPoints.length - 1].x) &&
-      Math.floor(this.controlPoints[0].y) ===
-        Math.floor(this.controlPoints[this.controlPoints.length - 1].y) &&
-      Math.floor(this.controlPoints[0].z) ===
-        Math.floor(this.controlPoints[this.controlPoints.length - 1].z)
+    this.spheres = [];
+
+    this.setupDragControls();
+  }
+ 
+  setupDragControls() {
+    
+    this.Dragcontrols = new DragControls(
+      [...this.globalArray],
+      this.camera,
+      this.renderer.domElement
     );
+    this.Dragcontrols.transformGroup =true
+    this.Dragcontrols.addEventListener("dragstart", () => {
+      this.controls.enabled = false;
+    });
+    this.Dragcontrols.addEventListener("dragend", () => {
+      this.controls.enabled = true;
+     
+      
+    });
+  }
+  
+ 
+  ceil(geometry) {
+    let loader = new THREE.TextureLoader();
+    let texture = loader.load("./images/ceil.jpeg", () => {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(1, 1);
+    });
+    let material = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.FrontSide,
+    });
+
+    this.polygonMesh = new THREE.Mesh(geometry, material);
+    this.polygonMesh.position.y = 2;
+    this.scene.add(this.polygonMesh);
+    this.group.add(this.polygonMesh);
   }
 
-  updateTemporaryLine(newPoint) {
+ 
+
+  updateTemporaryLine(newPoint) {    
     if (this.tempLine) {
       this.updateExistingTemporaryLine(newPoint);
     } else {
@@ -434,30 +555,32 @@ if (this.intersects.length > 0) {
   }
 
   createNewTemporaryLine(newPoint) {
-    let points = [];
-
-    points.push(
+    let points = [
       this.controlPoints[this.controlPoints.length - 1].x,
       this.controlPoints[this.controlPoints.length - 1].y,
-      this.controlPoints[this.controlPoints.length - 1].z
-    );
-    points.push(newPoint.x, newPoint.y, newPoint.z);
+      this.controlPoints[this.controlPoints.length - 1].z,
+      newPoint.x,
+      newPoint.y,
+      newPoint.z,
+    ];
 
     let geometry = new LineGeometry();
     geometry.setPositions(points);
 
     let material = new LineMaterial({
       color: "blue",
-      transparent:true,
-      opacity:0.5,
+      transparent: true,
+      opacity: 0.5,
       linewidth: 10,
       resolution: new THREE.Vector2(this.width, this.height),
     });
 
-    let line = new Line2(geometry, material);
-    line.computeLineDistances();
-    this.scene.add(line);
-    this.tempLine = line;
+    this.tempLine = new Line2(geometry, material);
+    this.tempLine.computeLineDistances();
+    this.scene.add(this.tempLine);
+    console.log('line',this.tempLine);
+    
+    // this.tempLine = line;
     this.addMeasurementLabel(
       this.controlPoints[this.controlPoints.length - 1],
       newPoint
@@ -505,11 +628,12 @@ if (this.intersects.length > 0) {
           .divideScalar(2);
         textMesh.position.set(midpoint.x, 0.3, midpoint.z);
         this.scene.add(textMesh);
+        
         this.textMeshes.push(textMesh);
+
       }
     );
   }
- 
 
   addLine(point1, point2) {
     let positions = [];
@@ -530,21 +654,15 @@ if (this.intersects.length > 0) {
     this.lines.push(line);
 
     this.addMeasurementLabel(point1, point2);
-    this.updateshape();
-
-   
   }
-
-  
-
   updateMeasurementLabels() {
     this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
     this.textMeshes = [];
 
-    for (let i = 0; i < this.controlPointss.length - 1; i++) {
+    for (let i = 0; i < this.controlPoints.length - 1; i++) {
       this.addMeasurementLabel(
-        this.controlPointss[i],
-        this.controlPointss[i + 1]
+        this.controlPoints[i],
+        this.controlPoints[i + 1]
       );
     }
   }
@@ -592,39 +710,66 @@ if (this.intersects.length > 0) {
 
       wall.lookAt(point2);
 
-      this.scene.add( wall );
-    
-      this.walls.push(  wall );
-    
-    }
-console.log('this.mainArray',this.mainArray);
+      this.scene.add(wall);
 
+
+      this.walls.push(wall);
+    }
+    this.scene.remove(this.tempLine);
+    this.tempLine=null
+    this.addLight();
+  }
+  addLight() {
+    let box = new THREE.Box3().setFromObject(this.polygonMesh);
+    let centre = box.getCenter(new THREE.Vector3());
+    let spotlight = new THREE.PointLight(Math.random() * 0xffffff, 50, 4);
+    spotlight.position.set(centre.x, centre.y + 1, centre.z);
+    this.scene.add(spotlight);
+    this.group.add(spotlight);
   }
   gltfLoader(modelLink) {
-    console.log('modelLink',modelLink);
-    
+    console.log("modelLink", modelLink);
+
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
-      console.log('gg',gltf.scene);
-      
+      console.log("gg", gltf.scene);
+      let box = new THREE.Box3().setFromObject(gltf.scene);
+      let size = new THREE.Vector3();
+      box.getSize(size); 
+          let maxSize = 0;
+          if (size.x >= size.z && size.x >= size.y) {
+            maxSize = size.x;
+          } else if (size.y >= size.x && size.y >= size.z) {
+            maxSize = size.y;
+          } else if (size.z >= size.x && size.z >= size.y) {
+            maxSize = size.z;
+          }
+      gltf.scene.scale.setScalar(1 / (maxSize / 2));
+
       this.gltf.push(gltf.scene);
-      gltf.scene.position.x=5
-      const saveModel={gltfLink:modelLink,gltfScene:gltf.scene.position}
-      this.modelLoad.push(saveModel)
-      
+      gltf.scene.position.set(
+        Math.random() * 10,
+        0,
+        Math.random() * 10
+      );
+
+      const saveModel = { gltfLink: modelLink, gltfScene: gltf.scene.position };
+      this.modelLoad.push(saveModel);
+
       this.scene.add(gltf.scene);
     });
 
+
     }
-   async saveFile(){
-    const saveModel={coordinates:this.mainArray,gltfObjects:this.modelLoad}
+   async saveFile(projectname){
+    const saveModel={projectname:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
     store.commit('setTriggerMethod', saveModel);          
 
           this.mainArray=[]
           this.modelLoad=[]
     }
-  animate() {
 
+  animate() {
     requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.render();
@@ -633,6 +778,5 @@ console.log('this.mainArray',this.mainArray);
   render() {
     this.renderer.render(this.scene, this.camera);
 
-    //   console.log(this.scene);
   }
 }
