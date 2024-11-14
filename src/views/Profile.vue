@@ -1,7 +1,7 @@
 <template>
   <v-container style="color: #f7f8fa" fluid="true">
     <v-card-title class="text-black">User Details</v-card-title>
-    <v-card class="d-flex" height="80vh" >
+    <v-card class="d-flex" height="80vh">
       <v-container class="elevation-1 py-0 px-0" fluid width="20%">
         <v-list>
           <v-spacer class="mt-4"></v-spacer>
@@ -21,7 +21,7 @@
         <!-- Account Details -->
         <v-card-title class="mb-3">{{ selectedItem }}</v-card-title>
 
-        <v-card class="py-4 pl-2 border " flat v-if="isprofile">
+        <v-card class="py-4 pl-2 border" flat v-if="isprofile">
           <v-row class="d-flex align-center">
             <v-col cols="3">
               <v-img
@@ -32,9 +32,9 @@
             </v-col>
             <v-col cols="8">
               <v-card-title>Account Details</v-card-title>
-              <v-card-subtitle class="mt-2">User Id : 123</v-card-subtitle>
+              <v-card-subtitle class="mt-2">User Id : {{lastUserData?.id }}</v-card-subtitle>
               <v-card-subtitle class="mt-2"
-                >User Name : S.M.Ajeesh</v-card-subtitle
+                >User Name : {{ lastUserData?.name }}</v-card-subtitle
               >
             </v-col>
           </v-row>
@@ -47,9 +47,9 @@
           >
           <v-row class="d-flex align-center py-4">
             <v-col cols="10">
-              <v-card-subtitle class="my-2">User Name :</v-card-subtitle>
+              <v-card-subtitle class="my-2">User Name :{{ lastUserData.name }}</v-card-subtitle>
               <v-card-subtitle class="mb-2">Email Address:</v-card-subtitle>
-              <v-card-subtitle>Role :</v-card-subtitle>
+              <v-card-subtitle>Role :{{lastUserData?.role }}</v-card-subtitle>
             </v-col>
             <v-col cols="2">
               <v-btn prepend-icon="mdi-pencil">Edit</v-btn>
@@ -85,6 +85,9 @@
 </template>
 
 <script>
+import axios from "axios";
+import VueJwtDecode from "vue-jwt-decode";
+import Cookies from "js-cookie";
 export default {
   name: "profilePage",
   data() {
@@ -95,6 +98,7 @@ export default {
       ],
       isprofile: true,
       selectedItem: "My Profile",
+      lastUserData: {},
     };
   },
   methods: {
@@ -102,6 +106,26 @@ export default {
       this.selectedItem = selectedItem;
       this.isprofile = selectedItem === "My Profile";
     },
+  },
+  async mounted() {
+    // getting logined user data from cookies
+    const data = Cookies.get("jwtToken");
+    const decodedToken = VueJwtDecode.decode(data);
+    console.log(decodedToken.name);
+    // getting all the user data from the database
+    const response = await axios.get(`${import.meta.env.VITE_API_LINK}/clients`);
+    console.log(response.data);
+
+    response.data.forEach((eachUser) => {
+      if (decodedToken.name === eachUser.username) {
+        this.lastUserData = {
+          name: eachUser.username,
+          role: eachUser.role,
+          id: eachUser._id,
+        };
+      }
+      console.log(eachUser);
+    });
   },
 };
 </script>

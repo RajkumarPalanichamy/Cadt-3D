@@ -84,22 +84,12 @@ export default {
   methods: {
     async handleLogin() {
       this.isLoading = true;
-      // this.errors.username = null;
-      // this.errors.password = null;
-
-      // if (!this.username) {
-      //   this.errors.username = "Username is required.";
-      // }
-      // if (!this.password) {
-      //   this.errors.password = "Password is required.";
-      // }
-
       if (this.username && this.password) {
         try {
-          const response = await axios.post("https://ebf4-14-194-187-129.ngrok-free.app/login", {
-            username: this.username,
-            password: this.password,
-          });
+          const response = await axios.post(`${import.meta.env.VITE_API_LINK}/login`,{
+              username: this.username,
+              password: this.password,}
+          );
           if (response.status === 200) {
             const token = response.data.accessToken;
             if (token) {
@@ -119,18 +109,15 @@ export default {
             this.password = null;
           }, 2000);
           this.errMsg = true;
-          console.error(error);
+          console.error("ERROR IN POST",error);
         }
       }
     },
     async fetchUserFurnitures(token) {
       try {
-        const response = await axios.get(
-          "http://localhost:3000/getfurnitures",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/furnitures`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         console.log("Furniture data:", response.data);
       } catch (error) {
         console.error("Error fetching furniture data:", error);
