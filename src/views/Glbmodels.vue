@@ -47,7 +47,7 @@
       <!-- Upload Dialog -->
       <v-dialog v-model="isUpload" width="1000px">
         <v-card  height="550px" >
-          <v-toolbar density="compact" color="#274e76" class="mb-10" flat>
+          <v-toolbar density="compact" color="#274e76"  flat>
             <v-icon class="py-6 px-6" @click="isUpload = false"
               >mdi-close</v-icon
             >
@@ -98,19 +98,19 @@
         </v-card>
       </v-dialog>
       <!-- view Dialog -->
-      <v-dialog v-model="isView" fullscreen>
+      <v-dialog v-model="isView" max-width="1000px" height="550px">
       <v-card rounded="0" flat>
         <v-toolbar density="compact" color="#274E76">
           <v-icon @click="isView = false" class="px-5">mdi-close</v-icon>
         </v-toolbar>
-        <v-card class="d-flex mt-5" height="100vh" flat>
-          <v-card width="30%" flat rounded="0" class="pl-3">
-            <v-img src="/images/login.png" width="400px"></v-img>
+        <v-card class="d-flex " height="100vh" flat>
+          <v-card width="70%" flat rounded="0" class="px-4 py-4">
+            <gltfViewer ref="gltfViewerComponent" class="gltfComponent"/>
           </v-card>
-          <v-card width="70%" flat class="ml-16 pt-3">
+          <v-card width="30%" flat class="pl-4 px-4 pt-10 mt-16">
             <v-form>
               <v-row>
-                <v-col cols="8">
+                <v-col >
                   <v-text-field
                     variant="underlined"
                     label="Name"
@@ -119,7 +119,7 @@
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="8">
+                <v-col >
                   <v-text-field
                     label="Type"
                     variant="underlined"
@@ -127,25 +127,17 @@
                   ></v-text-field>
                 </v-col>
               </v-row>
-              <v-row class="d-flex mt-6" style="width: 300px; height: 30px">
-                <v-col style="background-color: green" class="mr-4"></v-col>
-                <v-col style="background-color: red" class="mr-4"></v-col>
-                <v-col style="background-color: blue" class="mr-4"></v-col>
-                <v-col style="background-color: orange" class="mr-4"></v-col>
-                <v-col style="background-color: grey" class="mr-4"></v-col>
-                <v-col style="background-color: goldenrod" class="mr-4"></v-col>
-              </v-row>
-              <v-row class="mt-14">
-                <v-col cols="3">
-                  <v-btn color="#274E76" prepend-icon="mdi-pencil" block
+              
+              <v-row >
+                <v-col >
+                  <v-btn color="#274E76"  block
                     >Edit</v-btn
                   >
                 </v-col>
-                <v-col cols="3">
+                <v-col >
                   <v-btn
                     variant="outlined"
                     color="#274E76"
-                    prepend-icon="mdi-cancel"
                     block
                     >Cancel</v-btn
                   >
@@ -161,8 +153,13 @@
 </template>
 
 <script>
+import axios from 'axios';
+import gltfViewer from '@/components/gltfViewer.vue';
 export default {
   name: "glbModels",
+  components: {
+    gltfViewer,
+  },
   data() {
     return {
       showModels: true,
@@ -214,8 +211,21 @@ export default {
     viewTexture(viewFile) {
       this.isView = true;
       (this.textureName = viewFile.Name), (this.textureType = viewFile.type);
+      
     },
   },
+  async mounted(){
+    try{
+       const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getFurnitures`)
+       console.log(response.data);
+       
+    }
+    catch(err){
+         console.log(err);
+         
+    }
+
+  }
 };
 </script>
 
@@ -234,5 +244,9 @@ export default {
   /* transition: all ease-in .5s; */
   transform: scale(5);
   height: 200px;
+}
+.gltfComponent{
+  width:100%;
+  height:100%;
 }
 </style>
