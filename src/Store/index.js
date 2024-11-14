@@ -7,8 +7,6 @@ const store = createStore({
   mutations: {
     async setTriggerMethod(state, payload) {
       // state.triggerMethod = payload;
-      console.log('payload',payload);
-      
       try {
 
         const response = await axios.post(

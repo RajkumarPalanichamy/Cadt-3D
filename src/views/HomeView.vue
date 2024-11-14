@@ -11,14 +11,29 @@
       </v-btn>
 
       <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
+        <v-menu open-on-hover>
+          <template v-slot:activator="{ props }">
+            <v-icon v-bind="props" color="white">mdi-dots-vertical</v-icon>
+          </template>
+          <v-list width="200px">
+            <v-list-item
+              @click="hoverValue(item.text)"
+              v-for="(item, i) in hoverOptions"
+              :key="i"
+            >
+              <template v-slot:prepend>
+                <v-icon :icon="item.icon"></v-icon>
+              </template>
+              <v-list-item-title>{{ item.text }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </v-btn>
     </v-toolbar>
     <v-card class="d-flex" height="93vh">
       <v-card class="overflow pl-2 sidebar" width="20%">
         <v-list>
-          <v-icon @clik="Back">mdi mdi-arrow-left</v-icon>
-          <v-list-subheader>{{ role }} DASHBOARD</v-list-subheader>
+          <v-list-subheader class="mt-4">{{ role }} DASHBOARD</v-list-subheader>
           <v-spacer class="mt-4"></v-spacer>
 
           <v-list-item
@@ -34,7 +49,7 @@
             <v-list-item-title>{{ item.text }}</v-list-item-title>
           </v-list-item>
         </v-list>
-        <v-row>
+        <!-- <v-row>
           <v-col>
             <v-btn
               variant="outlined"
@@ -46,7 +61,7 @@
               Logout<v-icon class="ml-2">mdi-logout</v-icon></v-btn
             >
           </v-col>
-        </v-row>
+        </v-row> -->
       </v-card>
       <v-card width="100%">
         <router-view />
@@ -62,14 +77,18 @@ export default {
   name: "App",
   data() {
     return {
+      hoverOptions: [
+        { text: "Profile", icon: "mdi-account-arrow-right-outline" },
+        { text: "Logout", icon: "mdi-logout" },
+      ],
       userData: [
-        { text: "Home", icon: "mdi-clock" },
+        { text: "Home", icon: "mdi-home-minus-outline" },
         { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
       ],
       adminData: [
-        { text: "Home", icon: "mdi-clock-outline" },
+        { text: "Home", icon: "mdi-home-minus-outline" },
         { text: "My Profile", icon: "mdi-account-outline" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
@@ -92,21 +111,22 @@ export default {
       const value = clickedValue.split(" ").join("").toLowerCase();
       this.$router.push(`/homeview/${value}`);
     },
-    logout() {
-      this.$router.push("/");
-    },
-    Back() {
-      this.$router.go(-1);
+    hoverValue(value) {
+      if (value == "Logout") {
+        Cookies.remove("jwtToken");
+        this.$router.push("/");
+      }
     },
   },
 };
 </script>
 
 <style scoped>
-.hover:hover {
+/* .hover {
   color: #274e76;
-}
-.hover:active {
+  border-left: 2px solid #274e76;
+} */
+.hover:hover {
   color: #274e76;
   border-left: 2px solid #274e76;
 }

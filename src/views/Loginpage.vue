@@ -128,5 +128,12 @@ export default {
       }
     },
   },
+  mounted(){
+    const cookies = Cookies.get("jwtToken")
+   if(cookies){
+    this.$router.push("homeview/home")
+   }
+    
+  }
 };
 </script>

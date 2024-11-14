@@ -21,7 +21,9 @@
         <v-icon>{{ is3DView ? "mdi-video-2d" : "mdi-video-3d" }}</v-icon>
       </v-btn>
       <v-spacer></v-spacer>
-
+      <v-btn icon @click="isSave = true" class="mr-4">
+        <v-card-text>SAVE</v-card-text>
+      </v-btn>
       <v-btn icon>
         <v-icon>mdi-theme-light-dark</v-icon>
       </v-btn>
@@ -49,33 +51,17 @@
             variant="outlined"
             hint="Eg : Mininum 6 Characters"
             label="Project Name"
-             :rules="[rules.required,rules.length]"
+            :rules="[rules.required, rules.length]"
           ></v-text-field>
           <template v-slot:actions>
             <v-spacer></v-spacer>
-            <v-btn @click="saveFile()" color="#274E76"> Save Project  </v-btn>
+            <v-btn @click="saveFile(projectName)" color="#274E76">
+              Save Project
+            </v-btn>
             <v-btn @click="isSave = false" color="red"> Don't Save </v-btn>
           </template>
         </v-card>
       </v-dialog>
-
-      <V-row
-        class="mr-1"
-        @click="isSave = true"
-        style="
-          position: absolute;
-          top: 30px !important;
-          right: 10px;
-          background-color: #274e76;
-          border-radius: 50%;
-        "
-      >
-        <v-col>
-          <v-btn-icon>
-            <v-icon size="1.7em" color="white">mdi-content-save-outline</v-icon>
-          </v-btn-icon>
-        </v-col>
-      </V-row>
       <v-card
         style="top: 230px !important; right: 10px"
         class="d-flex flex-column justify-center position px-2 py-2"
@@ -118,11 +104,11 @@
             />
           </v-col>
         </v-row>
-        <v-list v-if="!isModelCard">
+        <!-- <v-list v-if="!isModelCard">
           <v-list-subheader class="text-blue-darken-4 m"
             >REACENT ACTIVITIES</v-list-subheader
           >
-        </v-list>
+        </v-list> -->
 
         <!-- model card -->
         <v-card
@@ -233,8 +219,8 @@ export default {
   data() {
     return {
       rules: {
-        required: value => !!value || 'Field is required',
-        length:value => value.length>6 ||"length greater than 6"
+        required: (value) => !!value || "Field is required",
+        length: (value) => value.length > 6 || "length greater than 6",
       },
       is3DView: false,
       isVisible: false,
@@ -245,6 +231,7 @@ export default {
       isSave: false,
       showCard: [],
       clickModel: false,
+      projectName: "",
       availabelModels: [],
       models: [
         { name: "Door", icon: "mdi-door" },
@@ -293,7 +280,7 @@ export default {
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
       ],
-      sideBar: ["mdi-magnify", "mdi-draw-pen", "mdi-table-furniture"],
+      sideBar: ["mdi-draw-pen", "mdi-table-furniture"],
     };
   },
   watch: {
@@ -357,8 +344,9 @@ export default {
         this.isModelCard = true;
         this.categories = true;
         this.showCard = this.modelsList;
-      } else if (selectedValue == "mdi-magnify") {
-        this.isModelCard = false;
+      
+      // } else if (selectedValue == "mdi-magnify") {
+      //   this.isModelCard = false;
       } else {
         (this.isModelCard = true), (this.categories = false);
         this.showCard = this.drawList;
@@ -424,8 +412,8 @@ export default {
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },
-    saveFile() {
-      this.$refs.threeSceneComponent.saveFile();
+    saveFile(projectname) {
+      this.$refs.threeSceneComponent.saveFile(projectname);
     },
 
     handleBackHome() {

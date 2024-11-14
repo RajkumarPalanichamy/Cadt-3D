@@ -759,18 +759,16 @@ gl_FragColor = vec4(gridColor, 1.0);
       this.scene.add(gltf.scene);
     });
 
-  }
-  async saveFile() {
-    
-    const saveModel = {
-      coordinates: this.mainArray,
-      gltfObjects: this.modelLoad,
-    };
-    store.commit("setTriggerMethod", saveModel);
 
-    this.mainArray = [];
-    this.modelLoad = [];
-  }
+    }
+   async saveFile(projectname){
+    const saveModel={projectname:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
+    store.commit('setTriggerMethod', saveModel);          
+
+          this.mainArray=[]
+          this.modelLoad=[]
+    }
+
   animate() {
     requestAnimationFrame(() => this.animate());
     this.controls.update();
