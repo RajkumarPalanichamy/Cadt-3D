@@ -17,6 +17,8 @@ export default {
   mounted() {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new ThreeScene(this.threeContainer);
+    this.threeScene.predefined();
+
   },
   // beforeUnmount() {
   //   if (this.threeScene) {
