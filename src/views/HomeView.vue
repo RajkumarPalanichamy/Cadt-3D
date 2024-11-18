@@ -73,7 +73,6 @@
 <script>
 import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
-import axios from "axios";
 export default {
   name: "App",
   data() {
