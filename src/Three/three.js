@@ -717,16 +717,16 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
     this.scene.remove(this.tempLine);
     this.tempLine=null
-    this.addLight();
+    // this.addLight();
   }
-  addLight() {
-    let box = new THREE.Box3().setFromObject(this.polygonMesh);
-    let centre = box.getCenter(new THREE.Vector3());
-    let spotlight = new THREE.PointLight(Math.random() * 0xffffff, 50, 4);
-    spotlight.position.set(centre.x, centre.y + 1, centre.z);
-    this.scene.add(spotlight);
-    this.group.add(spotlight);
-  }
+  // addLight() {
+  //   let box = new THREE.Box3().setFromObject(this.polygonMesh);
+  //   let centre = box.getCenter(new THREE.Vector3());
+  //   let spotlight = new THREE.PointLight(Math.random() * 0xffffff, 50, 4);
+  //   spotlight.position.set(centre.x, centre.y + 1, centre.z);
+  //   this.scene.add(spotlight);
+  //   this.group.add(spotlight);
+  // }
   gltfLoader(modelLink) {
     console.log("modelLink", modelLink);
 

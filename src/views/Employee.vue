@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid="true" class="py-0 px-0">
+  <v-container :fluid="true" class="py-0 px-0">
     <v-data-table-virtual
       class="mt-2"
       height="500px"

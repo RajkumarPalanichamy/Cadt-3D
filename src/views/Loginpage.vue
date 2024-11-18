@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="d-flex px-0 py-0" height="100vh">
+  <v-container :fluid="true" class="d-flex px-0 py-0" height="100vh">
     <v-card width="70%" color="black" flat rounded="0">
       <v-card-title style="position: absolute; z-index: 2" class="text-white">
         <v-icon class="text-primary">mdi mdi-cube-outline</v-icon>
@@ -10,9 +10,7 @@
     <v-card width="30%" flat class="d-flex flex-column justify-center px-4">
       <v-form v-model="isForm">
         <v-card-title class="pb-0 text-center">Welcome to Blue 3D</v-card-title>
-        <v-card-subtitle class="text-center"
-          >Your Admin Dashboard</v-card-subtitle
-        >
+        <v-card-subtitle class="text-center">Your Dashboard</v-card-subtitle>
         <v-card-text class="pb-0 font-weight-medium mb-1"
           >Username :</v-card-text
         >
@@ -23,7 +21,8 @@
           density="compact"
           class="ml-3"
           append-inner-icon="mdi-account"
-        ></v-text-field>
+        >
+        </v-text-field>
         <v-card-text class="pb-0 font-weight-medium mb-1"
           >Password :</v-card-text
         >
@@ -36,7 +35,8 @@
           variant="outlined"
           :type="show1 ? 'text' : 'password'"
           @click:append-inner="show1 = !show1"
-        ></v-text-field>
+        >
+        </v-text-field>
         <v-card-text class="text-red py-0" v-if="errMsg"
           >* Data Doesn't Match</v-card-text
         >
@@ -55,8 +55,8 @@
           block
           color="#274E76"
           :loading="isLoading"
-          >Login</v-btn
-        >
+          >Login
+        </v-btn>
       </v-form>
     </v-card>
   </v-container>
@@ -86,10 +86,12 @@ export default {
       this.isLoading = true;
       if (this.username && this.password) {
         try {
-
-          const response = await axios.post(`${import.meta.env.VITE_API_LINK}/login`,{
+          const response = await axios.post(
+            `${import.meta.env.VITE_API_LINK}/login`,
+            {
               username: this.username,
-              password: this.password,}
+              password: this.password,
+            }
           );
 
           if (response.status === 200) {
@@ -111,16 +113,18 @@ export default {
             this.password = null;
           }, 2000);
           this.errMsg = true;
-          console.error("ERROR IN POST",error);
+          console.error("ERROR IN POST", error);
         }
       }
     },
     async fetchUserFurnitures(token) {
       try {
-
-        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/furnitures`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/furnitures`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         console.log("Furniture data:", response.data);
       } catch (error) {
@@ -128,12 +132,11 @@ export default {
       }
     },
   },
-  mounted(){
-    const cookies = Cookies.get("jwtToken")
-   if(cookies){
-    this.$router.push("homeview/home")
-   }
-    
-  }
+  mounted() {
+    const cookies = Cookies.get("jwtToken");
+    if (cookies) {
+      this.$router.push("homeview/home");
+    }
+  },
 };
 </script>
