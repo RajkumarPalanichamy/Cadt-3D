@@ -219,23 +219,63 @@ export default class ThreeScene {
       );
     }
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+  
+    const onDragStart = () => {
+    this.controls.enablePan = false;
+    this.controls.enableRotate = false;
+    this.controls.enableZoom = false;
+};
 
-    if (this.camera.isPerspectiveCamera) {
-      this.controls.minDistance = 0.2;
-      this.controls.maxDistance = 40;
+    const onDragEnd = () => {
+    this.controls.enablePan = true;
+    this.controls.enableRotate = true;
+    this.controls.enableZoom = true;
+};
 
-      this.controls.minPolarAngle = 0;
-      this.controls.maxPolarAngle = Math.PI * 0.5;
-      this.camera.position.set(5, 5, 5);
-    } else {
-      this.camera.zoom = 1;
-      this.controls.minZoom = 0.2;
-      this.controls.maxZoom = 3.0;
-      this.controls.enableZoom = true;
-      this.controls.enableRotate = false;
-      this.controls.enablePan = true;
-      this.camera.position.y = 5;
+
+const initializeDragControls = () => {
+    this.dragControls = new DragControls(this.globalArray, this.camera, this.renderer.domElement);
+    this.dragControls.transformGroup = true;
+    this.dragControls.addEventListener('dragstart', onDragStart);
+    this.dragControls.addEventListener('dragend', onDragEnd);
+    console.log('DragControls initialized:', this.dragControls);
+};
+
+
+const disposeDragControls = () => {
+    if (this.dragControls) {
+        this.dragControls.removeEventListener('dragstart', onDragStart);
+        this.dragControls.removeEventListener('dragend', onDragEnd);
+        this.dragControls.dispose();
+        this.dragControls = null;
+        console.log('DragControls disposed');
     }
+};
+
+
+if (this.camera instanceof THREE.PerspectiveCamera) {
+    disposeDragControls();  
+    this.controls.minDistance = 0.2;
+    this.controls.maxDistance = 40;
+    this.controls.minPolarAngle = 0;
+    this.controls.maxPolarAngle = Math.PI * 0.5;
+    this.camera.position.set(5, 5, 5);
+    this.camera.updateProjectionMatrix();
+    console.log('Perspective camera active - DragControls removed');
+}
+ else if (this.camera instanceof THREE.OrthographicCamera) {
+    initializeDragControls();  
+    this.camera.zoom = 1;
+    this.controls.minZoom = 0.2;
+    this.controls.maxZoom = 3.0;
+    this.controls.enableZoom = true;
+    this.controls.enableRotate = false;
+    this.controls.enablePan = true;
+    this.camera.position.y = 5;
+    this.camera.updateProjectionMatrix();
+    console.log('Orthographic camera active - DragControls added');
+}
+
 
     this.camera.lookAt(0, 0, 0);
   }
@@ -273,11 +313,11 @@ export default class ThreeScene {
     void main() {
         // Parameters for the small grid
         float smallLineThickness = 0.003; // Thickness of small grid lines
-        float smallGridFrequency = 300.0; // Frequency of small grid
+        float smallGridFrequency = 80.0; // Frequency of small grid
 
         // Parameters for the large grid
         float largeLineThickness = 0.005; // Thickness of large grid lines
-        float largeGridFrequency = 100.0; // Frequency of large grid
+        float largeGridFrequency = 20.0; // Frequency of large grid
 
         // Small grid calculations
         float smallGridX = step(smallLineThickness, abs(mod(vUv.x * smallGridFrequency, 1.0) - 0.5));
@@ -504,26 +544,26 @@ gl_FragColor = vec4(gridColor, 1.0);
 
     this.spheres = [];
 
-    this.setupDragControls();
+    // this.setupDragControls();
   }
  
-  setupDragControls() {
+  // setupDragControls() {
     
-    this.Dragcontrols = new DragControls(
-      [...this.globalArray],
-      this.camera,
-      this.renderer.domElement
-    );
-    this.Dragcontrols.transformGroup =true
-    this.Dragcontrols.addEventListener("dragstart", () => {
-      this.controls.enabled = false;
-    });
-    this.Dragcontrols.addEventListener("dragend", () => {
-      this.controls.enabled = true;
+  //   this.Dragcontrols = new DragControls(
+  //     [...this.globalArray],
+  //     this.camera,
+  //     this.renderer.domElement
+  //   );
+  //   this.Dragcontrols.transformGroup =true
+  //   this.Dragcontrols.addEventListener("dragstart", () => {
+  //     this.controls.enabled = false;
+  //   });
+  //   this.Dragcontrols.addEventListener("dragend", () => {
+  //     this.controls.enabled = true;
      
       
-    });
-  }
+  //   });
+  // }
   
  
   ceil(geometry) {
@@ -722,7 +762,7 @@ gl_FragColor = vec4(gridColor, 1.0);
   addLight() {
     let box = new THREE.Box3().setFromObject(this.polygonMesh);
     let centre = box.getCenter(new THREE.Vector3());
-    let spotlight = new THREE.PointLight(Math.random() * 0xffffff, 50, 4);
+    let spotlight = new THREE.PointLight( 0xffffff, 10, 4);
     spotlight.position.set(centre.x, centre.y + 1, centre.z);
     this.scene.add(spotlight);
     this.group.add(spotlight);
