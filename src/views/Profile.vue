@@ -1,8 +1,8 @@
 <template>
-  <v-container style="color: #f7f8fa" fluid="true">
+  <v-container style="color: #f7f8fa" :fluid="true">
     <!-- <v-card-title class="text-black">User Details</v-card-title> -->
     <v-card class="d-flex" height="90vh">
-      <v-container class="elevation-1 py-0 px-0" fluid width="20%">
+      <v-container class="elevation-1 py-0 px-0" :fluid="true" width="20%">
         <v-list>
           <v-spacer class="mt-4"></v-spacer>
           <v-list-item
@@ -111,11 +111,8 @@ export default {
     // getting logined user data from cookies
     const data = Cookies.get("jwtToken");
     const decodedToken = VueJwtDecode.decode(data);
-    console.log(decodedToken.name);
     // getting all the user data from the database
     const response = await axios.get(`${import.meta.env.VITE_API_LINK}/clients`);
-    console.log(response.data);
-
     response.data.forEach((eachUser) => {
       if (decodedToken.name === eachUser.username) {
         this.lastUserData = {
@@ -124,7 +121,6 @@ export default {
           id: eachUser._id,
         };
       }
-      console.log(eachUser);
     });
   },
 };

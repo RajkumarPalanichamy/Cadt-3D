@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="py-0 px-0">
+  <v-container :fluid="true" class="py-0 px-0">
     <v-toolbar density="compact" color="#274e76" flat>
       <v-card-title>
         <v-icon>mdi mdi-cube-outline</v-icon>
@@ -49,9 +49,9 @@
             class="mt-4 mb-4"
             v-model="projectName"
             variant="outlined"
-            hint="Eg : Mininum 6 Characters"
+            hint="Enter Your Project Name"
             label="Project Name"
-            :rules="[rules.required, rules.length]"
+            :rules="[rules.required]"
           ></v-text-field>
           <template v-slot:actions>
             <v-spacer></v-spacer>
@@ -220,7 +220,6 @@ export default {
     return {
       rules: {
         required: (value) => !!value || "Field is required",
-        length: (value) => value.length > 6 || "length greater than 6",
       },
       is3DView: false,
       isVisible: false,
