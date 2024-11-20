@@ -40,6 +40,9 @@
             class="hover mt-2"
             v-for="(item, i) in displaySidebarData"
             :key="i"
+            :value="item"
+            color="primary"
+            variant="plain"
             @click="sideBar(item.text)"
           >
             <template v-slot:prepend>
@@ -86,7 +89,7 @@ export default {
         { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
-        {text: "Web", icon :"mdi-web"}
+        { text: "Web", icon: "mdi-web" },
       ],
       adminData: [
         { text: "Home", icon: "mdi-home-minus-outline" },
@@ -94,8 +97,7 @@ export default {
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Employee", icon: "mdi-account-group-outline" },
-        {text: "Web", icon :"mdi-web"}
-
+        { text: "Web", icon: "mdi-web" },
       ],
       displaySidebarData: [],
       role: "",
@@ -106,7 +108,8 @@ export default {
     const data = Cookies.get("jwtToken");
     const decodedToken = VueJwtDecode.decode(data);
     this.role = decodedToken.role.toUpperCase();
-    this.displaySidebarData = decodedToken.role == "admin" ? this.adminData : this.userData;
+    this.displaySidebarData =
+      decodedToken.role == "admin" ? this.adminData : this.userData;
   },
   methods: {
     sideBar(clickedValue) {
@@ -126,6 +129,5 @@ export default {
 <style scoped>
 .hover:hover {
   color: #274e76;
-  border-left: 2px solid #274e76;
 }
 </style>

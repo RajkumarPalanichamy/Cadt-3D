@@ -76,7 +76,7 @@
               <v-list>
                 <v-list-item
                   v-for="(item, i) in hoverOptions"
-                  @click="item.text == 'Open' && loadSavedModels(model)"
+                  @click="projectOptions(item, model)"
                   :key="i"
                 >
                   <template v-slot:prepend>
@@ -124,24 +124,7 @@ export default {
     this.filteredModels = this.savedModels;
   },
   async mounted() {
-    try {
-      const data = Cookies.get("jwtToken");
-      const userName = VueJwtDecode.decode(data);
-      this.isProjectLoad = true;
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
-      );
-
-      if (response.status === 200) {
-        this.isProjectLoad = false;
-        this.savedModels = response.data.data;
-        this.filteredModels = this.savedModels;
-      } else {
-        console.error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error.message);
-    }
+    this.getSavedModel();
   },
 
   methods: {
@@ -164,9 +147,61 @@ export default {
         this.filteredModels = this.savedModels;
       }
     },
+    async getSavedModel() {
+      this.isProjectLoad = true;
+      try {
+        const data = Cookies.get("jwtToken");
+        const userName = VueJwtDecode.decode(data);
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
+        );
+
+        if (response.status === 200) {
+          this.isProjectLoad = false;
+          this.savedModels = response.data.data;
+          this.filteredModels = this.savedModels;
+        } else {
+          console.error(response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error.message);
+      }
+    },
+    projectOptions(item, model) {
+      if (item.text == "Open") {
+        this.loadSavedModels(model);
+      } else if (item.text == "Rename") {
+        alert("Rename");
+      } else {
+        this.deleteModel(model.projectName);
+      }
+    },
     loadSavedModels(model) {
       this.$router.push("/createproject");
       ThreeScene.methods.loadSaved(model);
+    },
+    async deleteModel(projectname) {
+      try {
+        const username = VueJwtDecode.decode(Cookies.get("jwtToken")).name;
+        const deleteData = {
+          username: username,
+          projectName: projectname,
+        };
+
+        const response = await axios.delete(
+          `${import.meta.env.VITE_API_LINK}/dynamicscene`,
+          {
+            data: deleteData,
+          }
+        );
+        if (response.status === 200) {
+          this.getSavedModel();
+        }
+      } catch (error) {
+        console.error("Delete Error:", error.message);
+        this.$toast.error("An error occurred while deleting the item");
+      }
     },
   },
 };

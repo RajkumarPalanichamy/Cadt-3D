@@ -18,7 +18,7 @@ export default {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new ThreeScene(this.threeContainer);
     this.threeScene.predefined();
-    this.initializeThreeScene();
+    // this.initializeThreeScene();
 
   },
   // beforeUnmount() {
@@ -28,13 +28,13 @@ export default {
   //   }
   // },
   methods: {
-    async initializeThreeScene() {
-        // Simulating async initialization
-        this.threeScene = await new Promise((resolve) => {
-            setTimeout(() => resolve(new ThreeScene()), 1000); // Replace with actual initialization
-        });
-        console.log('threeScene initialized:', this.threeScene);
-    },
+    // async initializeThreeScene() {
+    //     // Simulating async initialization
+    //     this.threeScene = await new Promise((resolve) => {
+    //         setTimeout(() => resolve(new ThreeScene()), 1000); // Replace with actual initialization
+    //     });
+    //     console.log('threeScene initialized:', this.threeScene);
+    // },
     create() {
       this.threeScene.createListener();
     },
