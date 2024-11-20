@@ -94,6 +94,7 @@ export default {
       { text: "My Profile", icon: "mdi-account" },
       { text: "Glb Models", icon: "mdi-table-furniture" },
       { text: "Textures", icon: "mdi-texture" },
+      
     ],
     savedModels: [
       "Model Name 1",
@@ -124,6 +125,7 @@ export default {
   created() {
     this.filteredModels = this.savedModels;
   },
+  
   methods: {
     createProject() {
       this.$router.push("/createproject");

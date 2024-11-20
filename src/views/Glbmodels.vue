@@ -98,7 +98,7 @@
           </v-toolbar>
           <v-card class="d-flex" height="100vh" flat>
             <v-card width="70%" flat rounded="0" class="px-3 py-3">
-              <gltfViewer ref="gltfViewerComponent" style="height: 65vh" />
+              <gltfViewer ref="gltfViewerComponent" style="height: 480px" />
             </v-card>
             <v-card width="30%" flat class="pl-4 px-4 pt-10 mt-16">
               <v-form>

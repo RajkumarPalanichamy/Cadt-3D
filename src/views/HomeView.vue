@@ -86,6 +86,7 @@ export default {
         { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
+        {text:"CADT-3D",icon: "mdi-cube"}
       ],
       adminData: [
         { text: "Home", icon: "mdi-home-minus-outline" },
@@ -93,6 +94,7 @@ export default {
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Employee", icon: "mdi-account-group-outline" },
+        {text:"CADT-3D",icon: "mdi-cube"}
       ],
       displaySidebarData: [],
       role: "",
@@ -114,8 +116,15 @@ export default {
   },
   methods: {
     sideBar(clickedValue) {
-      const value = clickedValue.split(" ").join("").toLowerCase();
+      if(clickedValue=='CADT-3D'){
+        this.$router.push(`/cadt3d`);
+
+      }
+      else{
+        const value = clickedValue.split(" ").join("").toLowerCase();
       this.$router.push(`/homeview/${value}`);
+
+      }
     },
     hoverValue(value) {
       if (value == "Logout") {

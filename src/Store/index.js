@@ -5,21 +5,25 @@ const store = createStore({
     triggerMethod: false,
   },
   mutations: {
+    changeTriggerMethod(state){
+      state.triggerMethod = false;
+
+    },
     async setTriggerMethod(state, payload) {
       // state.triggerMethod = payload;
       console.log('payload',payload);
       
-      try {
-
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_LINK}/dynamicscene`,
-
-          payload
-        );
-        console.log(response);
-      } catch (error) {
-        console.log(error);
-      }
+      axios.post(`${import.meta.env.VITE_API_LINK}/dynamicscene`, payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        console.log('Data submitted successfully:', response.data);
+      })
+      .catch(error => {
+        console.error('Error:', error.response ? error.response : error);
+      });
       state.triggerMethod = true;
      
     } 
