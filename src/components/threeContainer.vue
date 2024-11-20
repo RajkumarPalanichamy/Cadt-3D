@@ -18,6 +18,7 @@ export default {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new ThreeScene(this.threeContainer);
     this.threeScene.predefined();
+    this.initializeThreeScene();
 
   },
   // beforeUnmount() {
@@ -27,6 +28,13 @@ export default {
   //   }
   // },
   methods: {
+    async initializeThreeScene() {
+        // Simulating async initialization
+        this.threeScene = await new Promise((resolve) => {
+            setTimeout(() => resolve(new ThreeScene()), 1000); // Replace with actual initialization
+        });
+        console.log('threeScene initialized:', this.threeScene);
+    },
     create() {
       this.threeScene.createListener();
     },
@@ -59,8 +67,19 @@ this.threeScene.predefined(model.cordinates);
     redoEvent() {
       console.log(this.undoModels);
     },
-    saveFile(projectname){
-      this.threeScene.saveFile(projectname);
+    saveFile(projectname,userName){      
+      this.threeScene.saveFile(projectname,userName);
+    },
+    loadSaved(model){
+      if (!this.threeScene) {
+            console.error('threeScene is not initialized!');
+            return;
+        }
+        this.threeScene.predefined(model);
+
+     
+
+
     },
     backHome(){
       // this.$parent.methods.return()

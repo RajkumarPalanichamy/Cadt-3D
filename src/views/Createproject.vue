@@ -210,6 +210,8 @@
 <script>
 import ThreeScene from "@/components/threeContainer.vue";
 import axios from "axios";
+import Cookies from "js-cookie";
+import VueJwtDecode from "vue-jwt-decode";
 import { mapState } from "vuex";
 export default {
   name: "createProject",
@@ -301,7 +303,6 @@ export default {
       return this.availabelModels.length;
     },
   },
-
   methods: {
     setView(view) {
       this.isModel = view === "models" ? true : false;
@@ -309,8 +310,9 @@ export default {
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
-
-        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getfurnitures`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/getfurnitures`
+        );
 
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
@@ -343,9 +345,9 @@ export default {
         this.isModelCard = true;
         this.categories = true;
         this.showCard = this.modelsList;
-      
-      // } else if (selectedValue == "mdi-magnify") {
-      //   this.isModelCard = false;
+
+        // } else if (selectedValue == "mdi-magnify") {
+        //   this.isModelCard = false;
       } else {
         (this.isModelCard = true), (this.categories = false);
         this.showCard = this.drawList;
@@ -360,7 +362,6 @@ export default {
         }, 500);
       } else {
         const response = await axios.get(
-
           `${import.meta.env.VITE_API_LINK}/defaultscenevalues`
         );
         response.data.forEach((model) => {
@@ -368,13 +369,11 @@ export default {
             this.$refs.threeSceneComponent.modelLoad(model);
           }
         });
-
       }
     },
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-
           `${import.meta.env.VITE_API_LINK}/getfurnitures`,
 
           {
@@ -412,7 +411,9 @@ export default {
       this.$refs.threeSceneComponent.undoEvent();
     },
     saveFile(projectname) {
-      this.$refs.threeSceneComponent.saveFile(projectname);
+      const data = Cookies.get("jwtToken");
+    const userName = VueJwtDecode.decode(data);
+      this.$refs.threeSceneComponent.saveFile(projectname,userName.name);
     },
 
     handleBackHome() {

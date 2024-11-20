@@ -761,8 +761,8 @@ gl_FragColor = vec4(gridColor, 1.0);
 
 
     }
-   async saveFile(projectname){
-    const saveModel={projectname:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
+   async saveFile(projectname,userName){
+    const saveModel={username:userName,projectName:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
     store.commit('setTriggerMethod', saveModel);          
 
           this.mainArray=[]
