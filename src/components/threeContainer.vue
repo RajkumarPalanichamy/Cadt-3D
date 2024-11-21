@@ -61,6 +61,7 @@ this.threeScene.predefined(model.cordinates);
     },
     saveFile(projectname){
       this.threeScene.saveFile(projectname);
+      this.threeScene.blob();
     },
     backHome(){
       // this.$parent.methods.return()

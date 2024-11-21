@@ -1,7 +1,7 @@
 import * as THREE from "three";
-
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
+import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
@@ -24,6 +24,7 @@ export default class ThreeScene {
     this.mouse = new THREE.Vector2();
     this.intersects = null;
     this.controlPoints = [];
+    this.vertMarkers=[]
     this.plane = null;
     this.controls = null;
     this.spheres = [];
@@ -35,18 +36,18 @@ export default class ThreeScene {
     this.Dragcontrols = null;
     this.isDrawing = false;
     this.gltf = [];
-
+    this.getImageData = false;
     this.dragObjects = [];
     this.mainArray = [];
     this.modelLoad = [];
     this.globalArray = [];
     this.group;
+    this.initializeDragControls;
+    this.disposeDragControls;
 
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
- 
-   
-    
+    this.mouseover = this.mouseover.bind(this);
 
     this.init();
   }
@@ -59,7 +60,11 @@ export default class ThreeScene {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("white");
 
-    this.renderer = new THREE.WebGLRenderer();
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      preserveDrawingBuffer: true
+    });
+    this.renderer.physicallyCorrectLights = true;
     this.renderer.setSize(
       this.container.clientWidth,
       this.container.clientHeight
@@ -93,28 +98,18 @@ export default class ThreeScene {
 
     this.scene.add(sky);
 
-      this.renderer.domElement.addEventListener(
-        "dblclick",
-        this.meshSelect.bind(this)
-      );
-  
+    // this.renderer.domElement.addEventListener(
+    //   "dblclick",
+    //   this.meshSelect.bind(this)
+    // );
 
     this.renderer.domElement.addEventListener(
       "mousemove",
       this.selectingProperty.bind(this)
     );
-
-
-    // console.log('scene',this.scene);
-    this.scene.traverse((child) => {
-      if (child.type == "Mesh") {
-        console.log("mesh congoonee");
-      }
-    });
-
     this.animate();
   }
-  
+
   createListener() {
     if (!this.listenersActive) {
       this.startDrawing();
@@ -147,7 +142,7 @@ export default class ThreeScene {
   }
 
   removeListeners() {
-    // this.renderer.domElement.removeEventListener("mouseover", this.mouseover);
+    this.renderer.domElement.addEventListener("dblclick", this.mouseover);
 
     if (this.listenersActive) {
       this.renderer.domElement.removeEventListener(
@@ -163,15 +158,11 @@ export default class ThreeScene {
   }
 
   updateCamera() {
-        // this.setupDragControls();
-
     if (this.controls) {
       this.controls.dispose();
     }
 
     if (this.cam) {
-      this.spheres.forEach((sphere) => this.scene.add(sphere));
-      this.lines.forEach((line) => this.scene.add(line));
       this.scene.background = new THREE.Color("white");
       this.scene.add(this.plane);
       this.objects.push(this.plane);
@@ -197,7 +188,6 @@ export default class ThreeScene {
       );
       this.scene.add(this.gridHelper);
     } else {
-     
       this.scene.remove(this.gridHelper);
       this.scene.remove(this.plane);
       this.objects.pop(this.plane);
@@ -217,86 +207,82 @@ export default class ThreeScene {
         0.1,
         1000
       );
+
     }
+
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-  
+
     const onDragStart = () => {
-    this.controls.enablePan = false;
-    this.controls.enableRotate = false;
-    this.controls.enableZoom = false;
-};
+      this.controls.enablePan = false;
+      this.controls.enableRotate = false;
+      this.controls.enableZoom = false;
+      this.controls.enabled=false
+    };
 
     const onDragEnd = () => {
-    this.controls.enablePan = true;
-    this.controls.enableRotate = true;
-    this.controls.enableZoom = true;
-};
+      this.controls.enablePan = true;
+      this.controls.enableRotate = false;
+      this.controls.enableZoom = true;
+      this.controls.enabled = true;
+      
+    };
 
+    this.initializeDragControls = () => {
+      this.dragControls = new DragControls(
+        this.globalArray,
+        this.camera,
+        this.renderer.domElement
+      );
+      this.dragControls.transformGroup = true;
+      this.dragControls.addEventListener("dragstart", onDragStart);
+      this.dragControls.addEventListener("dragend", onDragEnd);
+    };
 
-const initializeDragControls = () => {
-    this.dragControls = new DragControls(this.globalArray, this.camera, this.renderer.domElement);
-    this.dragControls.transformGroup = true;
-    this.dragControls.addEventListener('dragstart', onDragStart);
-    this.dragControls.addEventListener('dragend', onDragEnd);
-    console.log('DragControls initialized:', this.dragControls);
-};
-
-
-const disposeDragControls = () => {
-    if (this.dragControls) {
-        this.dragControls.removeEventListener('dragstart', onDragStart);
-        this.dragControls.removeEventListener('dragend', onDragEnd);
+    this.disposeDragControls = () => {
+      if (this.dragControls) {
+        this.dragControls.removeEventListener("dragstart", onDragStart);
+        this.dragControls.removeEventListener("dragend", onDragEnd);
         this.dragControls.dispose();
         this.dragControls = null;
-        console.log('DragControls disposed');
+      }
+    };
+
+    if (this.camera instanceof THREE.PerspectiveCamera) {
+      this.disposeDragControls();
+      this.controls.minDistance = 0.2;
+      this.controls.maxDistance = 40;
+      this.controls.minPolarAngle = 0;
+      this.controls.maxPolarAngle = Math.PI * 0.5;
+      this.camera.position.set(5, 5, 5);
+      this.camera.updateProjectionMatrix();
+    } else if (this.camera instanceof THREE.OrthographicCamera) {
+      this.initializeDragControls();
+      this.camera.zoom = 1;
+      this.controls.minZoom = 0.2;
+      this.controls.maxZoom = 3.0;
+      this.controls.enableZoom = true;
+      this.controls.enableRotate = false;
+      this.controls.enablePan = true;
+      this.camera.position.y = 5;
+      this.camera.updateProjectionMatrix();
     }
-};
-
-
-if (this.camera instanceof THREE.PerspectiveCamera) {
-    disposeDragControls();  
-    this.controls.minDistance = 0.2;
-    this.controls.maxDistance = 40;
-    this.controls.minPolarAngle = 0;
-    this.controls.maxPolarAngle = Math.PI * 0.5;
-    this.camera.position.set(5, 5, 5);
-    this.camera.updateProjectionMatrix();
-    console.log('Perspective camera active - DragControls removed');
-}
- else if (this.camera instanceof THREE.OrthographicCamera) {
-    initializeDragControls();  
-    this.camera.zoom = 1;
-    this.controls.minZoom = 0.2;
-    this.controls.maxZoom = 3.0;
-    this.controls.enableZoom = true;
-    this.controls.enableRotate = false;
-    this.controls.enablePan = true;
-    this.camera.position.y = 5;
-    this.camera.updateProjectionMatrix();
-    console.log('Orthographic camera active - DragControls added');
-}
-
 
     this.camera.lookAt(0, 0, 0);
   }
   predefined(model) {
-
-    if(model){
+    if (model) {
       this.controlPoints = model;
       this.finalizePolygon(this.controlPoints);
-  
-    }
-    else{
-      this.controlPoints = [{x:-5,y:0,z:-3},
-        {x:5,y:0,z:-3},
-        {x:5,y:9,z:3},
-        {x:-5,y:0,z:3},
-        {x:-5,y:0,z:-3}
+    } else {
+      this.controlPoints = [
+        { x: -5, y: 0, z: -3 },
+        { x: 5, y: 0, z: -3 },
+        { x: 5, y: 9, z: 3 },
+        { x: -5, y: 0, z: 3 },
+        { x: -5, y: 0, z: -3 },
       ];
       this.finalizePolygon(this.controlPoints);
-  
     }
-
   }
 
   mesh() {
@@ -380,7 +366,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
   }
 
-  meshSelect(e){
+  meshSelect(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -388,11 +374,9 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.intersects = this.raycaster.intersectObjects(this.globalArray);
 
     if (this.intersects.length > 0) {
-
     }
-
   }
-  
+
   raycastDefined(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -409,9 +393,8 @@ gl_FragColor = vec4(gridColor, 1.0);
     if (this.intersects.length > 0) {
       let point = this.intersects[0].point.clone();
 
-      let snapThreshold = 1; 
+      let snapThreshold = 1;
       let snappedPoint = this.findNearestPoint(point, snapThreshold);
-
 
       if (snappedPoint) {
         this.updateTemporaryLine(snappedPoint);
@@ -437,11 +420,11 @@ gl_FragColor = vec4(gridColor, 1.0);
         this.controlPoints.push(point);
         this.addControlPoint(point);
         this.finalizePolygon();
-        this.stopDrawing()
+        this.stopDrawing();
+        this.getImageData = true;
       } else {
         this.controlPoints.push(point);
         this.addControlPoint(point);
-
         if (this.controlPoints.length > 1) {
           this.addLine(
             this.controlPoints[this.controlPoints.length - 2],
@@ -452,7 +435,6 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
   }
 
-
   findNearestPoint(currentPoint, threshold) {
     for (let i = 0; i < this.controlPoints.length; i++) {
       if (currentPoint.distanceTo(this.controlPoints[i]) < threshold) {
@@ -461,7 +443,40 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
     return null;
   }
+  mouseover(e) {
+    this.raycastDefined(e);
+    if (this.intersects.length > 0) {
+      this.disposeDragControls();
+      if (!this.Dragcontrols) {
+        this.controls.enabled = false;
+        this.setupDragControls();
+      }
+    }
+  }
+  AddGeometries() {
+    this.spheres.forEach((sphere) => {
+      this.scene.add(sphere);
+    });
 
+    this.lines.forEach((line) => {
+      this.scene.add(line);
+    });
+    this.textMeshes.forEach((textMesh) => {
+      this.scene.add(textMesh);
+    });
+  }
+  RemoveGeometries() {
+    this.spheres.forEach((sphere) => {
+      this.scene.remove(sphere);
+    });
+
+    this.lines.forEach((line) => {
+      this.scene.remove(line);
+    });
+    this.textMeshes.forEach((textMesh) => {
+      this.scene.remove(textMesh);
+    });
+  }
 
 
   addControlPoint(point) {
@@ -481,20 +496,13 @@ gl_FragColor = vec4(gridColor, 1.0);
 
   finalizePolygon() {
     if (this.controlPoints.length < 3) return;
+
     this.group = new THREE.Group();
 
-
-    this.spheres.forEach((sphere) => {
-      this.group.attach(sphere);
-      this.scene.remove(sphere);
-    });
-
-
     let shape = new THREE.Shape();
-
-    for (let i = 0; i < this.controlPoints.length - 1; i++) {
-      shape.moveTo(this.controlPoints[i].x, this.controlPoints[i].z);
-      shape.lineTo(this.controlPoints[i + 1].x, this.controlPoints[i + 1].z);
+    shape.moveTo(this.controlPoints[0].x, this.controlPoints[0].z);
+    for (let i = 1; i < this.controlPoints.length; i++) {
+      shape.lineTo(this.controlPoints[i].x, this.controlPoints[i].z);
     }
 
     let loader = new THREE.TextureLoader();
@@ -506,7 +514,8 @@ gl_FragColor = vec4(gridColor, 1.0);
     let geometry = new THREE.ShapeGeometry(shape);
     geometry.rotateX(Math.PI / 2);
     let material = new THREE.MeshBasicMaterial({
-      map: texture,
+      // map: texture,
+      color:"lightgreen",
       side: THREE.DoubleSide,
     });
 
@@ -514,58 +523,35 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.polygonMesh.position.y = 0.01;
     this.group.add(this.polygonMesh);
 
-     this.threeDimension();
-     this.ceil(geometry);
-    
-      this.lines.forEach((line) => {
-        this.group.add(line);
-        this.scene.remove(line);
-      });
-      this.textMeshes.forEach((textMesh) => {
-        this.group.add(textMesh);
-        this.scene.remove(textMesh);
-      });
-  
+    this.threeDimension();
+    this.ceil(geometry);
+   
+
     this.walls.forEach((wall) => {
       this.group.add(wall);
-      this.scene.remove(wall)
+      this.scene.remove(wall);
     });
-     
-     
+
     this.globalArray.push(this.group);
-      this.scene.add(this.group);
-  
+    this.scene.add(this.group);
+
     this.mainArray.push(this.controlPoints);
+    this.RemoveGeometries();
 
     this.controlPoints = [];
-    this.lines = [];
     this.walls = [];
-    this.textMeshes = [];
-
-    this.spheres = [];
-
-    // this.setupDragControls();
   }
- 
-  // setupDragControls() {
-    
-  //   this.Dragcontrols = new DragControls(
-  //     [...this.globalArray],
-  //     this.camera,
-  //     this.renderer.domElement
-  //   );
-  //   this.Dragcontrols.transformGroup =true
-  //   this.Dragcontrols.addEventListener("dragstart", () => {
-  //     this.controls.enabled = false;
-  //   });
-  //   this.Dragcontrols.addEventListener("dragend", () => {
-  //     this.controls.enabled = true;
-     
-      
-  //   });
-  // }
-  
- 
+
+  blob() {
+    let data = this.dataURL;
+
+    var link = document.createElement("a");
+    link.download = "demo.png";
+    link.href = data;
+    link.target = "_blank";
+    link.click();
+  }
+
   ceil(geometry) {
     let loader = new THREE.TextureLoader();
     let texture = loader.load("./images/ceil.jpeg", () => {
@@ -584,9 +570,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.group.add(this.polygonMesh);
   }
 
- 
-
-  updateTemporaryLine(newPoint) {    
+  updateTemporaryLine(newPoint) {
     if (this.tempLine) {
       this.updateExistingTemporaryLine(newPoint);
     } else {
@@ -597,10 +581,10 @@ gl_FragColor = vec4(gridColor, 1.0);
   createNewTemporaryLine(newPoint) {
     let points = [
       this.controlPoints[this.controlPoints.length - 1].x,
-      this.controlPoints[this.controlPoints.length - 1].y,
+      this.controlPoints[this.controlPoints.length - 1].y + 0.5,
       this.controlPoints[this.controlPoints.length - 1].z,
       newPoint.x,
-      newPoint.y,
+      newPoint.y + 0.5,
       newPoint.z,
     ];
 
@@ -618,8 +602,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.tempLine = new Line2(geometry, material);
     this.tempLine.computeLineDistances();
     this.scene.add(this.tempLine);
-    console.log('line',this.tempLine);
-    
+
     // this.tempLine = line;
     this.addMeasurementLabel(
       this.controlPoints[this.controlPoints.length - 1],
@@ -630,10 +613,10 @@ gl_FragColor = vec4(gridColor, 1.0);
   updateExistingTemporaryLine(newPoint) {
     let points = [
       this.controlPoints[this.controlPoints.length - 1].x,
-      this.controlPoints[this.controlPoints.length - 1].y,
+      this.controlPoints[this.controlPoints.length - 1].y + 0.5,
       this.controlPoints[this.controlPoints.length - 1].z,
       newPoint.x,
-      newPoint.y,
+      newPoint.y + 0.5,
       newPoint.z,
     ];
 
@@ -648,13 +631,13 @@ gl_FragColor = vec4(gridColor, 1.0);
   }
 
   addMeasurementLabel(point1, point2) {
-    let distance = point1.distanceTo(point2);
+    let distance = point1.distanceTo(point2).toFixed(2);
     let loader = new FontLoader();
 
     loader.load(
       "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json",
       (font) => {
-        let textGeometry = new TextGeometry(distance.toFixed(2), {
+        let textGeometry = new TextGeometry(distance, {
           font: font,
           size: 0.2,
           depth: 0.01,
@@ -667,10 +650,10 @@ gl_FragColor = vec4(gridColor, 1.0);
           .addVectors(point1, point2)
           .divideScalar(2);
         textMesh.position.set(midpoint.x, 0.3, midpoint.z);
+        textMesh.userData.length = distance;
         this.scene.add(textMesh);
-        
-        this.textMeshes.push(textMesh);
 
+        this.textMeshes.push(textMesh);
       }
     );
   }
@@ -752,30 +735,21 @@ gl_FragColor = vec4(gridColor, 1.0);
 
       this.scene.add(wall);
 
-
       this.walls.push(wall);
     }
     this.scene.remove(this.tempLine);
-    this.tempLine=null
+    this.tempLine = null;
 
     this.addLight();
   }
   addLight() {
     let box = new THREE.Box3().setFromObject(this.polygonMesh);
     let centre = box.getCenter(new THREE.Vector3());
-    let spotlight = new THREE.PointLight( 0xffffff, 10, 4);
+    let spotlight = new THREE.PointLight(0xffffff, 10, 4);
     spotlight.position.set(centre.x, centre.y + 1, centre.z);
     this.scene.add(spotlight);
     this.group.add(spotlight);
   }
-  // addLight() {
-  //   let box = new THREE.Box3().setFromObject(this.polygonMesh);
-  //   let centre = box.getCenter(new THREE.Vector3());
-  //   let spotlight = new THREE.PointLight(Math.random() * 0xffffff, 50, 4);
-  //   spotlight.position.set(centre.x, centre.y + 1, centre.z);
-  //   this.scene.add(spotlight);
-  //   this.group.add(spotlight);
-  // }
   gltfLoader(modelLink) {
     console.log("modelLink", modelLink);
 
@@ -784,48 +758,50 @@ gl_FragColor = vec4(gridColor, 1.0);
       console.log("gg", gltf.scene);
       let box = new THREE.Box3().setFromObject(gltf.scene);
       let size = new THREE.Vector3();
-      box.getSize(size); 
-          let maxSize = 0;
-          if (size.x >= size.z && size.x >= size.y) {
-            maxSize = size.x;
-          } else if (size.y >= size.x && size.y >= size.z) {
-            maxSize = size.y;
-          } else if (size.z >= size.x && size.z >= size.y) {
-            maxSize = size.z;
-          }
+      box.getSize(size);
+      let maxSize = 0;
+      if (size.x >= size.z && size.x >= size.y) {
+        maxSize = size.x;
+      } else if (size.y >= size.x && size.y >= size.z) {
+        maxSize = size.y;
+      } else if (size.z >= size.x && size.z >= size.y) {
+        maxSize = size.z;
+      }
       gltf.scene.scale.setScalar(1 / (maxSize / 2));
 
       this.gltf.push(gltf.scene);
-      gltf.scene.position.set(
-        Math.random() * 10,
-        0,
-        Math.random() * 10
-      );
+      gltf.scene.position.set(Math.random() * 10, 0, Math.random() * 10);
 
       const saveModel = { gltfLink: modelLink, gltfScene: gltf.scene.position };
       this.modelLoad.push(saveModel);
 
       this.scene.add(gltf.scene);
     });
+  }
+  async saveFile(projectname) {
+    const saveModel = {
+      projectname: projectname,
+      coordinates: this.mainArray,
+      gltfObjects: this.modelLoad,
+    };
+    store.commit("setTriggerMethod", saveModel);
 
-
-    }
-   async saveFile(projectname){
-    const saveModel={projectname:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
-    store.commit('setTriggerMethod', saveModel);          
-
-          this.mainArray=[]
-          this.modelLoad=[]
-    }
+    this.mainArray = [];
+    this.modelLoad = [];
+  }
 
   animate() {
     requestAnimationFrame(() => this.animate());
     this.controls.update();
     this.render();
+    if (this.getImageData == true) {
+      this.dataURL = this.renderer.domElement.toDataURL();
+      // this.blob()
+      this.getImageData = false;
+    }
   }
 
   render() {
     this.renderer.render(this.scene, this.camera);
-
   }
 }
