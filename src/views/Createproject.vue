@@ -35,6 +35,9 @@
     <v-card
       class="d-flex"
       @dragover.prevent="onDragOver"
+      @drop="onDrop"
+      @mousemove="handleMouseMove"
+      @mouseup="handleMouseUp"
       style="cursor: pointer"
     >
       <ThreeScene ref="threeSceneComponent" />
@@ -184,7 +187,11 @@
                 <v-card
                   v-for="(model, index) in availabelModels"
                   :key="index"
-                  @dragstart="onDragStart(model._id)"
+                  @dragstart="
+                    onDragStart(
+                      model.FurnituresImagesArraywithGltf[0].furnitureGltfLoader
+                    )
+                  "
                   draggable="true"
                   class="ma-2 pt-2"
                   outlined
@@ -210,6 +217,8 @@
 <script>
 import ThreeScene from "@/components/threeContainer.vue";
 import axios from "axios";
+import Cookies from "js-cookie";
+import VueJwtDecode from "vue-jwt-decode";
 import { mapState } from "vuex";
 export default {
   name: "createProject",
@@ -290,7 +299,7 @@ export default {
         console.log("newValue", newValue);
 
         this.handleBackHome();
-        this.$store.commit("setTriggerMethod", false);
+        this.$store.commit("changeTriggerMethod");
       }
     },
   },
@@ -301,7 +310,6 @@ export default {
       return this.availabelModels.length;
     },
   },
-
   methods: {
     setView(view) {
       this.isModel = view === "models" ? true : false;
@@ -309,8 +317,9 @@ export default {
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
-
-        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getfurnitures`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/getfurnitures`
+        );
 
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
@@ -343,9 +352,9 @@ export default {
         this.isModelCard = true;
         this.categories = true;
         this.showCard = this.modelsList;
-      
-      // } else if (selectedValue == "mdi-magnify") {
-      //   this.isModelCard = false;
+
+        // } else if (selectedValue == "mdi-magnify") {
+        //   this.isModelCard = false;
       } else {
         (this.isModelCard = true), (this.categories = false);
         this.showCard = this.drawList;
@@ -360,7 +369,6 @@ export default {
         }, 500);
       } else {
         const response = await axios.get(
-
           `${import.meta.env.VITE_API_LINK}/defaultscenevalues`
         );
         response.data.forEach((model) => {
@@ -368,13 +376,11 @@ export default {
             this.$refs.threeSceneComponent.modelLoad(model);
           }
         });
-
       }
     },
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-
           `${import.meta.env.VITE_API_LINK}/getfurnitures`,
 
           {
@@ -395,24 +401,36 @@ export default {
         console.error("Error loading model:", error);
       }
     },
-    onDragStart(modelId) {
-      const draggedModel = modelId;
+    onDragStart(modelLink) {
+      const draggedModel = modelLink;
       event.dataTransfer.setData("text/plain", draggedModel);
-      this.loadModel(modelId);
     },
+
     onDragOver(event) {
       this.isVisible = false;
       event.preventDefault();
     },
-    // onDrop(event) {
-    //   const droppedText = event.dataTransfer.getData("text/plain");
-    //   this.isVisible = true;
-    // },
+    onDrop(event) {
+      const droppedText = event.dataTransfer.getData("text/plain");
+      console.log("droppedText", droppedText);
+
+      this.isVisible = true;
+      const mouse = {
+        x: (event.clientX / event.target.clientWidth) * 2 - 1,
+        y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+      };
+      const dropEvent = new CustomEvent("model-drop", {
+        detail: { droppedText, mouse },
+      });
+      window.dispatchEvent(dropEvent);
+    },
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },
     saveFile(projectname) {
-      this.$refs.threeSceneComponent.saveFile(projectname);
+      const data = Cookies.get("jwtToken");
+      const userName = VueJwtDecode.decode(data);
+      this.$refs.threeSceneComponent.saveFile(projectname, userName.name);
     },
 
     handleBackHome() {
