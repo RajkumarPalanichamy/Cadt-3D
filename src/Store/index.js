@@ -5,6 +5,7 @@ const store = createStore({
     triggerMethod: false,
   },
   mutations: {
+
     changeTriggerMethod(state) {
       state.triggerMethod = false;
     },
@@ -17,6 +18,7 @@ const store = createStore({
       } catch (err) { 
         console.error("Error:", err.response ? err.response : err); 
       }
+
       state.triggerMethod = true;
     },
   }    

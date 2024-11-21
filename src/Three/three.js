@@ -105,6 +105,7 @@ export default class ThreeScene {
     );
 
 
+
     window.addEventListener("model-drop", (event) => {
       console.log("event",event.detail);
       
@@ -121,6 +122,7 @@ this.raycaster.setFromCamera(mouse, this.camera);
   if (!this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
     console.error("Ray did not intersect the plane.");
     return;
+
   }
   // this.raycaster.ray.intersectPlane(plane, intersectPoint);
     
@@ -783,7 +785,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
   }
 
-  threeDimension() {
+   threeDimension() {
     let point1 = new THREE.Vector3();
     let point2 = new THREE.Vector3();
     let height = 2;
@@ -833,8 +835,23 @@ gl_FragColor = vec4(gridColor, 1.0);
     }
     this.scene.remove(this.tempLine);
     this.tempLine=null
+    // const dataURL = this.renderer.domElement.toDataURL('image/png');
 
+    //  fetch(dataURL)
+    // .then(res => res.blob())
+    // .then(blob => {
+    //     // Create a download link for the blob
+    //     console.log('blob',blob);
+        
+    //     const link = document.createElement('a');
+    //     link.href = URL.createObjectURL(blob);
+    //     link.download = 'scene.png';
+    //     link.click();
+    // })
+    // .catch(err => console.error('Failed to convert scene to image:', err));
     this.addLight();
+    // this.getBlob()
+    
   }
   addLight() {
     let box = new THREE.Box3().setFromObject(this.polygonMesh);
@@ -843,6 +860,10 @@ gl_FragColor = vec4(gridColor, 1.0);
     spotlight.position.set(centre.x, centre.y + 1, centre.z);
     this.scene.add(spotlight);
     this.group.add(spotlight);
+    
+  }
+  getBlob(){
+   
   }
   // addLight() {
   //   let box = new THREE.Box3().setFromObject(this.polygonMesh);
@@ -886,12 +907,14 @@ gl_FragColor = vec4(gridColor, 1.0);
 
 
     }
+
    async saveFile(projectname,userName){
     const saveModel={username:userName,projectName:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
     store.commit('setTriggerMethod', saveModel);          
 
           this.mainArray=[]
           this.modelLoad=[]
+
     }
 
   animate() {
@@ -902,6 +925,7 @@ gl_FragColor = vec4(gridColor, 1.0);
 
   render() {
     this.renderer.render(this.scene, this.camera);
+    
 
   }
 }

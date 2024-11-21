@@ -109,6 +109,7 @@ export default {
       { text: "My Profile", icon: "mdi-account" },
       { text: "Glb Models", icon: "mdi-table-furniture" },
       { text: "Textures", icon: "mdi-texture" },
+      
     ],
     hoverOptions: [
       { text: "Open", icon: "mdi-open-in-new" },
@@ -126,7 +127,6 @@ export default {
   async mounted() {
     this.getSavedModel();
   },
-
   methods: {
     createProject() {
       this.$router.push("/createproject");

@@ -8,7 +8,11 @@ import Texture from "@/views/Texture.vue";
 import Profile from "@/views/Profile.vue";
 import Createproject from "@/views/Createproject.vue";
 import Employee from "@/views/Employee.vue"
+
 import Web from "@/views/web.vue";
+
+import cadt3d from "@/components/cadt3d.vue";
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -61,6 +65,13 @@ const router = createRouter({
       component: Createproject,
       meta: { requiresAuth: true },
     },
+    {
+      path: "/cadt3d",
+      name: "cadt3d-container",
+      component: cadt3d,
+
+    }
+
   ],
 });
 
