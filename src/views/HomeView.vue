@@ -40,6 +40,9 @@
             class="hover mt-2"
             v-for="(item, i) in displaySidebarData"
             :key="i"
+            :value="item"
+            color="primary"
+            variant="plain"
             @click="sideBar(item.text)"
           >
             <template v-slot:prepend>
@@ -86,6 +89,9 @@ export default {
         { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
+        { text: "Web", icon: "mdi-web" },
+        {text:"CADT-3D",icon: "mdi-cube"}
+
       ],
       adminData: [
         { text: "Home", icon: "mdi-home-minus-outline" },
@@ -93,18 +99,14 @@ export default {
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Employee", icon: "mdi-account-group-outline" },
+        { text: "Web", icon: "mdi-web" },
+        {text:"CADT-3D",icon: "mdi-cube"}
       ],
       displaySidebarData: [],
       role: "",
     };
   },
   async mounted() {
-    // await axios
-    // .get(`${import.meta.env.VITE_API_LINK}/getTextures`)
-    // .then((response)=>{
-    //   console.log('textures',response);
-      
-    // })
     this.$router.push("/homeview/home");
     const data = Cookies.get("jwtToken");
     const decodedToken = VueJwtDecode.decode(data);
@@ -114,8 +116,15 @@ export default {
   },
   methods: {
     sideBar(clickedValue) {
-      const value = clickedValue.split(" ").join("").toLowerCase();
+      if(clickedValue=='CADT-3D'){
+        this.$router.push(`/cadt3d`);
+
+      }
+      else{
+        const value = clickedValue.split(" ").join("").toLowerCase();
       this.$router.push(`/homeview/${value}`);
+
+      }
     },
     hoverValue(value) {
       if (value == "Logout") {
@@ -128,12 +137,7 @@ export default {
 </script>
 
 <style scoped>
-/* .hover {
-  color: #274e76;
-  border-left: 2px solid #274e76;
-} */
 .hover:hover {
   color: #274e76;
-  border-left: 2px solid #274e76;
 }
 </style>

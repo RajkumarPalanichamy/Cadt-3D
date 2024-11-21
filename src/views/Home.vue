@@ -1,5 +1,6 @@
 <template>
   <v-container class="py-5 px-0" fluid="true">
+    <!-- Search Bar -->
     <v-card class="d-flex align-center justify-center" flat>
       <v-row class="mt-1 mx-4">
         <v-col cols="8">
@@ -35,8 +36,11 @@
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
       <v-card-title>No data found</v-card-title>
     </v-card>
+    <v-overlay v-model="isProjectLoad"> </v-overlay>
+    <!-- Displaying Cards -->
     <v-card
       height="80vh"
+      :loading="isProjectLoad"
       class="grid-project mt-1 px-16 py-2 savedprojects overflow"
       flat
     >
@@ -44,6 +48,8 @@
         v-if="isShow"
         class="d-flex flex-column pt-8 align-center"
         @click="createProject()"
+        width="240px"
+        height="220px"
       >
         <v-icon size="2em">mdi-plus</v-icon>
         <v-card-text class="text-">Create Project</v-card-text>
@@ -56,17 +62,23 @@
         :key="index"
       >
         <v-container class="bg-grey" height="75%"> </v-container>
-        {{ model }}
+        {{ model.projectName }}
         <v-row>
-          <v-col cols="10" class="text-grey">11-12-2004 ,17.56</v-col>
+          <v-col cols="10" class="text-grey">{{ model.createdAt }}</v-col>
           <v-col cols="2">
             <!-- v-menu for menu list on dots icon hover -->
             <v-menu transition="scale-transition" offset-y open-on-hover>
               <template v-slot:activator="{ props }">
-                <v-icon v-bind="props" color="grey" style="cursor: pointer;">mdi-dots-vertical</v-icon>
+                <v-icon v-bind="props" color="grey" style="cursor: pointer"
+                  >mdi-dots-vertical</v-icon
+                >
               </template>
               <v-list>
-                <v-list-item v-for="(item, i) in hoverOptions" :key="i">
+                <v-list-item
+                  v-for="(item, i) in hoverOptions"
+                  @click="projectOptions(item, model)"
+                  :key="i"
+                >
                   <template v-slot:prepend>
                     <v-icon :icon="item.icon"></v-icon>
                   </template>
@@ -78,38 +90,26 @@
         </v-row>
       </v-card>
     </v-card>
-
-    <!-- <v-card-text @click="seeMore" class="text-center">
-      See More <v-icon>mdi-menu-down</v-icon>
-    </v-card-text> -->
   </v-container>
 </template>
-\
+
 <script>
+import axios from "axios";
+import Cookies from "js-cookie";
+import VueJwtDecode from "vue-jwt-decode";
+import ThreeScene from "@/components/threeContainer.vue";
+
 export default {
   name: "App",
   data: () => ({
+    savedModels: [],
+    isProjectLoad: true,
     items: [
       { text: "Home", icon: "mdi-clock" },
       { text: "My Profile", icon: "mdi-account" },
       { text: "Glb Models", icon: "mdi-table-furniture" },
       { text: "Textures", icon: "mdi-texture" },
-    ],
-    savedModels: [
-      "Model Name 1",
-      "Model Name 2",
-      "Model Name 3",
-      "Model Name 4",
-      "Model Name 5",
-      "Model Name 6",
-      "Model Name 6",
-      "Model Name 1",
-      "Model Name 2",
-      "Model Name 3",
-      "Model Name 4",
-      "Model Name 5",
-      "Model Name 6",
-      "Model Name 6",
+      
     ],
     hoverOptions: [
       { text: "Open", icon: "mdi-open-in-new" },
@@ -124,6 +124,9 @@ export default {
   created() {
     this.filteredModels = this.savedModels;
   },
+  async mounted() {
+    this.getSavedModel();
+  },
   methods: {
     createProject() {
       this.$router.push("/createproject");
@@ -136,20 +139,70 @@ export default {
       if (this.searchedValue) {
         this.isShow = false;
         this.filteredModels = this.savedModels.filter((model) =>
-          model.toLowerCase().includes(this.searchedValue.toLowerCase())
+          model.projectName
+            .toLowerCase()
+            .includes(this.searchedValue.toLowerCase())
         );
       } else {
         this.filteredModels = this.savedModels;
       }
     },
-    // seeMore() {
-    //   const length = this.savedModels.length;
-    //   console.log(length);
+    async getSavedModel() {
+      this.isProjectLoad = true;
+      try {
+        const data = Cookies.get("jwtToken");
+        const userName = VueJwtDecode.decode(data);
 
-    //   for (let i = length; i < length + 20; i++) {
-    //     this.savedModels.push(`Model ${i}`);
-    //   }
-    // },
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
+        );
+
+        if (response.status === 200) {
+          this.isProjectLoad = false;
+          this.savedModels = response.data.data;
+          this.filteredModels = this.savedModels;
+        } else {
+          console.error(response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error.message);
+      }
+    },
+    projectOptions(item, model) {
+      if (item.text == "Open") {
+        this.loadSavedModels(model);
+      } else if (item.text == "Rename") {
+        alert("Rename");
+      } else {
+        this.deleteModel(model.projectName);
+      }
+    },
+    loadSavedModels(model) {
+      this.$router.push("/createproject");
+      ThreeScene.methods.loadSaved(model);
+    },
+    async deleteModel(projectname) {
+      try {
+        const username = VueJwtDecode.decode(Cookies.get("jwtToken")).name;
+        const deleteData = {
+          username: username,
+          projectName: projectname,
+        };
+
+        const response = await axios.delete(
+          `${import.meta.env.VITE_API_LINK}/dynamicscene`,
+          {
+            data: deleteData,
+          }
+        );
+        if (response.status === 200) {
+          this.getSavedModel();
+        }
+      } catch (error) {
+        console.error("Delete Error:", error.message);
+        this.$toast.error("An error occurred while deleting the item");
+      }
+    },
   },
 };
 </script>

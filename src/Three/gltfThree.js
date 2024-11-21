@@ -24,7 +24,7 @@ export default class gltfThreeScene {
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
-      0.1,
+      0.5,
       1000
     );
     const directionalLight = new THREE.DirectionalLight("white", 0.5);
