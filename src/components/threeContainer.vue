@@ -67,6 +67,7 @@ this.threeScene.predefined(model.cordinates);
     redoEvent() {
       console.log(this.undoModels);
     },
+
     saveFile(projectname,userName){      
       this.threeScene.saveFile(projectname,userName);
     },
@@ -76,10 +77,6 @@ this.threeScene.predefined(model.cordinates);
             return;
         }
         this.threeScene.predefined(model);
-
-     
-
-
     },
     backHome(){
       // this.$parent.methods.return()

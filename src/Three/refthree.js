@@ -457,7 +457,6 @@ export default class ThreeScene {
     // this.updateMeasurementLabels();
   }
   updateWalls() {
-    // Remove existing walls
     this.walls.forEach((wall) => this.scene.remove(wall));
     this.walls = [];
       let point1
@@ -722,3 +721,185 @@ export default class ThreeScene {
     //   console.log(this.scene);
   }
 }
+
+
+
+
+/*
+  setupDragControls() {
+    // this.AddGeometries();
+
+    this.Dragcontrols = new DragControls(
+      this.vertMarkers,
+      this.camera,
+      this.renderer.domElement
+    );
+    this.Dragcontrols.addEventListener("dragstart", (event) => {
+      this.controls.enabled = false;
+    });
+    this.Dragcontrols.addEventListener("dragend", (event) => {
+      this.controls.enabled = true;
+      console.log(event.object);
+      
+      // this.onControlPointDrag(event.object);
+      // this.RemoveGeometries()
+    });
+  }
+  onControlPointDrag(sphere) {
+    let index = sphere.userData.index;
+    for (let i = 0; i < this.mainArray.length; i++) {
+      if (index == i) {
+        this.mainArray[i][index].copy(sphere.position);
+      }
+    }
+
+    if (this.polygonMesh) {
+      let vertices = this.polygonMesh.geometry.attributes.position.array;
+      for (let i = 0; i < this.mainArray.length; i++) {
+        for (let j = 0; j < this.mainArray[i].length - 1; j++) {
+          vertices[i * 3] = this.mainArray[i][j].x;
+          vertices[i * 3 + 1] = 0;
+          vertices[i * 3 + 2] = this.mainArray[i][j].z;
+        }
+      }
+
+      this.polygonMesh.geometry.attributes.position.needsUpdate = true;
+    }
+    this.updateWalls();
+    this.updateShapeGeometry()
+    this.updateLines();
+  }
+
+  updateWalls() {
+    // this.walls.forEach((wall) => this.scene.remove(wall));
+    // this.walls = [];
+    let point1;
+    let point2;
+    let height = 2;
+    let thickness = 0.1;
+    for (let i = 0; i < this.mainArray.length - 1; i++) {
+      for (let j = 0; j < this.mainArray[i].length - 1; j++) {
+        point1 = new THREE.Vector3(
+          this.mainArray[i][j].x,
+          1,
+          this.mainArray[i][j].z
+        );
+        point2 = new THREE.Vector3(
+          this.mainArray[i][j + 1].x,
+          1,
+          this.mainArray[i][j + 1].z
+        );
+        console.log(point1);
+        console.log(point2);
+      }
+
+      let length = point1.distanceTo(point2);
+      let direction = new THREE.Vector3()
+        .subVectors(point2, point1)
+        .normalize();
+
+      let loader = new THREE.TextureLoader();
+      let texture = loader.load("./images/images.jpg", () => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+      });
+
+      let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
+      let material = [
+        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+        new THREE.MeshLambertMaterial({ map: texture }),
+        new THREE.MeshLambertMaterial({ color: "white" }),
+      ];
+      geometry.rotateY(Math.PI / 2);
+
+      let wall = new THREE.Mesh(geometry, material);
+      wall.position.copy(
+        new THREE.Vector3().addVectors(point1, point2).divideScalar(2)
+      );
+      wall.lookAt(point2);
+
+      this.scene.add(wall);
+      this.walls.push(wall);
+    }
+  }
+  updateShapeGeometry() {
+    // if (this.polygonMesh) {
+    //   this.scene.remove(this.polygonMesh);
+    // }
+
+    if (this.mainArray.length < 3) return;
+
+    let shape = new THREE.Shape();
+    for (let i = 0; i < this.mainArray.length; i++) {
+      const point = this.mainArray[i];
+      if (i === 0) {
+        shape.moveTo(point.x, point.z);
+      } else {
+        shape.lineTo(point.x, point.z);
+      }
+    }
+
+    let geometry = new THREE.ShapeGeometry(shape);
+    geometry.rotateX(Math.PI / 2);
+    let texture = new THREE.TextureLoader().load("./images/download.jpg");
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+
+    let material = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: THREE.DoubleSide,
+    });
+
+    this.polygonMesh = new THREE.Mesh(geometry, material);
+    this.polygonMesh.position.y = 0.01;
+    this.scene.add(this.polygonMesh);
+  }
+
+  updateLines() {
+    // this.lines.forEach((line) => this.scene.remove(line));
+    // this.lines = [];
+    let point1;
+    let point2;
+    let height = 2;
+    let thickness = 0.1;
+    for (let i = 0; i < this.mainArray.length - 1; i++) {
+      for (let j = 0; j < this.mainArray[i].length - 1; j++) {
+        point1 = new THREE.Vector3(this.mainArray[i][j].x,1,this.mainArray[i][j].z);
+        point2 = new THREE.Vector3(this.mainArray[i][j + 1].x,1, this.mainArray[i][j + 1].z);
+        this.addLine(point1,point2)
+      }
+    }
+  }
+ 
+ 
+  var size = 0.2;
+    var vertGeometry = new THREE.BoxGeometry(size, size, size);
+    var vertMaterial = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+      transparent: false,
+    });
+
+    var verts = this.polygonMesh.geometry.attributes.position.array;
+    for (let k = 0; k < verts.length; k += 3) {
+      var vertMarker = new THREE.Mesh(vertGeometry, vertMaterial);
+
+      let tooltipText = `idx: ${k}, pos: [${verts[k].toFixed(3)},${verts[
+        k + 1
+      ].toFixed(3)},${verts[k + 2].toFixed(3)}]`;
+      vertMarker.userData.tooltipText = tooltipText;
+
+      vertMarker.applyMatrix4(
+        new THREE.Matrix4().makeTranslation(
+          verts[k],
+          verts[k + 1],
+          verts[k + 2]
+        )
+      );
+      this.scene.add(vertMarker);
+      this.vertMarkers.push(vertMarker)
+    }
+*/
