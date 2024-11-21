@@ -290,7 +290,7 @@ export default {
         console.log("newValue", newValue);
 
         this.handleBackHome();
-        this.$store.commit("setTriggerMethod", false);
+        this.$store.commit("changeTriggerMethod");
       }
     },
   },
