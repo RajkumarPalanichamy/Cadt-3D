@@ -1,6 +1,5 @@
 <template>
-  <v-container style="color: #f7f8fa" :fluid="true">
-    <!-- <v-card-title class="text-black">User Details</v-card-title> -->
+  <v-container style="color: #f7f8fa" :fluid="true" >
     <v-card class="d-flex" height="90vh">
       <v-container class="elevation-1 py-0 px-0" :fluid="true" width="20%">
         <v-list>

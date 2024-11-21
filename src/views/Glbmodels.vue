@@ -1,7 +1,19 @@
 <template>
-  <v-container class="py-0 px-0 ml-0 mr-0" :fluid="true">
+  <v-container class="py-0 px-0" :fluid="true">
     <v-container class="px-0 py-0" :fluid="true">
-      <v-card flat>
+      <v-card flat height="100vh">
+        <v-row
+          @click="isUpload = true"
+          style="position: absolute; bottom: 100px; right: 80px"
+        >
+          <v-col>
+            <v-btn
+              size="x-large"
+              icon="mdi-upload-outline"
+              color="#274E76"
+            ></v-btn>
+          </v-col>
+        </v-row>
         <v-data-table-virtual
           height="94vh"
           :loading="isLoading"
@@ -9,60 +21,72 @@
           density="compact"
           item-value="name"
         >
-        
+          <template v-slot:top>
+            <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
+              <v-col cols="1">
+                <v-icon class="ml-4 mt-2" color="grey">mdi-grid-large</v-icon>
+              </v-col>
+              <v-divider
+                vertical
+                thickness="3"
+                style="transform: rotate(20deg)"
+              ></v-divider>
+              <v-spacer class="search_bg_colo"></v-spacer>
+              <v-col class="search_bg_colo">
+                <v-text-field
+                  density="compact"
+                  class="mt-1"
+                  style="height: 0px"
+                  variant="plain"
+                  prepend-icon="mdi-magnify"
+                  placeholder="Search"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </template>
           <template v-slot:item.Sno="{ index }">
             {{ index + 1 }}
           </template>
           <template v-slot:item.Modelimage="{ item }">
-            <v-img :src="item.Modelimage" width="40px" class="hover"></v-img>
+            <v-img :src="item.Modelimage" width="30px" class="hover"></v-img>
           </template>
 
           <template v-slot:item.view="{ item }">
-            <v-icon color="grey" @click="viewTexture(item)"
+            <v-icon color="grey" @click="viewModel(item)"
               >mdi-eye-outline</v-icon
             >
           </template>
         </v-data-table-virtual>
       </v-card>
-      <!-- Upload Icon -->
-      <v-row
-        @click="isUpload = true"
-        style="position: absolute; bottom: 50px; right: 80px"
-      >
-        <v-col>
-          <v-btn
-            size="x-large"
-            icon="mdi-upload-outline"
-            color="#274E76"
-          ></v-btn>
-        </v-col>
-      </v-row>
       <!-- Upload Dialog -->
       <v-dialog v-model="isUpload" width="1000px">
-        <v-card height="550px">
+        <v-card height="550px" flat>
           <v-toolbar density="compact" color="#274e76" flat>
             <v-icon class="py-6 px-6" @click="isUpload = false"
               >mdi-close</v-icon
             >
+            <v-card-title>Upload Model</v-card-title>
           </v-toolbar>
           <v-card class="d-flex justify-center mt-16" flat>
             <v-card width="50%" class="px-6 py-2" flat>
               <v-form>
-                <v-card-title>Upload Model</v-card-title>
                 <v-text-field
-                  :focused="isFocused"
+                  v-model="uploadModelCategories"
                   label="Enter Model Categories"
                   variant="outlined"
                   hint="eg:Living Room,Bed Room..."
                   class="mb-6 mt-6"
                 ></v-text-field>
                 <v-text-field
-                  label="Enter Model Name"
+                  v-model="uploadModelType"
+                  label="Enter Model Type"
                   hint="eg:Window,Door,Table..."
                   variant="outlined"
                   class="mb-6"
                 ></v-text-field>
-                <v-btn color="#274E76" class="mr-3">Upload</v-btn>
+                <v-btn color="#274E76" class="mr-3" @click="postModel"
+                  >Upload</v-btn
+                >
                 <v-btn @click="showModels = true">Back</v-btn>
               </v-form>
             </v-card>
@@ -157,9 +181,12 @@ export default {
       isView: false,
       modelType: "",
       modelCategory: "",
+      uploadModelType: "",
+      uploadModelCategories: "",
       isUpload: false,
       allModel: [],
       displayModel: [],
+      file: "",
     };
   },
 
@@ -170,17 +197,66 @@ export default {
     handleFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
-        console.log("File selected:", file);
+        this.file = file;
       }
     },
-    viewTexture(viewFile) {
+    async getModel() {
+      this.displayModel = [];
+      this.isLoading = true;
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/getFurnitures`
+        );
+        if (response.status == 200) {
+          this.allModel = response.data;
+          this.isLoading = false;
+          response.data.forEach((eachModel) => {
+            const modelObj = {
+              Sno: true,
+              Modelimage:
+                eachModel.FurnituresImagesArraywithGltf[0].furnitureImage,
+              _id: eachModel._id,
+              "Model Type": eachModel.modelType,
+              categories: eachModel.category,
+              view: true,
+            };
+            this.displayModel.push(modelObj);
+          });
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
+    async postModel() {
+      const formData = new FormData();
+      formData.append("glbModel", this.file);
+      formData.append("modelCategories", this.uploadModelCategories);
+      formData.append("modelType", this.uploadModelType);
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_LINK}/glbloaders`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        console.log("Model uploaded:", response.data);
+        this.isUpload = false;
+      } catch (err) {
+        console.error("Failed to upload model:", err);
+      }
+    },
+    viewModel(viewFile) {
       this.isView = true;
       setTimeout(() => {
         this.allModel.forEach((eachModel) => {
           if (eachModel._id == viewFile._id) {
-            this.modelType = eachModel.modelType
-            this.modelCategory = eachModel.category
-            const modelLink = 
+            this.modelType = eachModel.modelType;
+            this.modelCategory = eachModel.category;
+            const modelLink =
               eachModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
             this.$refs.gltfViewerComponent.gltf(modelLink);
           }
@@ -189,31 +265,7 @@ export default {
     },
   },
   async mounted() {
-    this.displayModel = [];
-    this.isLoading = true;
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_LINK}/getFurnitures`
-      );
-      if (response.status == 200) {
-        this.allModel = response.data;
-        this.isLoading = false;
-        response.data.forEach((eachModel) => {
-          const modelObj = {
-            Sno: true,
-            Modelimage:
-              eachModel.FurnituresImagesArraywithGltf[0].furnitureImage,
-            _id: eachModel._id,
-            "Model Type": eachModel.modelType,
-            categories: eachModel.category,
-            view: true,
-          };
-          this.displayModel.push(modelObj);
-        });
-      }
-    } catch (err) {
-      console.log(err);
-    }
+    this.getModel();
   },
 };
 </script>

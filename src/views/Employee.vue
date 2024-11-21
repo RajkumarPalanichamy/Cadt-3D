@@ -1,47 +1,49 @@
 <template>
-  <v-container :fluid="true" class="py-0 px-0">
+  <v-container :fluid="true" class="py-0 px-0 " height="100vh" >
+    <v-row
+      @click="isUpload = true"
+      style="position: absolute; bottom: 50px; right: 80px"
+    >
+      <v-col>
+        <v-btn
+          @click="isDialog = true"
+          size="x-large"
+          icon="mdi-plus"
+          color="#274E76"
+        ></v-btn>
+      </v-col>
+    </v-row>
     <v-data-table-virtual
-      class="mt-2"
-      height="500px"
+      height="94vh"
       :items="filteredUsers"
       density="compact"
       :loading="isLoading"
     >
       <template v-slot:top>
-        <v-row>
-          <v-col cols="6">
-            <v-text-field
-              class="ml-2"
-              variant="underlined"
-              label="Search By Name"
-              v-model="searchText"
-              clearable
-              append-icon="mdi-magnify"
-            ></v-text-field>
+        <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
+          <v-col cols="1">
+            <v-icon class="ml-4 mt-2" color="grey">mdi-grid-large</v-icon>
           </v-col>
-          <!-- <v-col cols="5" class="text-end">
-            <v-btn
-              prepend-icon="mdi-plus"
-              color="#274E76"
-              @click="isDialog = true"
-              >Add Users</v-btn
-            >
-          </v-col> -->
-        </v-row>
-        <v-row
-          @click="isUpload = true"
-          style="position: absolute; bottom: 50px; right: 80px"
-        >
-          <v-col>
-            <v-btn
-              @click="isDialog = true"
-              size="x-large"
-              icon="mdi-plus"
-              color="#274E76"
-            ></v-btn>
+          <v-divider
+            vertical
+            thickness="3"
+            style="transform: rotate(20deg)"
+          ></v-divider>
+          <v-spacer class="search_bg_colo"></v-spacer>
+          <v-col class="search_bg_colo">
+            <v-text-field
+              density="compact"
+              v-model="searchText"
+              class="mt-1"
+              style="height: 0px"
+              variant="plain"
+              prepend-icon="mdi-magnify"
+              placeholder="Search"
+            ></v-text-field>
           </v-col>
         </v-row>
       </template>
+
       <template v-slot:item.SNO="{ index }">
         {{ index + 1 }}
       </template>

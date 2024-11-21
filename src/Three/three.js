@@ -45,8 +45,8 @@ export default class ThreeScene {
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
  
-   
-    
+    this.isDragging = false;
+    this.draggedObject = null; // Reference to the currently dragged model
 
     this.init();
   }
@@ -105,10 +105,94 @@ export default class ThreeScene {
     );
 
 
+
+    window.addEventListener("model-drop", (event) => {
+      console.log("event",event.detail);
+      
+      const { droppedText,mouse } = event.detail;
+    console.log('modelUrl',droppedText);
+
+       
+this.raycaster.setFromCamera(mouse, this.camera);
+
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Horizontal plane
+
+  const intersectPoint = new THREE.Vector3();
+  // console.log('intersectPoint',intersectPoint);
+  if (!this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+    console.error("Ray did not intersect the plane.");
+    return;
+
+  }
+  // this.raycaster.ray.intersectPlane(plane, intersectPoint);
     
+      // Load and place the model
+      const loader = new GLTFLoader();
+
+      loader.load(droppedText, (gltf) => {
+        console.log("child",this.scene.children);
+        
+        let box = new THREE.Box3().setFromObject(gltf.scene);
+        let size = new THREE.Vector3();
+        box.getSize(size); 
+            let maxSize = 0;
+            if (size.x >= size.z && size.x >= size.y) {
+              maxSize = size.x;
+            } else if (size.y >= size.x && size.y >= size.z) {
+              maxSize = size.y;
+            } else if (size.z >= size.x && size.z >= size.y) {
+              maxSize = size.z;
+            }
+        gltf.scene.scale.setScalar(1 / (maxSize / 2));
+  
+        const model = gltf.scene;
+        console.log('mouseArea',mouse);
+        
+        model.position.copy(intersectPoint);
+        this.scene.add(model);
+      });
+  })    
+
+  // window.addEventListener("drag-start", (event) => {
+  //   const modelUrl = event.detail.modelLink;
+  //   const loader = new GLTFLoader();
+  //   loader.load(modelUrl, (gltf) => {
+  //     this.draggedObject = gltf.scene;
+  //     // console.log('this.draggObject',this.dragObject);
+      
+  //     this.scene.add(this.draggedObject);
+  //     this.isDragging = true;
+  //   });
+  // });
+
+  // window.addEventListener("mousemove", (event) => {
+  //   if (this.isDragging && this.draggObject) {
+  //     // Update mouse position
+  //     const { x, y } = event.detail;
+  //     mouse.x = (x / this.renderer.domElement.clientWidth) * 2 - 1;
+  //     mouse.y = -(y / this.renderer.domElement.clientHeight) * 2 + 1;
+
+  //     // Raycast to find the intersection point
+  //     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // y = 0 plane
+  //     const intersectPoint = new THREE.Vector3();
+  //     this.raycaster.setFromCamera(mouse, this.camera);
+  //     this.raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+
+  //     // Update dragged object's position
+  //     this.draggObject.position.copy(intersectPoint);
+  //   }
+  // });
+  // window.addEventListener("drag-end", () => {
+  //   if (this.isDragging) {
+  //     this.isDragging = false;
+  //     this.draggObject = null; // Clear reference to dragged object
+  //   }
+  // });
     this.animate();
   }
-  
+  position(){
+
+  }
   createListener() {
     if (!this.listenersActive) {
       this.startDrawing();
@@ -823,17 +907,14 @@ gl_FragColor = vec4(gridColor, 1.0);
 
 
     }
-    saveFile(projectname){
-      console.log('projectname',projectname);
-      
-      const saveModel={projectName:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
-      store.commit('setTriggerMethod', saveModel);          
-  console.log("saveModel",saveModel);
-  
-            this.mainArray=[]
-            this.modelLoad=[]
-          
- 
+
+   async saveFile(projectname,userName){
+    const saveModel={username:userName,projectName:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
+    store.commit('setTriggerMethod', saveModel);          
+
+          this.mainArray=[]
+          this.modelLoad=[]
+
     }
 
   animate() {
