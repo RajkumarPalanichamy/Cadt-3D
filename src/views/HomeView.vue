@@ -11,10 +11,6 @@
         BLUE 3D
       </v-card-title>
       <v-spacer></v-spacer>
-      <v-switch
-      color="white"
-      hide-details
-      ></v-switch>
       <v-btn icon>
         <v-menu open-on-hover>
           <template v-slot:activator="{ props }">
@@ -25,6 +21,8 @@
               @click="hoverValue(item.text)"
               v-for="(item, i) in hoverOptions"
               :key="i"
+              :value="item"
+              color="primary"
             >
               <template v-slot:prepend>
                 <v-icon :icon="item.icon"></v-icon>
@@ -45,7 +43,8 @@
           class="custom-drawer"
           :permanent="!isSmallScreen"
           :temporary="isSmallScreen"
-          :width="220"
+          :width="240"
+          color="#F6F6F6"
         >
           <v-list>
             <v-list-subheader class="my-5"
@@ -66,7 +65,7 @@
             </v-list-item>
           </v-list>
           <!-- <v-img
-            src="/public/images/bl.png"
+            src="/public/images/3d.png"
             max-height="100%"
             max-width="400"
           ></v-img> -->
@@ -94,22 +93,21 @@ export default {
         { text: "Logout", icon: "mdi-logout" },
       ],
       userData: [
-        { text: "Home", icon: "mdi-home-minus-outline" },
+        { text: "Home", icon: "mdi-home-account" },
         { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Web", icon: "mdi-web" },
-        {text:"CADT-3D",icon: "mdi-cube"}
-
+        { text: "CADT-3D", icon: "mdi-cube" },
       ],
       adminData: [
-        { text: "Home", icon: "mdi-home-minus-outline" },
-        { text: "My Profile", icon: "mdi-account-outline" },
+        { text: "Home", icon: "mdi-home-account" },
+        { text: "My Profile", icon: "mdi-account" },
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Employee", icon: "mdi-account-group-outline" },
         { text: "Web", icon: "mdi-web" },
-        {text:"CADT-3D",icon: "mdi-cube"}
+        { text: "CADT-3D", icon: "mdi-cube" },
       ],
       displaySidebarData: [],
       role: "",
@@ -135,14 +133,11 @@ export default {
       this.isSmallScreen = window.innerWidth <= 960;
     },
     sideBar(clickedValue) {
-      if(clickedValue=='CADT-3D'){
+      if (clickedValue == "CADT-3D") {
         this.$router.push(`/cadt3d`);
-
-      }
-      else{
+      } else {
         const value = clickedValue.split(" ").join("").toLowerCase();
-      this.$router.push(`/homeview/${value}`);
-
+        this.$router.push(`/homeview/${value}`);
       }
     },
     hoverValue(value) {
@@ -156,9 +151,7 @@ export default {
 </script>
 
 <style scoped>
-.hover:hover {
-  color: #274e76;
-}
+
 .custom-drawer {
   background-size: cover;
   background-position: center;

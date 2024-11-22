@@ -24,13 +24,13 @@
       <v-btn icon @click="isSave = true" class="mr-4">
         <v-card-text>SAVE</v-card-text>
       </v-btn>
-      <v-btn icon>
+      <!-- <v-btn icon>
         <v-icon>mdi-theme-light-dark</v-icon>
       </v-btn>
 
       <v-btn icon>
         <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
+      </v-btn> -->
     </v-toolbar>
     <v-card
       class="d-flex"
@@ -39,6 +39,7 @@
       @mousemove="handleMouseMove"
       @mouseup="handleMouseUp"
       style="cursor: pointer"
+      height="93vh"
     >
       <ThreeScene ref="threeSceneComponent" />
       <!-- Save Btn Dialog -->
@@ -67,7 +68,7 @@
       </v-dialog>
       <v-card
         style="top: 230px !important; right: 10px"
-        class="d-flex flex-column justify-center position px-2 py-2"
+        class="d-flex flex-column justify-center position px-2 py-2 border"
       >
         <v-icon
           v-for="(item, index) in sideBar"
@@ -75,7 +76,6 @@
           @click="toggleVisibility(item)"
           class="mt-2"
           size="1.7em"
-          color="grey"
           >{{ item }}</v-icon
         >
       </v-card>
@@ -85,14 +85,12 @@
         width="300px"
         class="mr-6 pt-2 pb-2 position"
       >
-        <v-row class="d-flex align-center">
-          <v-col>
-            <v-card-title class="text-h6">Search</v-card-title>
-          </v-col>
-          <v-col class="d-flex justify-end mr-6">
-            <v-icon class="text-error" @click="cancel">mdi-window-close</v-icon>
-          </v-col>
-        </v-row>
+        
+        <v-toolbar color="white" class="mb-6" density="compact" style="border-radius:6px ;">
+          <v-card-title class="text-h6">Search</v-card-title>
+          <v-spacer></v-spacer>
+          <v-icon class="pr-3" @click="cancel">mdi-window-close</v-icon>
+        </v-toolbar>
 
         <v-row class="pl-2 pr-2">
           <v-col>

@@ -3,7 +3,7 @@
     <!-- Search Bar -->
     <v-card class="d-flex align-center justify-center" flat>
       <v-row class="mt-1 mx-4">
-        <v-col cols="8">
+        <v-col cols="12">
           <v-text-field
             v-model="searchedValue"
             @input="searchSavedModels"
@@ -15,26 +15,16 @@
           >
           </v-text-field>
         </v-col>
-        <v-col cols="2" style="position: relative; right: 30px">
-          <v-btn color="#274E76" size="x-large" density="compact">search</v-btn>
-        </v-col>
-        <v-col cols="2">
-          <v-select
-            variant="outlined"
-            label="Last Updated"
-            density="compact"
-          ></v-select>
-        </v-col>
       </v-row>
     </v-card>
     <!-- No data found message -->
     <v-card
       flat
-      class="d-flex flex-column align-center justify-center"
+      class="d-flex flex-column align-center justify-center mt-16"
       v-if="!isShow && filteredModels.length === 0"
     >
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
-      <v-card-title>No data found</v-card-title>
+      <v-card-title>No Project found</v-card-title>
     </v-card>
     <v-overlay v-model="isProjectLoad" persistent> </v-overlay>
     <!-- Displaying Cards -->
@@ -45,10 +35,10 @@
     >
       <v-card
         v-if="isShow"
-        class="d-flex flex-column pt-8 align-center"
         @click="createProject()"
         width="240px"
         height="220px"
+        class="hoverCard d-flex flex-column align-center pt-8"
       >
         <v-icon size="2em">mdi-plus</v-icon>
         <v-card-text class="text-">Create Project</v-card-text>
@@ -118,7 +108,6 @@ export default {
       { text: "My Profile", icon: "mdi-account" },
       { text: "Glb Models", icon: "mdi-table-furniture" },
       { text: "Textures", icon: "mdi-texture" },
-      
     ],
     hoverOptions: [
       { text: "Open", icon: "mdi-open-in-new" },
@@ -167,16 +156,18 @@ export default {
         const data = Cookies.get("jwtToken");
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/commonprojects`,
+          `${import.meta.env.VITE_API_LINK}/getdynamicscene`,
           {
             headers: {
               Authorization: `Bearer ${data}`,
             },
           }
         );
+        console.log(response);
+
         if (response.status === 200) {
           this.isProjectLoad = false;
-          this.savedModels = response.data.data;
+          this.savedModels = response.data;
           this.filteredModels = this.savedModels;
         }
       } catch (error) {
@@ -258,5 +249,10 @@ export default {
   position: relative;
   left: 430px;
   cursor: pointer;
+}
+.hoverCard:hover {
+  background-color: rgba(33, 150, 243, 0.2);
+  border: 1px solid rgba(33, 150, 243, 0.6);
+  transition: background-color 0.3s ease, border 0.3s ease;
 }
 </style>

@@ -93,6 +93,6 @@ export default {
 <style>
 .three-container {
   width: 100%;
-  height: 95vh;
+  height: 100vh;
 }
 </style>

@@ -222,11 +222,13 @@ export default {
 
     async postModel() {
       const formData = new FormData();
-      formData.append("glbModel", this.file);
-      formData.append("modelCategories", this.uploadModelCategories);
+      formData.append("glbUrl", this.file);
+      formData.append("category", this.uploadModelCategories);
       formData.append("modelType", this.uploadModelType);
       try {
-        const response = await axios.post(`${import.meta.env.VITE_API_LINK}/glbloaders`,formData,
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_LINK}/glbloaders`,
+          formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
