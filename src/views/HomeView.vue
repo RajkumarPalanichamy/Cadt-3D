@@ -1,15 +1,20 @@
 <template>
   <v-card rounded="0">
+    <!-- Toolbar -->
     <v-toolbar density="compact" color="#274e76" flat>
+      <v-app-bar-nav-icon
+        variant="text"
+        @click.stop="drawer = !drawer"
+      ></v-app-bar-nav-icon>
       <v-card-title>
         <v-icon>mdi mdi-cube-outline</v-icon>
         BLUE 3D
       </v-card-title>
       <v-spacer></v-spacer>
-      <v-btn icon>
-        <v-icon>mdi-theme-light-dark</v-icon>
-      </v-btn>
-
+      <v-switch
+      color="white"
+      hide-details
+      ></v-switch>
       <v-btn icon>
         <v-menu open-on-hover>
           <template v-slot:activator="{ props }">
@@ -30,45 +35,48 @@
         </v-menu>
       </v-btn>
     </v-toolbar>
-    <v-card class="d-flex" height="93vh">
-      <v-card class="overflow pl-2 sidebar" width="20%">
-        <v-list>
-          <v-list-subheader class="mt-4">{{ role }} DASHBOARD</v-list-subheader>
-          <v-spacer class="mt-4"></v-spacer>
 
-          <v-list-item
-            class="hover mt-2"
-            v-for="(item, i) in displaySidebarData"
-            :key="i"
-            :value="item"
-            color="primary"
-            variant="plain"
-            @click="sideBar(item.text)"
-          >
-            <template v-slot:prepend>
-              <v-icon :icon="item.icon"></v-icon>
-            </template>
+    <!-- Main Content -->
+    <v-card class="d-flex" height="93vh" rounded="0">
+      <v-layout>
+        <!-- Navigation Drawer -->
+        <v-navigation-drawer
+          v-model="drawer"
+          class="custom-drawer"
+          :permanent="!isSmallScreen"
+          :temporary="isSmallScreen"
+          :width="220"
+        >
+          <v-list>
+            <v-list-subheader class="my-5"
+              >{{ role }} DASHBOARD</v-list-subheader
+            >
+            <v-list-item
+              v-for="(item, i) in displaySidebarData"
+              :key="i"
+              :value="item"
+              color="primary"
+              @click="sideBar(item.text)"
+              class="hover"
+            >
+              <template v-slot:prepend>
+                <v-icon :icon="item.icon"></v-icon>
+              </template>
+              <v-list-item-title>{{ item.text }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <!-- <v-img
+            src="/public/images/bl.png"
+            max-height="100%"
+            max-width="400"
+          ></v-img> -->
+        </v-navigation-drawer>
 
-            <v-list-item-title>{{ item.text }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-        <!-- <v-row>
-          <v-col>
-            <v-btn
-              variant="outlined"
-              @click="logout"
-              block
-              class="mt-16"
-              color="#274E76"
-            >
-              Logout<v-icon class="ml-2">mdi-logout</v-icon></v-btn
-            >
-          </v-col>
-        </v-row> -->
-      </v-card>
-      <v-card width="100%">
-        <router-view />
-      </v-card>
+        <!-- Main Section -->
+        <v-main>
+          <router-view />
+        </v-main>
+      </v-layout>
     </v-card>
   </v-card>
 </template>
@@ -80,6 +88,7 @@ export default {
   name: "App",
   data() {
     return {
+      drawer: true,
       hoverOptions: [
         { text: "Profile", icon: "mdi-account-arrow-right-outline" },
         { text: "Logout", icon: "mdi-logout" },
@@ -104,6 +113,7 @@ export default {
       ],
       displaySidebarData: [],
       role: "",
+      isSmallScreen: false,
     };
   },
   async mounted() {
@@ -113,8 +123,17 @@ export default {
     this.role = decodedToken.role.toUpperCase();
     this.displaySidebarData =
       decodedToken.role == "admin" ? this.adminData : this.userData;
+
+    this.isSmallScreen = window.innerWidth <= 960;
+    window.addEventListener("resize", this.handleResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.handleResize);
   },
   methods: {
+    handleResize() {
+      this.isSmallScreen = window.innerWidth <= 960;
+    },
     sideBar(clickedValue) {
       if(clickedValue=='CADT-3D'){
         this.$router.push(`/cadt3d`);
@@ -139,5 +158,13 @@ export default {
 <style scoped>
 .hover:hover {
   color: #274e76;
+}
+.custom-drawer {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: url("/images/3d.jpeg");
+  width: 100%;
+  height: 200px;
 }
 </style>

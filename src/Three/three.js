@@ -356,7 +356,9 @@ this.raycaster.setFromCamera(mouse, this.camera);
     this.camera.lookAt(0, 0, 0);
   }
   predefined(model) {
-    if (model) {
+     console.log(model);
+     
+    if(model){
       this.controlPoints = model;
       this.finalizePolygon(this.controlPoints);
     } else {

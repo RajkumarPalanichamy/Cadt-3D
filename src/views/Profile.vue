@@ -1,25 +1,28 @@
 <template>
-  <v-container style="color: #f7f8fa" :fluid="true" >
-    <v-card class="d-flex" height="90vh">
-      <v-container class="elevation-1 py-0 px-0" :fluid="true" width="20%">
+  <v-container style="color: #f7f8fa" :fluid="true" class="px-0 py-0">
+    <v-card class="d-flex" height="100vh">
+      <!-- sidebar -->
+      <v-container class="elevation-1 py-0 px-0" :fluid="true" width="100px">
         <v-list>
-          <v-spacer class="mt-4"></v-spacer>
           <v-list-item
             v-for="(item, i) in items"
             :key="i"
-            :class="{ 'sidebar-active': selectedItem === item.text }"
+            :value="item"
+            color="primary"
             @click="sideBar(item.text)"
+            class="text-center mt-2 px-0"
           >
-            <v-list-item-title class="pl-5">{{ item.text }}</v-list-item-title>
+            <v-icon :icon="item.icon"></v-icon>
+            <v-list-item-title class="break-word">{{
+              item.text
+            }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-container>
-
       <!-- Main Content Area -->
-      <v-container width="80%">
+      <v-container width="100%" class="py-0">
         <!-- Account Details -->
         <v-card-title class="mb-3">{{ selectedItem }}</v-card-title>
-
         <v-card class="py-4 pl-2 border" flat v-if="isprofile">
           <v-row class="d-flex align-center">
             <v-col cols="3">
@@ -31,7 +34,9 @@
             </v-col>
             <v-col cols="8">
               <v-card-title>Account Details</v-card-title>
-              <v-card-subtitle class="mt-2">User Id : {{lastUserData?.id }}</v-card-subtitle>
+              <v-card-subtitle class="mt-2"
+                >User Id : {{ lastUserData?.id }}</v-card-subtitle
+              >
               <v-card-subtitle class="mt-2"
                 >User Name : {{ lastUserData?.name }}</v-card-subtitle
               >
@@ -46,9 +51,11 @@
           >
           <v-row class="d-flex align-center py-4">
             <v-col cols="10">
-              <v-card-subtitle class="my-2">User Name :{{ lastUserData.name }}</v-card-subtitle>
+              <v-card-subtitle class="my-2"
+                >User Name :{{ lastUserData.name }}</v-card-subtitle
+              >
               <v-card-subtitle class="mb-2">Email Address:</v-card-subtitle>
-              <v-card-subtitle>Role :{{lastUserData?.role }}</v-card-subtitle>
+              <v-card-subtitle>Role :{{ lastUserData?.role }}</v-card-subtitle>
             </v-col>
             <v-col cols="2">
               <v-btn prepend-icon="mdi-pencil">Edit</v-btn>
@@ -111,7 +118,9 @@ export default {
     const data = Cookies.get("jwtToken");
     const decodedToken = VueJwtDecode.decode(data);
     // getting all the user data from the database
-    const response = await axios.get(`${import.meta.env.VITE_API_LINK}/clients`);
+    const response = await axios.get(
+      `${import.meta.env.VITE_API_LINK}/clients`
+    );
     response.data.forEach((eachUser) => {
       if (decodedToken.name === eachUser.username) {
         this.lastUserData = {
@@ -130,5 +139,11 @@ export default {
   color: #274e76;
   font-weight: bold;
   border-left: 2px solid #274e76;
+}
+.break-word {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  font-size: 10px;
 }
 </style>

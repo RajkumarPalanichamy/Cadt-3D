@@ -36,11 +36,10 @@
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
       <v-card-title>No data found</v-card-title>
     </v-card>
-    <v-overlay v-model="isProjectLoad"> </v-overlay>
+    <v-overlay v-model="isProjectLoad" persistent> </v-overlay>
     <!-- Displaying Cards -->
     <v-card
       height="80vh"
-      :loading="isProjectLoad"
       class="grid-project mt-1 px-16 py-2 savedprojects overflow"
       flat
     >
@@ -90,6 +89,15 @@
         </v-row>
       </v-card>
     </v-card>
+    <!-- Snack Bar -->
+    <v-snackbar v-model="isSnackbar" :timeout="500">
+      No Project Found
+      <template v-slot:actions>
+        <v-btn color="pink" variant="text" @click="isSnackbar = false">
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -103,6 +111,7 @@ export default {
   name: "App",
   data: () => ({
     savedModels: [],
+    isSnackbar: false,
     isProjectLoad: true,
     items: [
       { text: "Home", icon: "mdi-clock" },
@@ -125,7 +134,12 @@ export default {
     this.filteredModels = this.savedModels;
   },
   async mounted() {
-    this.getSavedModel();
+    const userRole = VueJwtDecode.decode(Cookies.get("jwtToken")).role;
+    if (userRole == "admin") {
+      this.getAdminStoreModels();
+    } else {
+      this.getUserSavedModels();
+    }
   },
   methods: {
     createProject() {
@@ -147,7 +161,30 @@ export default {
         this.filteredModels = this.savedModels;
       }
     },
-    async getSavedModel() {
+    async getAdminStoreModels() {
+      this.isProjectLoad = true;
+      try {
+        const data = Cookies.get("jwtToken");
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/commonprojects`,
+          {
+            headers: {
+              Authorization: `Bearer ${data}`,
+            },
+          }
+        );
+        if (response.status === 200) {
+          this.isProjectLoad = false;
+          this.savedModels = response.data.data;
+          this.filteredModels = this.savedModels;
+        }
+      } catch (error) {
+        this.isProjectLoad = false;
+        this.isSnackbar = true;
+      }
+    },
+    async getUserSavedModels() {
       this.isProjectLoad = true;
       try {
         const data = Cookies.get("jwtToken");
@@ -161,11 +198,10 @@ export default {
           this.isProjectLoad = false;
           this.savedModels = response.data.data;
           this.filteredModels = this.savedModels;
-        } else {
-          console.error(response.data.message);
         }
       } catch (error) {
-        console.error("Error fetching data:", error.message);
+        this.isProjectLoad = false;
+        this.isSnackbar = true;
       }
     },
     projectOptions(item, model) {
@@ -196,11 +232,10 @@ export default {
           }
         );
         if (response.status === 200) {
-          this.getSavedModel();
+          this.getUserSavedModels();
         }
       } catch (error) {
         console.error("Delete Error:", error.message);
-        this.$toast.error("An error occurred while deleting the item");
       }
     },
   },

@@ -23,14 +23,6 @@
         >
           <template v-slot:top>
             <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
-              <v-col cols="1">
-                <v-icon class="ml-4 mt-2" color="grey">mdi-grid-large</v-icon>
-              </v-col>
-              <v-divider
-                vertical
-                thickness="3"
-                style="transform: rotate(20deg)"
-              ></v-divider>
               <v-spacer class="search_bg_colo"></v-spacer>
               <v-col class="search_bg_colo">
                 <v-text-field
@@ -234,9 +226,7 @@ export default {
       formData.append("modelCategories", this.uploadModelCategories);
       formData.append("modelType", this.uploadModelType);
       try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_LINK}/glbloaders`,
-          formData,
+        const response = await axios.post(`${import.meta.env.VITE_API_LINK}/glbloaders`,formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
