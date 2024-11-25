@@ -247,12 +247,13 @@ export default class cadt3dThreeScene {
           const maxSize = Math.max(size.x, size.y, size.z);
           const desiredSize = 5; 
           gltf.scene.scale.setScalar(desiredSize / maxSize);
+          // Random position
+          // gltf.scene.position.set(-3,-0.5,-3.5)
       const gltfScene=gltf.scene
       this.group2 = new THREE.Group();
       this.group2.add(gltfScene)
       this.box2 = new THREE.Box3().setFromObject(this.group2);
-       console.log(this.group2);
-       
+
       this.gltfArray.push(this.group2)
       this.scene.add(this.group2);
         },
@@ -273,4 +274,3 @@ export default class cadt3dThreeScene {
         this.renderer.render(this.scene, this.camera);
       }
     }
-    
