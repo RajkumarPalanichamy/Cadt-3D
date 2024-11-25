@@ -15,7 +15,7 @@ export default {
     };
   },
   mounted() {
-    this.initScene()
+    this.initScene();
     // this.initializeThreeScene();
   },
   // beforeUnmount() {
@@ -70,16 +70,21 @@ export default {
       this.threeScene.saveFile(projectname, userName);
     },
     loadSaved(model) {
-
-      this.initScene()
-      // const k = new ThreeScene(this.threeContainer);
-      this.threeScene.predefined(model);
-      // this.threeScene?.saveFile('ttt', 'yhvh');
-
-      // if (!this.threeScene) {
-      //       console.error('threeScene is not initialized!');
-      //       return;
-      //   }
+      const array = []
+      model.coordinates.forEach((eachCoordinates) => {
+        console.log("first",eachCoordinates);
+        eachCoordinates.forEach((each) => {
+          console.log("each",each);
+          const obj = {
+            x: each.x,
+            y: each.y,
+            z: each.z,
+          };
+          array.push(obj)
+        
+        });
+      });
+      this.threeScene.predefined(array);
     },
     backHome() {
       // this.$parent.methods.return()

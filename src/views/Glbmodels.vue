@@ -17,7 +17,7 @@
         <v-data-table-virtual
           height="94vh"
           :loading="isLoading"
-          :items="displayModel"
+          :items="filteredModels"
           density="compact"
           item-value="name"
         >
@@ -26,6 +26,7 @@
               <v-spacer class="search_bg_colo"></v-spacer>
               <v-col class="search_bg_colo">
                 <v-text-field
+                  v-model="searchQuery"
                   density="compact"
                   class="mt-1"
                   style="height: 0px"
@@ -161,6 +162,7 @@
 <script>
 import axios from "axios";
 import gltfViewer from "@/components/gltfViewer.vue";
+
 export default {
   name: "glbModels",
   components: {
@@ -169,7 +171,6 @@ export default {
   data() {
     return {
       isLoading: false,
-      showModels: true,
       isView: false,
       modelType: "",
       modelCategory: "",
@@ -177,11 +178,25 @@ export default {
       uploadModelCategories: "",
       isUpload: false,
       allModel: [],
+      filteredModels: [],
       displayModel: [],
-      file: "",
+      searchQuery: "",
+      file: null,
     };
   },
-
+  computed: {
+    filteredModels() {
+      if (!this.searchQuery) {
+        return this.displayModel;
+      }
+      const query = this.searchQuery.toLowerCase();
+      return this.displayModel.filter(
+        (item) =>
+          item["Model Type"].toLowerCase().includes(query) ||
+          item.categories.toLowerCase().includes(query)
+      );
+    },
+  },
   methods: {
     triggerFileInput() {
       this.$refs.fileInput.click();
@@ -193,38 +208,37 @@ export default {
       }
     },
     async getModel() {
-      this.displayModel = [];
       this.isLoading = true;
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getFurnitures`
-        );
-        if (response.status == 200) {
+        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getFurnitures`);
+        if (response.status === 200) {
           this.allModel = response.data;
-          this.isLoading = false;
-          response.data.forEach((eachModel) => {
-            const modelObj = {
-              Sno: true,
-              Modelimage:
-                eachModel.FurnituresImagesArraywithGltf[0].furnitureImage,
-              _id: eachModel._id,
-              "Model Type": eachModel.modelType,
-              categories: eachModel.category,
-              view: true,
-            };
-            this.displayModel.push(modelObj);
-          });
+          this.displayModel = response.data.map((eachModel) => ({
+            Sno: true,
+            Modelimage: eachModel.FurnituresImagesArraywithGltf[0].furnitureImage,
+            _id: eachModel._id,
+            "Model Type": eachModel.modelType,
+            categories: eachModel.category,
+            view: true,
+          }));
         }
       } catch (err) {
-        console.log(err);
+        console.error("Error fetching models:", err);
+      } finally {
+        this.isLoading = false;
       }
     },
-
     async postModel() {
+      if (!this.file) {
+        console.error("No file selected");
+        return;
+      }
+
       const formData = new FormData();
-      formData.append("glbUrl", this.file);
+      formData.append("glbModel", this.file);
       formData.append("category", this.uploadModelCategories);
       formData.append("modelType", this.uploadModelType);
+
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_API_LINK}/glbloaders`,
@@ -235,25 +249,26 @@ export default {
             },
           }
         );
-        console.log("Model uploaded:", response.data);
-        this.isUpload = false;
+
+        if (response.status === 201) {
+          console.log("Model uploaded successfully:", response.data);
+          this.isUpload = false;
+          this.getModel(); // Refresh the model list
+        }
       } catch (err) {
-        console.error("Failed to upload model:", err);
+        console.error("Error uploading model:", err);
       }
     },
     viewModel(viewFile) {
       this.isView = true;
-      setTimeout(() => {
-        this.allModel.forEach((eachModel) => {
-          if (eachModel._id == viewFile._id) {
-            this.modelType = eachModel.modelType;
-            this.modelCategory = eachModel.category;
-            const modelLink =
-              eachModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
-            this.$refs.gltfViewerComponent.gltf(modelLink);
-          }
-        });
-      }, 1000);
+      const selectedModel = this.allModel.find((model) => model._id === viewFile._id);
+
+      if (selectedModel) {
+        this.modelType = selectedModel.modelType;
+        this.modelCategory = selectedModel.category;
+        const modelLink = selectedModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
+        this.$refs.gltfViewerComponent.gltf(modelLink);
+      }
     },
   },
   async mounted() {

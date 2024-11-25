@@ -16,7 +16,7 @@
         </v-row>
         <v-data-table-virtual
           height="94vh"
-          :items="textureData"
+          :items="filteredTextures"
           density="compact"
           item-value="name"
           :loading="isLoading"
@@ -28,6 +28,7 @@
               <v-col class="search_bg_colo">
                 <v-text-field
                   density="compact"
+                  v-model="searchQuery"
                   class="mt-1"
                   style="height: 0px"
                   variant="plain"
@@ -170,8 +171,11 @@ export default {
       isLoading: true,
       textureName: "",
       textureType: "",
+      searchQuery: "",
+      filteredTextures: [],
       textureData: [],
-      allTexture: [],
+      userSavedTextures: [],
+
       file: "",
       uploadTextureName: "",
       uploadTextureType: "",
@@ -179,6 +183,19 @@ export default {
   },
   async mounted() {
     this.getTextures();
+  },
+  computed: {
+    filteredTextures() {
+      if (!this.searchQuery) {
+        return this.textureData;
+      }
+      const query = this.searchQuery.toLowerCase();
+      return this.textureData.filter(
+        (item) =>
+          item.TextureName.toLowerCase().includes(query) ||
+          item.TextureType.toLowerCase().includes(query)
+      );
+    },
   },
   methods: {
     edit() {
@@ -199,7 +216,7 @@ export default {
       );
 
       if (response.status == 200) {
-        this.allTexture = response.data;
+        this.userSavedTextures = response.data;
         this.isLoading = false;
         response.data.forEach((eachTexture) => {
           (this.textureName = eachTexture.name),
@@ -252,7 +269,7 @@ export default {
       this.textureName = viewFile.TextureName;
       this.textureType = viewFile.TextureType;
       setTimeout(() => {
-        this.allTexture.forEach((eachTexture) => {
+        this.userSavedTextures.forEach((eachTexture) => {
           if (eachTexture._id === viewFile._id) {
             const textureLink = eachTexture.textures[0].url;
             this.$refs.gltfViewerComponent.Texture(textureLink);

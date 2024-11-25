@@ -10,8 +10,13 @@ import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import store from './Store';
 import axios from 'axios';
+import { VNumberInput } from 'vuetify/labs/VNumberInput'
 const vuetify = createVuetify({
-    components,
+    components:{
+      ...components,
+      VNumberInput,
+
+    },
     directives,
     icons: {
         defaultSet: 'mdi',

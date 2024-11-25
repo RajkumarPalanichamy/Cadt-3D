@@ -43,13 +43,48 @@
             </v-col>
           </v-row>
         </v-card>
-
+        <!-- Edit dialog -->
+        <v-dialog
+          fullscreen
+          transition="dialog-bottom-transition"
+          v-model="isEdit"
+        >
+          <v-card>
+            <v-toolbar density="compact" color="#274E76" class="px-2">
+              <v-icon @click="isEdit = false">mdi-close</v-icon>
+              <v-card-text>Edit</v-card-text>
+            </v-toolbar>
+            <v-container class="px-0 py-0 d-flex" :fluid="true" width="100%">
+              <v-sheet class="mr-4">
+                <v-img src="/images/login.png" width="300px"></v-img>
+              </v-sheet>
+              <v-card width="80%" flat class="mr-4">
+                <v-form>
+                  <v-text-field
+                    variant="underlined"
+                    label="Name"
+                  ></v-text-field>
+                  <v-text-field
+                    variant="underlined"
+                    label="Email"
+                  ></v-text-field>
+                  <v-text-field
+                    variant="underlined"
+                    label="Role"
+                    disabled
+                  ></v-text-field>
+                </v-form>
+              </v-card>
+            </v-container>
+            <v-divider></v-divider>
+          </v-card>
+        </v-dialog>
         <!-- Personal Information -->
         <v-card class="mt-10 border py-4" flat v-if="isprofile">
           <v-card-title class="text-subtitle-1"
             >Personal Information</v-card-title
           >
-          <v-row class="d-flex align-center py-4">
+          <v-row class="d-flex align-center py-2 px-4">
             <v-col cols="10">
               <v-card-subtitle class="my-2"
                 >User Name :{{ lastUserData.name }}</v-card-subtitle
@@ -58,7 +93,13 @@
               <v-card-subtitle>Role :{{ lastUserData?.role }}</v-card-subtitle>
             </v-col>
             <v-col cols="2">
-              <v-btn prepend-icon="mdi-pencil">Edit</v-btn>
+              <v-btn
+                prepend-icon="mdi-pencil"
+                block
+                color="#274E76"
+                @click="isEdit = true"
+                >Edit</v-btn
+              >
             </v-col>
           </v-row>
         </v-card>
@@ -102,6 +143,7 @@ export default {
         { text: "My Profile", icon: "mdi-account" },
         { text: "Change Password", icon: "mdi-lock" },
       ],
+      isEdit: false,
       isprofile: true,
       selectedItem: "My Profile",
       lastUserData: {},

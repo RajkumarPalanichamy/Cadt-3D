@@ -6,17 +6,23 @@
         BLUE 3D
       </v-card-title>
       <v-btn icon @click="backToHome">
+        <v-tooltip activator="parent" location="top">Exit</v-tooltip>
         <v-icon>mdi-menu-left</v-icon>
       </v-btn>
 
       <v-btn icon @click="undo">
+        <v-tooltip activator="parent" location="top">undo</v-tooltip>
+
         <v-icon>mdi-arrow-left-top</v-icon>
       </v-btn>
       <v-btn icon>
+        <v-tooltip activator="parent" location="top">Redo</v-tooltip>
+
         <v-icon>mdi-arrow-right-top</v-icon>
       </v-btn>
 
       <v-spacer></v-spacer>
+
       <v-btn icon class="mr-16" @click="triggerCreate">
         <v-icon>{{ is3DView ? "mdi-video-2d" : "mdi-video-3d" }}</v-icon>
       </v-btn>
@@ -67,16 +73,19 @@
         </v-card>
       </v-dialog>
       <v-card
+        color="#F6F6F6"
         style="top: 230px !important; right: 10px"
-        class="d-flex flex-column justify-center position px-2 py-2 border"
+        class="d-flex flex-column justify-center position px-2 py-2 border-md"
       >
         <v-icon
           v-for="(item, index) in sideBar"
           :key="index"
-          @click="toggleVisibility(item)"
+          @click="toggleVisibility(item.icon)"
           class="mt-2"
           size="1.7em"
-          >{{ item }}</v-icon
+          v-tooltip="`${item.tooltip}`"
+        >
+          {{ item.icon }}</v-icon
         >
       </v-card>
       <v-card
@@ -85,8 +94,12 @@
         width="300px"
         class="mr-6 pt-2 pb-2 position"
       >
-        
-        <v-toolbar color="white" class="mb-6" density="compact" style="border-radius:6px ;">
+        <v-toolbar
+          color="white"
+          class="mb-6"
+          density="compact"
+          style="border-radius: 6px"
+        >
           <v-card-title class="text-h6">Search</v-card-title>
           <v-spacer></v-spacer>
           <v-icon class="pr-3" @click="cancel">mdi-window-close</v-icon>
@@ -137,7 +150,7 @@
             </v-col>
           </v-row>
           <v-divider class="mb-2"></v-divider>
-          <v-card v-if="!isModel" class="grid" flat>
+          <v-card v-if="isCategories" class="grid" flat>
             <v-card
               v-for="(model, index) in showCard"
               :key="index"
@@ -190,11 +203,13 @@
                       model.FurnituresImagesArraywithGltf[0].furnitureGltfLoader
                     )
                   "
+                  :draggable="isDrag"
                   class="ma-2 pt-2"
                   outlined
                   style="cursor: grab"
                 >
                   <v-img
+                    draggable="false"
                     :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
                   >
                   </v-img>
@@ -228,11 +243,13 @@ export default {
         required: (value) => !!value || "Field is required",
       },
       is3DView: false,
+      isDrag: true,
       isVisible: false,
       isModel: false,
       modelList: true,
       isModelCard: false,
       categories: false,
+      isCategories: true,
       isSave: false,
       showCard: [],
       clickModel: false,
@@ -285,8 +302,18 @@ export default {
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
       ],
-      sideBar: ["mdi-draw-pen", "mdi-table-furniture"],
+      sideBar: [
+        { icon: "mdi-draw-pen", tooltip: "Draw" },
+        { icon: "mdi-table-furniture", tooltip: "Furnitures" },
+      ],
     };
+  },
+  computed: {
+    ...mapState(["triggerMethod", "loadSavedModel"]),
+
+    totalmodel() {
+      return this.availabelModels.length;
+    },
   },
   watch: {
     triggerMethod(newValue) {
@@ -299,17 +326,26 @@ export default {
         this.$store.commit("changeTriggerMethod");
       }
     },
-  },
-  computed: {
-    ...mapState(["triggerMethod"]),
+    //   loadSavedModel(newValue){
+    //     console.log('newValuebrgshnj',newValue);
 
-    totalmodel() {
-      return this.availabelModels.length;
-    },
+    //     this.loadSaved(newValue)
+    //   }
   },
+
   methods: {
+    loadSaved(newValue) {
+      console.log("newValue", newValue);
+
+      this.$refs.threeSceneComponent.loadSaved(newValue);
+    },
     setView(view) {
-      this.isModel = view === "models" ? true : false;
+      console.log(view);
+      if (view == "models") {
+        (this.isModel = true), (this.isCategories = false);
+      } else {
+        (this.isModel = false), (this.isCategories = true);
+      }
     },
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
@@ -349,12 +385,11 @@ export default {
         this.isModelCard = true;
         this.categories = true;
         this.showCard = this.modelsList;
-
-        // } else if (selectedValue == "mdi-magnify") {
-        //   this.isModelCard = false;
       } else {
         (this.isModelCard = true), (this.categories = false);
         this.showCard = this.drawList;
+        this.isCategories = true;
+        this.isModel = false;
       }
     },
 
@@ -459,6 +494,14 @@ onDrop(event) {
 
       this.$router.push("/homeview");
     },
+  },
+  mounted() {
+    if (this.loadSavedModel) {
+      this.loadSaved(this.loadSavedModel);
+    }
+  },
+  beforeUnmount() {
+    this.$store.commit("cancelModel");
   },
 };
 </script>

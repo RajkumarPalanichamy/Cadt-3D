@@ -25,11 +25,54 @@
       :fluid="true"
       class="px-0 py-0"
     >
-      <v-toolbar density="compact" class="bg-white">
+      <v-toolbar
+        density="compact"
+        :color="selectedModels.length > 0 ? 'black' : 'white'"
+      >
         <v-card-title class="text-subtitle-2">{{ title }}</v-card-title>
         <v-spacer> </v-spacer>
+        <v-btn v-if="selectedModels.length > 0" color="whilte"
+          >Add to Web</v-btn
+        >
+        <v-card-title class="text-subtitle-2" v-if="selectedModels.length > 0">
+          {{ selectedModelsCount }}</v-card-title
+        >
       </v-toolbar>
-      <!-- Add Image -->
+      <!-- DIsplaying Models card-->
+      <v-item-group multiple>
+        <v-container
+          v-if="isModels"
+          flat
+          rounded="0"
+          class="pl-10 grid"
+          :fluid="true"
+        >
+          <v-card
+            v-for="(model, index) in modelData"
+            :key="index"
+            :color="selectedModels.includes(index) ? '#274E76' : ''"
+            class="px-2 pt-2 elevation-4"
+            style="border-radius: 8px"
+            width="240px"
+            height="220px"
+            @click="() => handleCardClick(index)"
+          >
+            <v-scroll-y-transition>
+              <div class="text-h3 flex-grow-1 text-center">
+                {{ selectedModels.includes(index) ? "Selected" : "" }}
+              </div>
+            </v-scroll-y-transition>
+            <v-container class="bg-grey" height="80%"> 
+              <v-img></v-img>
+            </v-container>
+            <v-card-text class="py-1 px-0 text-subtitle-1">{{
+              model.projectName
+            }}</v-card-text>
+          </v-card>
+        </v-container>
+      </v-item-group>
+
+      <!-- Add Image card -->
       <v-card rounded="0" flat v-if="isCreated">
         <!-- carousel -->
         <v-carousel show-arrows="hover" cycle hide-delimiter-background>
@@ -72,6 +115,7 @@
       </v-card>
       <!-- add button -->
       <v-row
+        v-if="!isModels"
         @click="isAddImage = true"
         style="position: absolute; bottom: 100px; right: 80px"
       >
@@ -130,6 +174,9 @@
   </v-container>
 </template>
 <script>
+import axios from "axios";
+import Cookies from "js-cookie";
+import VueJwtDecode from "vue-jwt-decode";
 export default {
   data: () => ({
     items: [
@@ -144,20 +191,81 @@ export default {
     title: "",
     imageSnackbar: false,
     snackbarText: "",
-    displayData: [],
     isAddImage: false,
     isCreated: true,
     slides: ["", "", "", ""],
+    isModels: false,
+    modelData: [],
+    selectedModels: [],
   }),
+  computed: {
+    selectedModelsCount() {
+      return this.selectedModels.length;
+    },
+  },
   methods: {
     sideBarData(value) {
       this.title = value.toUpperCase();
       if (value == "Add Image") {
-        this.displayData = this.imageData;
         this.isCreated = true;
+        this.isModels = false;
+        this.selectedModels = [];
       } else {
+        this.isModels = true;
         this.isCreated = false;
-        this.displayData = this.createdModelData;
+        const userRole = VueJwtDecode.decode(Cookies.get("jwtToken")).role;
+        if (userRole == "admin") {
+          this.getAdminStoreModels();
+        } else {
+          this.getUserSavedModels();
+        }
+      }
+    },
+    handleCardClick(index) {
+      if (this.selectedModels.includes(index)) {
+        this.selectedModels = this.selectedModels.filter((i) => i !== index);
+      } else {
+        this.selectedModels.push(index);
+      }
+    },
+    async getUserSavedModels() {
+      try {
+        const data = Cookies.get("jwtToken");
+        const userName = VueJwtDecode.decode(data);
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
+        );
+
+        if (response.status === 200) {
+          this.modelData = response.data.data;
+          console.log(this.modelData);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async getAdminStoreModels() {
+      this.isProjectLoad = true;
+      try {
+        const data = Cookies.get("jwtToken");
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/getdynamicscene`,
+          {
+            headers: {
+              Authorization: `Bearer ${data}`,
+            },
+          }
+        );
+        if (response.status === 200) {
+          this.isProjectLoad = false;
+          this.savedModels = response.data;
+          this.filteredModels = this.savedModels;
+        }
+      } catch (error) {
+        this.isProjectLoad = false;
+        this.isSnackbar = true;
       }
     },
     uploadImage() {
@@ -181,7 +289,7 @@ export default {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 </style>
