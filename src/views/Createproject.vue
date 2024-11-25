@@ -192,7 +192,6 @@
                       model.FurnituresImagesArraywithGltf[0].furnitureGltfLoader
                     )
                   "
-                  draggable="true"
                   class="ma-2 pt-2"
                   outlined
                   style="cursor: grab"
@@ -401,29 +400,51 @@ export default {
         console.error("Error loading model:", error);
       }
     },
-    onDragStart(modelLink) {
-      const draggedModel = modelLink;
-      event.dataTransfer.setData("text/plain", draggedModel);
-    },
+   onDragStart(modelLink) {
+  const draggedModel = modelLink; // The URL or path to the GLTF model
+  event.dataTransfer.setData("text/plain", draggedModel);
 
-    onDragOver(event) {
-      this.isVisible = false;
-      event.preventDefault();
-    },
-    onDrop(event) {
-      const droppedText = event.dataTransfer.getData("text/plain");
-      console.log("droppedText", droppedText);
+  // Dispatch the model-drag-start event with the model link
+  const dragStartEvent = new CustomEvent("model-drag-start", {
+    detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
+  });
+  window.dispatchEvent(dragStartEvent);
+},
 
-      this.isVisible = true;
-      const mouse = {
-        x: (event.clientX / event.target.clientWidth) * 2 - 1,
-        y: -(event.clientY / event.target.clientHeight) * 2 + 1,
-      };
-      const dropEvent = new CustomEvent("model-drop", {
-        detail: { droppedText, mouse },
-      });
-      window.dispatchEvent(dropEvent);
-    },
+onDragOver(event) {
+  this.isVisible = false;
+  event.preventDefault();
+
+  // Calculate mouse position
+  const mouse = {
+    x: (event.clientX / event.target.clientWidth) * 2 - 1,
+    y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+  };
+
+  // Dispatch the model-drag-move event to update placeholder position
+  const dragMoveEvent = new CustomEvent("model-drag-move", { detail: { mouse } });
+  window.dispatchEvent(dragMoveEvent);
+},
+
+onDrop(event) {
+  const droppedText = event.dataTransfer.getData("text/plain");
+  console.log("Dropped Model:", droppedText);
+
+  this.isVisible = true;
+
+  // Calculate mouse position
+  const mouse = {
+    x: (event.clientX / event.target.clientWidth) * 2 - 1,
+    y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+  };
+
+  // Dispatch the model-drop event with model link and position
+  const dropEvent = new CustomEvent("model-drop", {
+    detail: { droppedText, mouse },
+  });
+  window.dispatchEvent(dropEvent);
+},
+
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
     },
@@ -432,6 +453,7 @@ export default {
       const userName = VueJwtDecode.decode(data);
       this.$refs.threeSceneComponent.saveFile(projectname, userName.name);
     },
+   
 
     handleBackHome() {
       console.log("returing home");
