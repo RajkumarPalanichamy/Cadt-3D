@@ -239,8 +239,7 @@ export default class cadt3dThreeScene {
       loader.load(
         './wardrobe.glb',
         (gltf) => {
-          console.log("Loaded model:", gltf.scene);
-      
+      console.log('gltf',gltf)
           const box = new THREE.Box3().setFromObject(gltf.scene);
 
           const size = new THREE.Vector3();
@@ -251,9 +250,6 @@ export default class cadt3dThreeScene {
       const gltfScene=gltf.scene
       this.group2 = new THREE.Group();
       this.group2.add(gltfScene)
-//       gltfScene.children.forEach((child)=>{
-// this.group2.add(child)
-//       })
       this.box2 = new THREE.Box3().setFromObject(this.group2);
        console.log(this.group2);
        
