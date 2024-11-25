@@ -207,6 +207,7 @@ export default {
     loadSavedModels(model) {
       this.$router.push("/createproject");
       ThreeScene.methods.loadSaved(model);
+      
     },
     async deleteModel(projectname) {
       try {

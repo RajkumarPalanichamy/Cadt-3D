@@ -49,7 +49,7 @@ export default class ThreeScene {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.mouseover = this.mouseover.bind(this);
     this.isDragging = false;
-    this.draggedObject = null; // Reference to the currently dragged model
+    this.draggedObject = null; 
 
     this.init();
   }
@@ -110,52 +110,106 @@ export default class ThreeScene {
       this.selectingProperty.bind(this)
     );
 
-    window.addEventListener("model-drop", (event) => {
-      console.log("event",event.detail);
-      
-      const { droppedText,mouse } = event.detail;
-    console.log('modelUrl',droppedText);
+    let placeholder; // Placeholder for the object
 
-       
-this.raycaster.setFromCamera(mouse, this.camera);
+// Event listener for drag start
+window.addEventListener("model-drag-start", (event) => {
+  const { droppedText, mouse } = event.detail;
 
-  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // Horizontal plane
+  // Load the GLTF model as the placeholder
+  const loader = new GLTFLoader();
+  loader.load(
+    droppedText,
+    (gltf) => {
+      // Remove any existing placeholder
+      if (placeholder) {
+        this.scene.remove(placeholder);
+      }
 
-  const intersectPoint = new THREE.Vector3();
-  // console.log('intersectPoint',intersectPoint);
-  if (!this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
-    console.error("Ray did not intersect the plane.");
-    return;
+      // Set the placeholder to the loaded model
+      placeholder = gltf.scene;
 
+      // Calculate the bounding box for scaling
+      let box = new THREE.Box3().setFromObject(placeholder);
+      let size = new THREE.Vector3();
+      box.getSize(size);
+
+      let maxSize = Math.max(size.x, size.y, size.z);
+      placeholder.scale.setScalar(1 / (maxSize / 2));
+
+      // Set the initial position
+      this.raycaster.setFromCamera(mouse, this.camera);
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersectPoint = new THREE.Vector3();
+      if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+        placeholder.position.copy(intersectPoint);
+      }
+
+      // Add the placeholder to the scene
+      this.scene.add(placeholder);
+    },
+    undefined,
+    (error) => {
+      console.error("Error loading GLTF model:", error);
+    }
+  );
+});
+
+// Event listener for drag move
+window.addEventListener("model-drag-move", (event) => {
+  const { mouse } = event.detail;
+
+  // Update placeholder position if it exists
+  if (placeholder) {
+    this.raycaster.setFromCamera(mouse, this.camera);
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const intersectPoint = new THREE.Vector3();
+    if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+      placeholder.position.copy(intersectPoint);
+    }
   }
-  // this.raycaster.ray.intersectPlane(plane, intersectPoint);
-    
-      // Load and place the model
-      const loader = new GLTFLoader();
+});
 
-      loader.load(droppedText, (gltf) => {
-        console.log("child",this.scene.children);
-        
-        let box = new THREE.Box3().setFromObject(gltf.scene);
-        let size = new THREE.Vector3();
-        box.getSize(size); 
-            let maxSize = 0;
-            if (size.x >= size.z && size.x >= size.y) {
-              maxSize = size.x;
-            } else if (size.y >= size.x && size.y >= size.z) {
-              maxSize = size.y;
-            } else if (size.z >= size.x && size.z >= size.y) {
-              maxSize = size.z;
-            }
-        gltf.scene.scale.setScalar(1 / (maxSize / 2));
-  
-        const model = gltf.scene;
-        console.log('mouseArea',mouse);
-        
+// Event listener for drop
+window.addEventListener("model-drop", (event) => {
+  const { droppedText, mouse } = event.detail;
+
+  // Remove the placeholder
+  if (placeholder) {
+    this.scene.remove(placeholder);
+    placeholder = null;
+  }
+
+  // Load the actual model to place at the final drop position
+  const loader = new GLTFLoader();
+  loader.load(
+    droppedText,
+    (gltf) => {
+      let box = new THREE.Box3().setFromObject(gltf.scene);
+      let size = new THREE.Vector3();
+      box.getSize(size);
+
+      let maxSize = Math.max(size.x, size.y, size.z);
+      gltf.scene.scale.setScalar(1 / (maxSize / 2));
+
+      const model = gltf.scene;
+
+      this.raycaster.setFromCamera(mouse, this.camera);
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersectPoint = new THREE.Vector3();
+      if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
         model.position.copy(intersectPoint);
-        this.scene.add(model);
-      });
-  })    
+      }
+
+      this.scene.add(model);
+    },
+    undefined,
+    (error) => {
+      console.error("Error loading GLTF model:", error);
+    }
+  );
+});
+
 
   // window.addEventListener("drag-start", (event) => {
   //   const modelUrl = event.detail.modelLink;

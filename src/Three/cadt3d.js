@@ -109,13 +109,13 @@ export default class cadt3dThreeScene {
     
     }
     create() {
-      setTimeout(()=>{
-        new TWEEN.Tween(this.camera.position)
-        .to({ x: 5, y: 5, z: 15 }, 3000)
-        .easing(TWEEN.Easing.Quadratic.InOut)
-        .start();
+      // setTimeout(()=>{
+      //   new TWEEN.Tween(this.camera.position)
+      //   .to({ x: 5, y: 5, z: 15 }, 3000)
+      //   .easing(TWEEN.Easing.Quadratic.InOut)
+      //   .start();
   
-      },500)
+      // },500)
 
         this.xAxis=5
         this.zAxis=5
@@ -237,19 +237,16 @@ export default class cadt3dThreeScene {
     gltfLoading(){
       const loader = new GLTFLoader();
       loader.load(
-        './cabinet_on_wheels.glb',
+        './wardrobe.glb',
         (gltf) => {
-          console.log("Loaded model:", gltf.scene);
-      
-          // Calculate bounding box and normalize scale
+      console.log('gltf',gltf)
           const box = new THREE.Box3().setFromObject(gltf.scene);
 
           const size = new THREE.Vector3();
           box.getSize(size);
           const maxSize = Math.max(size.x, size.y, size.z);
-          const desiredSize = 5; // Scale largest dimension to 2 units
+          const desiredSize = 5; 
           gltf.scene.scale.setScalar(desiredSize / maxSize);
-      
           // Random position
           // gltf.scene.position.set(-3,-0.5,-3.5)
       const gltfScene=gltf.scene
@@ -257,8 +254,6 @@ export default class cadt3dThreeScene {
       this.group2.add(gltfScene)
       this.box2 = new THREE.Box3().setFromObject(this.group2);
 
-
-      // this.group2.rotation.y=-Math.PI/2
       this.gltfArray.push(this.group2)
       this.scene.add(this.group2);
         },
