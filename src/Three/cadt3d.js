@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js'
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-
+import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export default class cadt3dThreeScene {
@@ -12,6 +12,8 @@ export default class cadt3dThreeScene {
       this.renderer = null;
   this.cubes=[];
   this.walls=[];
+  this.gltfArray=[];
+  this.boxes=[];
   this.group = new THREE.Group();
 
       this.init();
@@ -42,13 +44,52 @@ export default class cadt3dThreeScene {
       this.scene.add( pointLight );
     
       this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-      // this.controls.minPolarAngle = 0;
-      // this.controls.maxPolarAngle = Math.PI * 0.4;
       this.controls.minDistance = 0.2;
       this.controls.maxDistance = 40;
-  this.controls.rotateSpeed  =0.5
+      this.controls.autoRotateSpeed  =0.5
+      this.controls.enableDamping=true
       this.camera.position.set(0, 15, 35);
+  console.log(this.controls);
   
+      this.dragControls = new DragControls( this.gltfArray, this.camera, this.renderer.domElement );
+
+      this.dragControls.addEventListener('dragstart', (event) => {
+        event.object.material.emissive.set(0xaaaaaa);
+        this.controls.enabled = false;
+    
+        event.object.userData.lastValidPosition = event.object.position.clone();
+    
+        this.box2.setFromObject(event.object);
+    });
+    
+    this.dragControls.addEventListener('drag', (event) => {
+        this.box2.setFromObject(event.object);
+    
+        let collisionDetected = false;
+    
+        for (const box of this.boxes) {
+            if (box.intersectsBox(this.box2)) {
+                collisionDetected = true;
+                break;
+            }
+        }
+    
+        if (collisionDetected) {
+            console.log("Collision detected! Reverting position.");
+            event.object.position.copy(event.object.userData.lastValidPosition);
+            event.object.material.emissive.set(0xff0000); 
+        } else {
+            event.object.userData.lastValidPosition.copy(event.object.position);
+            event.object.material.emissive.set(0xaaaaaa); 
+        }
+    });
+    
+    this.dragControls.addEventListener('dragend', (event) => {
+        event.object.material.emissive.set(0x000000); 
+        this.controls.enabled = true;
+    });
+    
+    
       window.addEventListener("resize", () => {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
@@ -124,7 +165,6 @@ export default class cadt3dThreeScene {
     this.wall.castShadow=true
     this.wall.position.y=-2
     this.wall.lookAt(0,0,0)
-    console.log('vfv',this.wall);
     
     this.walls.push(this.wall);
         this.group.add(this.wall);
@@ -180,10 +220,13 @@ export default class cadt3dThreeScene {
             this.room.lookAt(point2);
             this.room.rotateY(Math.PI/2)
             this.group.add( this.room );
-           
+    
+            this.box1 = new THREE.Box3().setFromObject(this.room);
+            this.boxes.push(this.box1)
             this.cubes.push(this.room);
         }
         this.group.position.y=0
+
         this.group.scale.y=this.yAxis
         this.group.scale.x=1
         this.scene.add( this.group );
@@ -200,6 +243,7 @@ export default class cadt3dThreeScene {
       
           // Calculate bounding box and normalize scale
           const box = new THREE.Box3().setFromObject(gltf.scene);
+
           const size = new THREE.Vector3();
           box.getSize(size);
           const maxSize = Math.max(size.x, size.y, size.z);
@@ -207,10 +251,16 @@ export default class cadt3dThreeScene {
           gltf.scene.scale.setScalar(desiredSize / maxSize);
       
           // Random position
-          gltf.scene.position.set(-3,-0.5,-3.5)
-      console.log('gltf.scene',gltf.scene.children[0].children[0].children[0].children[0]);
-      
-          this.scene.add(gltf.scene);
+          // gltf.scene.position.set(-3,-0.5,-3.5)
+      const gltfScene=gltf.scene
+      this.group2 = new THREE.Group();
+      this.group2.add(gltfScene)
+      this.box2 = new THREE.Box3().setFromObject(this.group2);
+
+
+      // this.group2.rotation.y=-Math.PI/2
+      this.gltfArray.push(this.group2)
+      this.scene.add(this.group2);
         },
         undefined,
         (error) => {
@@ -229,4 +279,3 @@ export default class cadt3dThreeScene {
         this.renderer.render(this.scene, this.camera);
       }
     }
-    

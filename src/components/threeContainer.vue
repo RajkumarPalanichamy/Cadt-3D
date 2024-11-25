@@ -15,11 +15,8 @@ export default {
     };
   },
   mounted() {
-    this.threeContainer = this.$refs.threeContainer;
-    this.threeScene = new ThreeScene(this.threeContainer);
-    this.threeScene.predefined();
+    this.initScene()
     // this.initializeThreeScene();
-
   },
   // beforeUnmount() {
   //   if (this.threeScene) {
@@ -38,21 +35,23 @@ export default {
     create() {
       this.threeScene.createListener();
     },
-    update(){
-      this.threeScene.cam=!this.threeScene.cam
+    initScene() {
+      this.threeContainer = this.$refs.threeContainer;
+      this.threeScene = new ThreeScene(this.threeContainer);
+      this.threeScene.predefined();
+      console.log("three", this.threeScene);
+    },
+    update() {
+      this.threeScene.cam = !this.threeScene.cam;
 
       this.threeScene.updateCamera();
-
     },
-    modelLoad(model){
-console.log('model',model);
-this.threeScene.predefined(model.cordinates);
-
-
+    modelLoad(model) {
+      console.log("model", model);
+      this.threeScene.predefined(model.cordinates);
     },
     gltfLoader(modelLink) {
       this.threeScene.gltfLoader(modelLink);
-
     },
     undoEvent() {
       const sceneModels = this.threeScene.scene.children;
@@ -62,26 +61,30 @@ this.threeScene.predefined(model.cordinates);
           this.threeScene.scene.remove(sceneModels[i]);
         }
       }
-      
     },
     redoEvent() {
       console.log(this.undoModels);
     },
+    saveFile(projectname, userName) {
+      console.log(this.threeScene);
+      this.threeScene.saveFile(projectname, userName);
+    },
+    loadSaved(model) {
 
-    saveFile(projectname,userName){      
-      this.threeScene.saveFile(projectname,userName);
+      this.initScene()
+      // const k = new ThreeScene(this.threeContainer);
+      this.threeScene.predefined(model);
+      // this.threeScene?.saveFile('ttt', 'yhvh');
+
+      // if (!this.threeScene) {
+      //       console.error('threeScene is not initialized!');
+      //       return;
+      //   }
     },
-    loadSaved(model){
-      if (!this.threeScene) {
-            console.error('threeScene is not initialized!');
-            return;
-        }
-        this.threeScene.predefined(model);
-    },
-    backHome(){
+    backHome() {
       // this.$parent.methods.return()
       console.log(this);
-      this.$emit('backHome');   
+      this.$emit("backHome");
     },
   },
 };
@@ -90,6 +93,6 @@ this.threeScene.predefined(model.cordinates);
 <style>
 .three-container {
   width: 100%;
-  height: 95vh;
+  height: 100vh;
 }
 </style>

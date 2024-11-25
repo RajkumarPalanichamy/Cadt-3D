@@ -1,5 +1,5 @@
 <template>
-  <v-container :fluid="true" class="py-0 px-0 " height="100vh" >
+  <v-container :fluid="true" class="py-0 px-0" height="100vh">
     <v-row
       @click="isUpload = true"
       style="position: absolute; bottom: 50px; right: 80px"
@@ -21,14 +21,6 @@
     >
       <template v-slot:top>
         <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
-          <v-col cols="1">
-            <v-icon class="ml-4 mt-2" color="grey">mdi-grid-large</v-icon>
-          </v-col>
-          <v-divider
-            vertical
-            thickness="3"
-            style="transform: rotate(20deg)"
-          ></v-divider>
           <v-spacer class="search_bg_colo"></v-spacer>
           <v-col class="search_bg_colo">
             <v-text-field
