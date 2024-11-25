@@ -3,7 +3,7 @@
     <!-- Search Bar -->
     <v-card class="d-flex align-center justify-center" flat>
       <v-row class="mt-1 mx-4">
-        <v-col cols="8">
+        <v-col cols="12">
           <v-text-field
             v-model="searchedValue"
             @input="searchSavedModels"
@@ -15,41 +15,30 @@
           >
           </v-text-field>
         </v-col>
-        <v-col cols="2" style="position: relative; right: 30px">
-          <v-btn color="#274E76" size="x-large" density="compact">search</v-btn>
-        </v-col>
-        <v-col cols="2">
-          <v-select
-            variant="outlined"
-            label="Last Updated"
-            density="compact"
-          ></v-select>
-        </v-col>
       </v-row>
     </v-card>
     <!-- No data found message -->
     <v-card
       flat
-      class="d-flex flex-column align-center justify-center"
+      class="d-flex flex-column align-center justify-center mt-16"
       v-if="!isShow && filteredModels.length === 0"
     >
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
-      <v-card-title>No data found</v-card-title>
+      <v-card-title>No Project found</v-card-title>
     </v-card>
-    <v-overlay v-model="isProjectLoad"> </v-overlay>
+    <v-overlay v-model="isProjectLoad" persistent> </v-overlay>
     <!-- Displaying Cards -->
     <v-card
       height="80vh"
-      :loading="isProjectLoad"
       class="grid-project mt-1 px-16 py-2 savedprojects overflow"
       flat
     >
       <v-card
         v-if="isShow"
-        class="d-flex flex-column pt-8 align-center"
         @click="createProject()"
         width="240px"
         height="220px"
+        class="hoverCard d-flex flex-column align-center pt-8"
       >
         <v-icon size="2em">mdi-plus</v-icon>
         <v-card-text class="text-">Create Project</v-card-text>
@@ -90,6 +79,15 @@
         </v-row>
       </v-card>
     </v-card>
+    <!-- Snack Bar -->
+    <v-snackbar v-model="isSnackbar" :timeout="500">
+      No Project Found
+      <template v-slot:actions>
+        <v-btn color="pink" variant="text" @click="isSnackbar = false">
+          Close
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
@@ -103,13 +101,13 @@ export default {
   name: "App",
   data: () => ({
     savedModels: [],
+    isSnackbar: false,
     isProjectLoad: true,
     items: [
       { text: "Home", icon: "mdi-clock" },
       { text: "My Profile", icon: "mdi-account" },
       { text: "Glb Models", icon: "mdi-table-furniture" },
       { text: "Textures", icon: "mdi-texture" },
-      
     ],
     hoverOptions: [
       { text: "Open", icon: "mdi-open-in-new" },
@@ -125,7 +123,12 @@ export default {
     this.filteredModels = this.savedModels;
   },
   async mounted() {
-    this.getSavedModel();
+    const userRole = VueJwtDecode.decode(Cookies.get("jwtToken")).role;
+    if (userRole == "admin") {
+      this.getAdminStoreModels();
+    } else {
+      this.getUserSavedModels();
+    }
   },
   methods: {
     createProject() {
@@ -147,7 +150,32 @@ export default {
         this.filteredModels = this.savedModels;
       }
     },
-    async getSavedModel() {
+    async getAdminStoreModels() {
+      this.isProjectLoad = true;
+      try {
+        const data = Cookies.get("jwtToken");
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/getdynamicscene`,
+          {
+            headers: {
+              Authorization: `Bearer ${data}`,
+            },
+          }
+        );
+        console.log(response);
+
+        if (response.status === 200) {
+          this.isProjectLoad = false;
+          this.savedModels = response.data;
+          this.filteredModels = this.savedModels;
+        }
+      } catch (error) {
+        this.isProjectLoad = false;
+        this.isSnackbar = true;
+      }
+    },
+    async getUserSavedModels() {
       this.isProjectLoad = true;
       try {
         const data = Cookies.get("jwtToken");
@@ -161,11 +189,10 @@ export default {
           this.isProjectLoad = false;
           this.savedModels = response.data.data;
           this.filteredModels = this.savedModels;
-        } else {
-          console.error(response.data.message);
         }
       } catch (error) {
-        console.error("Error fetching data:", error.message);
+        this.isProjectLoad = false;
+        this.isSnackbar = true;
       }
     },
     projectOptions(item, model) {
@@ -180,6 +207,7 @@ export default {
     loadSavedModels(model) {
       this.$router.push("/createproject");
       ThreeScene.methods.loadSaved(model);
+      
     },
     async deleteModel(projectname) {
       try {
@@ -196,11 +224,10 @@ export default {
           }
         );
         if (response.status === 200) {
-          this.getSavedModel();
+          this.getUserSavedModels();
         }
       } catch (error) {
         console.error("Delete Error:", error.message);
-        this.$toast.error("An error occurred while deleting the item");
       }
     },
   },
@@ -223,5 +250,10 @@ export default {
   position: relative;
   left: 430px;
   cursor: pointer;
+}
+.hoverCard:hover {
+  background-color: rgba(33, 150, 243, 0.2);
+  border: 1px solid rgba(33, 150, 243, 0.6);
+  transition: background-color 0.3s ease, border 0.3s ease;
 }
 </style>
