@@ -11,27 +11,27 @@
         BLUE 3D
       </v-card-title>
       <v-spacer></v-spacer>
-      <v-btn icon>
-        <v-menu open-on-hover>
-          <template v-slot:activator="{ props }">
-            <v-icon v-bind="props" color="white">mdi-dots-vertical</v-icon>
-          </template>
-          <v-list width="200px">
-            <v-list-item
-              @click="hoverValue(item.text)"
-              v-for="(item, i) in hoverOptions"
-              :key="i"
-              :value="item"
-              color="primary"
-            >
-              <template v-slot:prepend>
-                <v-icon :icon="item.icon"></v-icon>
-              </template>
-              <v-list-item-title>{{ item.text }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-      </v-btn>
+      <v-menu>
+  <template v-slot:activator="{ props }">
+    <v-btn icon v-bind="props">
+      <v-icon color="white">mdi-dots-vertical</v-icon>
+    </v-btn>
+  </template>
+  <v-list width="200px">
+    <v-list-item
+      v-for="(item, i) in hoverOptions"
+      :key="i"
+      @click="hoverValue(item.text)"
+      color="primary"
+    >
+      <template v-slot:prepend>
+        <v-icon :icon="item.icon"></v-icon>
+      </template>
+      <v-list-item-title>{{ item.text }}</v-list-item-title>
+    </v-list-item>
+  </v-list>
+</v-menu>
+
     </v-toolbar>
 
     <!-- Main Content -->
@@ -98,7 +98,7 @@ export default {
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Web", icon: "mdi-web" },
-        { text: "CADT-3D", icon: "mdi-cube" },
+        { text: "Studio3D", icon: "mdi-cube" },
       ],
       adminData: [
         { text: "Home", icon: "mdi-home-account" },
@@ -107,7 +107,7 @@ export default {
         { text: "Textures", icon: "mdi-texture" },
         { text: "Employee", icon: "mdi-account-group-outline" },
         { text: "Web", icon: "mdi-web" },
-        { text: "CADT-3D", icon: "mdi-cube" },
+        { text: "Studio3D", icon: "mdi-cube" },
       ],
       displaySidebarData: [],
       role: "",
@@ -133,8 +133,8 @@ export default {
       this.isSmallScreen = window.innerWidth <= 960;
     },
     sideBar(clickedValue) {
-      if (clickedValue == "CADT-3D") {
-        this.$router.push(`/cadt3d`);
+      if (clickedValue == "Studio3D") {
+        this.$router.push(`/studio3d`);
       } else {
         const value = clickedValue.split(" ").join("").toLowerCase();
         this.$router.push(`/homeview/${value}`);
@@ -151,7 +151,6 @@ export default {
 </script>
 
 <style scoped>
-
 .custom-drawer {
   background-size: cover;
   background-position: center;

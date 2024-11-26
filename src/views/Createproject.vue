@@ -6,17 +6,23 @@
         BLUE 3D
       </v-card-title>
       <v-btn icon @click="backToHome">
+        <v-tooltip activator="parent" location="top">Exit</v-tooltip>
         <v-icon>mdi-menu-left</v-icon>
       </v-btn>
 
       <v-btn icon @click="undo">
+        <v-tooltip activator="parent" location="top">undo</v-tooltip>
+
         <v-icon>mdi-arrow-left-top</v-icon>
       </v-btn>
       <v-btn icon>
+        <v-tooltip activator="parent" location="top">Redo</v-tooltip>
+
         <v-icon>mdi-arrow-right-top</v-icon>
       </v-btn>
 
       <v-spacer></v-spacer>
+
       <v-btn icon class="mr-16" @click="triggerCreate">
         <v-icon>{{ is3DView ? "mdi-video-2d" : "mdi-video-3d" }}</v-icon>
       </v-btn>
@@ -36,8 +42,6 @@
       class="d-flex"
       @dragover.prevent="onDragOver"
       @drop="onDrop"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
       style="cursor: pointer"
       height="93vh"
     >
@@ -67,16 +71,19 @@
         </v-card>
       </v-dialog>
       <v-card
+        color="#F6F6F6"
         style="top: 230px !important; right: 10px"
-        class="d-flex flex-column justify-center position px-2 py-2 border"
+        class="d-flex flex-column justify-center position px-2 py-2 border-md"
       >
         <v-icon
           v-for="(item, index) in sideBar"
           :key="index"
-          @click="toggleVisibility(item)"
+          @click="toggleVisibility(item.icon)"
           class="mt-2"
           size="1.7em"
-          >{{ item }}</v-icon
+          v-tooltip="`${item.tooltip}`"
+        >
+          {{ item.icon }}</v-icon
         >
       </v-card>
       <v-card
@@ -85,8 +92,12 @@
         width="300px"
         class="mr-6 pt-2 pb-2 position"
       >
-        
-        <v-toolbar color="white" class="mb-6" density="compact" style="border-radius:6px ;">
+        <v-toolbar
+          color="white"
+          class="mb-6"
+          density="compact"
+          style="border-radius: 6px"
+        >
           <v-card-title class="text-h6">Search</v-card-title>
           <v-spacer></v-spacer>
           <v-icon class="pr-3" @click="cancel">mdi-window-close</v-icon>
@@ -137,7 +148,7 @@
             </v-col>
           </v-row>
           <v-divider class="mb-2"></v-divider>
-          <v-card v-if="!isModel" class="grid" flat>
+          <v-card v-if="isCategories" class="grid" flat>
             <v-card
               v-for="(model, index) in showCard"
               :key="index"
@@ -145,7 +156,7 @@
               height="170px"
               @click="selectedCategory(model)"
             >
-              <v-img :src="model.modelimg"></v-img>
+              <v-img :src="model.modelimg"  ></v-img>
               <v-card-text class="text-center text-blue-darken-4">{{
                 model.modelname
               }}</v-card-text>
@@ -190,13 +201,15 @@
                       model.FurnituresImagesArraywithGltf[0].furnitureGltfLoader
                     )
                   "
+                  :draggable="isDrag"
                   class="ma-2 pt-2"
                   outlined
                   style="cursor: grab"
                 >
                   <v-img
+                    draggable="false"
                     :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
-                  >
+                    draggable="true"
                   </v-img>
                   <v-card-text class="text-center">{{
                     model.FurnituresImagesArraywithGltf[0].furnitureName
@@ -228,11 +241,13 @@ export default {
         required: (value) => !!value || "Field is required",
       },
       is3DView: false,
+      isDrag: true,
       isVisible: false,
       isModel: false,
       modelList: true,
       isModelCard: false,
       categories: false,
+      isCategories: true,
       isSave: false,
       showCard: [],
       clickModel: false,
@@ -285,8 +300,18 @@ export default {
           modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
         },
       ],
-      sideBar: ["mdi-draw-pen", "mdi-table-furniture"],
+      sideBar: [
+        { icon: "mdi-draw-pen", tooltip: "Draw" },
+        { icon: "mdi-table-furniture", tooltip: "Furnitures" },
+      ],
     };
+  },
+  computed: {
+    ...mapState(["triggerMethod", "loadSavedModel"]),
+
+    totalmodel() {
+      return this.availabelModels.length;
+    },
   },
   watch: {
     triggerMethod(newValue) {
@@ -299,23 +324,32 @@ export default {
         this.$store.commit("changeTriggerMethod");
       }
     },
-  },
-  computed: {
-    ...mapState(["triggerMethod"]),
+    //   loadSavedModel(newValue){
+    //     console.log('newValuebrgshnj',newValue);
 
-    totalmodel() {
-      return this.availabelModels.length;
-    },
+    //     this.loadSaved(newValue)
+    //   }
   },
+
   methods: {
+    loadSaved(newValue) {
+      console.log("newValue", newValue);
+
+      this.$refs.threeSceneComponent.loadSaved(newValue);
+    },
     setView(view) {
-      this.isModel = view === "models" ? true : false;
+      console.log(view);
+      if (view == "models") {
+        (this.isModel = true), (this.isCategories = false);
+      } else {
+        (this.isModel = false), (this.isCategories = true);
+      }
     },
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getfurnitures`
+          `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`
         );
 
         response.data.forEach((eachModel) => {
@@ -349,12 +383,11 @@ export default {
         this.isModelCard = true;
         this.categories = true;
         this.showCard = this.modelsList;
-
-        // } else if (selectedValue == "mdi-magnify") {
-        //   this.isModelCard = false;
       } else {
         (this.isModelCard = true), (this.categories = false);
         this.showCard = this.drawList;
+        this.isCategories = true;
+        this.isModel = false;
       }
     },
 
@@ -366,7 +399,7 @@ export default {
         }, 500);
       } else {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/defaultscenevalues`
+          `${import.meta.env.VITE_API_LINK}/default/getdefaultscene`
         );
         response.data.forEach((model) => {
           if (model.name == category.modelname) {
@@ -378,7 +411,7 @@ export default {
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getfurnitures`,
+          `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`,
 
           {
             responseType: "json",
@@ -398,50 +431,52 @@ export default {
         console.error("Error loading model:", error);
       }
     },
-   onDragStart(modelLink) {
-  const draggedModel = modelLink; // The URL or path to the GLTF model
-  event.dataTransfer.setData("text/plain", draggedModel);
+    onDragStart(modelLink) {
+      const draggedModel = modelLink; // The URL or path to the GLTF model
+      event.dataTransfer.setData("text/plain", draggedModel);
 
-  // Dispatch the model-drag-start event with the model link
-  const dragStartEvent = new CustomEvent("model-drag-start", {
-    detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
-  });
-  window.dispatchEvent(dragStartEvent);
-},
+      // Dispatch the model-drag-start event with the model link
+      const dragStartEvent = new CustomEvent("model-drag-start", {
+        detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
+      });
+      window.dispatchEvent(dragStartEvent);
+    },
 
-onDragOver(event) {
-  this.isVisible = false;
-  event.preventDefault();
+    onDragOver(event) {
+      this.isVisible = false;
+      event.preventDefault();
 
-  // Calculate mouse position
-  const mouse = {
-    x: (event.clientX / event.target.clientWidth) * 2 - 1,
-    y: -(event.clientY / event.target.clientHeight) * 2 + 1,
-  };
+      // Calculate mouse position
+      const mouse = {
+        x: (event.clientX / event.target.clientWidth) * 2 - 1,
+        y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+      };
 
-  // Dispatch the model-drag-move event to update placeholder position
-  const dragMoveEvent = new CustomEvent("model-drag-move", { detail: { mouse } });
-  window.dispatchEvent(dragMoveEvent);
-},
+      // Dispatch the model-drag-move event to update placeholder position
+      const dragMoveEvent = new CustomEvent("model-drag-move", {
+        detail: { mouse },
+      });
+      window.dispatchEvent(dragMoveEvent);
+    },
 
-onDrop(event) {
-  const droppedText = event.dataTransfer.getData("text/plain");
-  console.log("Dropped Model:", droppedText);
+    onDrop(event) {
+      const droppedText = event.dataTransfer.getData("text/plain");
+      console.log("Dropped Model:", droppedText);
 
-  this.isVisible = true;
+      this.isVisible = true;
 
-  // Calculate mouse position
-  const mouse = {
-    x: (event.clientX / event.target.clientWidth) * 2 - 1,
-    y: -(event.clientY / event.target.clientHeight) * 2 + 1,
-  };
+      // Calculate mouse position
+      const mouse = {
+        x: (event.clientX / event.target.clientWidth) * 2 - 1,
+        y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+      };
 
-  // Dispatch the model-drop event with model link and position
-  const dropEvent = new CustomEvent("model-drop", {
-    detail: { droppedText, mouse },
-  });
-  window.dispatchEvent(dropEvent);
-},
+      // Dispatch the model-drop event with model link and position
+      const dropEvent = new CustomEvent("model-drop", {
+        detail: { droppedText, mouse },
+      });
+      window.dispatchEvent(dropEvent);
+    },
 
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
@@ -451,7 +486,6 @@ onDrop(event) {
       const userName = VueJwtDecode.decode(data);
       this.$refs.threeSceneComponent.saveFile(projectname, userName.name);
     },
-   
 
     handleBackHome() {
       console.log("returing home");
@@ -459,6 +493,14 @@ onDrop(event) {
 
       this.$router.push("/homeview");
     },
+  },
+  mounted() {
+    if (this.loadSavedModel) {
+      this.loadSaved(this.loadSavedModel);
+    }
+  },
+  beforeUnmount() {
+    this.$store.commit("cancelModel");
   },
 };
 </script>
@@ -486,4 +528,5 @@ onDrop(event) {
 .models:hover {
   color: #274e76;
 }
+
 </style>

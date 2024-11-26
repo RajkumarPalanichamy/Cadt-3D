@@ -87,7 +87,7 @@ export default {
       if (this.username && this.password) {
         try {
           const response = await axios.post(
-            `${import.meta.env.VITE_API_LINK}/login`,
+            `${import.meta.env.VITE_API_LINK}/auth/login`,
             {
               username: this.username,
               password: this.password,
@@ -120,7 +120,7 @@ export default {
     async fetchUserFurnitures(token) {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/furnitures`,
+          `${import.meta.env.VITE_API_LINK}/furniture/furnitures`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

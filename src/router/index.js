@@ -11,7 +11,7 @@ import Employee from "@/views/Employee.vue"
 
 import Web from "@/views/web.vue";
 
-import cadt3d from "@/components/cadt3d.vue";
+import studio3d from "@/components/studio3d.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,9 +66,9 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/cadt3d",
-      name: "cadt3d-container",
-      component: cadt3d,
+      path: "/studio3d",
+      name: "studio3d-container",
+      component: studio3d,
 
     }
 
