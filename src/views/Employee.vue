@@ -186,8 +186,7 @@ export default {
       try {
         this.isLoading = true;
         const user = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/auth/getclients`
-        );
+          `${import.meta.env.VITE_API_LINK}/auth/getclients`);
         if (user.status == "200") {
           this.isLoading = false;
           user.data.forEach((eachUser) => {
