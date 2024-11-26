@@ -98,7 +98,7 @@ export default {
         { text: "Glb Models", icon: "mdi-table-furniture" },
         { text: "Textures", icon: "mdi-texture" },
         { text: "Web", icon: "mdi-web" },
-        { text: "CADT-3D", icon: "mdi-cube" },
+        { text: "Studio3D", icon: "mdi-cube" },
       ],
       adminData: [
         { text: "Home", icon: "mdi-home-account" },
@@ -107,7 +107,7 @@ export default {
         { text: "Textures", icon: "mdi-texture" },
         { text: "Employee", icon: "mdi-account-group-outline" },
         { text: "Web", icon: "mdi-web" },
-        { text: "CADT-3D", icon: "mdi-cube" },
+        { text: "Studio3D", icon: "mdi-cube" },
       ],
       displaySidebarData: [],
       role: "",
@@ -133,8 +133,8 @@ export default {
       this.isSmallScreen = window.innerWidth <= 960;
     },
     sideBar(clickedValue) {
-      if (clickedValue == "CADT-3D") {
-        this.$router.push(`/cadt3d`);
+      if (clickedValue == "Studio3D") {
+        this.$router.push(`/studio3d`);
       } else {
         const value = clickedValue.split(" ").join("").toLowerCase();
         this.$router.push(`/homeview/${value}`);

@@ -4,7 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-export default class cadt3dThreeScene {
+export default class studio3dThreeScene {
     constructor(container) {
       this.container = container;
       this.scene = null;
@@ -59,24 +59,15 @@ export default class cadt3dThreeScene {
     
         event.object.userData.lastValidPosition = event.object.position.clone();
     
-        this.box2.setFromObject(event.object);
+        this.roomBox = new THREE.Box3().setFromObject(this.group); 
+        this.modelBox = new THREE.Box3().setFromObject(event.object); 
     });
     
     this.dragControls.addEventListener('drag', (event) => {
-        this.box2.setFromObject(event.object);
+        this.modelBox.setFromObject(event.object);
     
-        let collisionDetected = false;
-    
-        for (const box of this.boxes) {
-            if (box.intersectsBox(this.box2)) {
-                collisionDetected = true;
-                break;
-            }
-        }
-    
-        if (collisionDetected) {
-            console.log("Collision detected! Reverting position.");
-            event.object.position.copy(event.object.userData.lastValidPosition);
+        if (!this.roomBox.containsBox(this.modelBox)) {
+            event.object.position.copy(event.object.userData.lastValidPosition); // Revert position
             event.object.material.emissive.set(0xff0000); 
         } else {
             event.object.userData.lastValidPosition.copy(event.object.position);
@@ -85,7 +76,7 @@ export default class cadt3dThreeScene {
     });
     
     this.dragControls.addEventListener('dragend', (event) => {
-        event.object.material.emissive.set(0x000000); 
+        event.object.material.emissive.set(0x000000);
         this.controls.enabled = true;
     });
     
