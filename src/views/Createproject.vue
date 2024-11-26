@@ -36,8 +36,6 @@
       class="d-flex"
       @dragover.prevent="onDragOver"
       @drop="onDrop"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
       style="cursor: pointer"
       height="93vh"
     >
@@ -145,7 +143,7 @@
               height="170px"
               @click="selectedCategory(model)"
             >
-              <v-img :src="model.modelimg"></v-img>
+              <v-img :src="model.modelimg"  ></v-img>
               <v-card-text class="text-center text-blue-darken-4">{{
                 model.modelname
               }}</v-card-text>
@@ -196,7 +194,7 @@
                 >
                   <v-img
                     :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
-                  >
+                    draggable="true"
                   </v-img>
                   <v-card-text class="text-center">{{
                     model.FurnituresImagesArraywithGltf[0].furnitureName
@@ -399,6 +397,7 @@ export default {
       }
     },
    onDragStart(modelLink) {
+
   const draggedModel = modelLink; // The URL or path to the GLTF model
   event.dataTransfer.setData("text/plain", draggedModel);
 
@@ -486,4 +485,5 @@ onDrop(event) {
 .models:hover {
   color: #274e76;
 }
+
 </style>

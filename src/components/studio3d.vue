@@ -41,13 +41,13 @@
       >
     </v-card>
     <!-- Scene Container -->
-    <v-container class="px-0 py-0">
-      <div ref="threeContainer" class="three-container"></div>
+    <v-container class="px-0 py-0" :fluid="true">
+      <div ref="threeContainer" class="three-container" style="height:90vh"></div>
     </v-container>
   </v-container>
 </template>
 <script>
-import cadt3dThreeScene from "@/Three/cadt3d";
+import studio3dThreeScene from "@/Three/studio3d.js";
 export default {
   name: "cadt3d-container",
   data() {
@@ -87,7 +87,7 @@ export default {
   },
   mounted() {
     this.threeContainer = this.$refs.threeContainer;
-    this.threeScene = new cadt3dThreeScene(this.threeContainer);
+    this.threeScene = new studio3dThreeScene(this.threeContainer);
   },
 };
 </script>
