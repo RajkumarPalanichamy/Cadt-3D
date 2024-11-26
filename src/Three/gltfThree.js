@@ -13,9 +13,12 @@ export default class gltfThreeScene {
   }
   init() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#D3D3D3");
+    this.scene.background = new THREE.Color("#BCBCBC");
 
     this.renderer = new THREE.WebGLRenderer();
+    this.renderer.shadowMap.enabled = true;
+this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: soft shadows
+
     this.renderer.setSize(
       this.container.clientWidth,
       this.container.clientHeight
@@ -27,19 +30,29 @@ export default class gltfThreeScene {
       0.5,
       1000
     );
-    const directionalLight = new THREE.DirectionalLight("white", 0.5);
+    const directionalLight = new THREE.DirectionalLight("white", 1);
+    directionalLight.position.set(1,1,1); // Adjust to fit your scene
+
+    directionalLight.castShadow=true
+    directionalLight.shadow.mapSize.width = 1024;
+directionalLight.shadow.mapSize.height = 1024;
     this.scene.add(directionalLight);
+
     const light = new THREE.AmbientLight("white"); // soft white light
     this.scene.add(light);
+
+   
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     window.addEventListener("resize", () => {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
+   
     this.animate();
   }
   gltf(modelLink) {
+    this.group = new THREE.Group();
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
       let box = new THREE.Box3().setFromObject(gltf.scene);
@@ -55,9 +68,24 @@ export default class gltfThreeScene {
       }
       gltf.scene.scale.setScalar(1 / (maxSize / 3));
       gltf.scene.position.set(0, 0, 0);
-      this.scene.add(gltf.scene);
+      gltf.scene.traverse((node) => {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true; // If you need it to interact with shadows
+        }
+      });
+            // this.scene.add(gltf.scene);
+      this.group.add(gltf.scene)
     });
-    this.camera.position.z = 5;
+    const geometry = new THREE.PlaneGeometry( 100,100 );
+    const material = new THREE.MeshStandardMaterial( {color:'white', side: THREE.FrontSide,roughness:0} );
+    const plane = new THREE.Mesh( geometry, material );
+    plane.receiveShadow=true
+    plane.rotateX(-Math.PI/2)
+    // this.scene.add( plane );
+    this.group.add(plane)
+    this.scene.add(this.group)
+    this.camera.position.set(0,2.5,5)
   }
   texture(textureLink) {
     const geometry = new THREE.BoxGeometry(1, 1, 1);

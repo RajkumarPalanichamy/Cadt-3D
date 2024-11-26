@@ -25,11 +25,58 @@
       :fluid="true"
       class="px-0 py-0"
     >
-      <v-toolbar density="compact" class="bg-white">
+      <v-toolbar
+        style="position: sticky; z-index: 1; top: 0px"
+        density="compact"
+        :color="selectedModels.length > 0 ? 'black' : 'white'"
+      >
         <v-card-title class="text-subtitle-2">{{ title }}</v-card-title>
         <v-spacer> </v-spacer>
+        <v-btn
+          v-if="selectedModels.length > 0"
+          @click="isAddShop = true"
+          color="whilte"
+          >Add to Web</v-btn
+        >
+        <v-card-title class="text-subtitle-2" v-if="selectedModels.length > 0">
+          {{ selectedModelsCount }}</v-card-title
+        >
       </v-toolbar>
-      <!-- Add Image -->
+      <!-- DIsplaying Models card-->
+      <v-item-group multiple>
+        <v-container
+          v-if="isModels"
+          flat
+          rounded="0"
+          class="pl-10 grid"
+          :fluid="true"
+        >
+          <v-card
+            v-for="(model, index) in modelData"
+            :key="index"
+            :color="selectedModels.includes(index) ? '#274E76' : ''"
+            class="px-2 pt-2 elevation-4"
+            style="border-radius: 8px"
+            width="240px"
+            height="220px"
+            @click="() => handleCardClick(index)"
+          >
+            <v-scroll-y-transition>
+              <div class="text-h6">
+                {{ selectedModels.includes(index) ? "Selected" : "" }}
+              </div>
+            </v-scroll-y-transition>
+            <v-container height="70%" class="px-0 py-0">
+              <v-img src="/public/images/model_display.jpg"></v-img>
+            </v-container>
+            <v-card-text class="py-2 text-subtitle-1 text-capitalize">{{
+              model.projectName
+            }}</v-card-text>
+          </v-card>
+        </v-container>
+      </v-item-group>
+
+      <!-- Add Image card -->
       <v-card rounded="0" flat v-if="isCreated">
         <!-- carousel -->
         <v-carousel show-arrows="hover" cycle hide-delimiter-background>
@@ -72,6 +119,7 @@
       </v-card>
       <!-- add button -->
       <v-row
+        v-if="!isModels"
         @click="isAddImage = true"
         style="position: absolute; bottom: 100px; right: 80px"
       >
@@ -118,6 +166,25 @@
         </v-container>
       </v-card>
     </v-dialog>
+    <!-- Add To Shop -->
+    <v-dialog v-model="isAddShop" max-width="800px">
+      <v-card height="200px">
+        <v-toolbar class="px-2" color="#274E76" density="compact">
+          <v-icon @click="isAddShop = false">mdi-close</v-icon>
+          <v-card-title class="text-subtitle-1"
+            >{{ selectedModelsCount }} MODELS SELECTED</v-card-title
+          >
+        </v-toolbar>
+        <v-card-title>Are You sure ?</v-card-title>
+        <v-card-subtitle
+          >Do you want to display the selected model in your application . If '
+          YES' click 'CONFIRM' button at the end</v-card-subtitle
+        >
+        <v-card-actions class="mt-4">
+          <v-btn @click="isAddShop = false">Confirm</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <!-- image Snackbar -->
     <v-snackbar v-model="imageSnackbar" :timeout="2000">
       {{ snackbarText }}
@@ -130,8 +197,12 @@
   </v-container>
 </template>
 <script>
+import axios from "axios";
+import Cookies from "js-cookie";
+import VueJwtDecode from "vue-jwt-decode";
 export default {
   data: () => ({
+    isAddShop: false,
     items: [
       { text: "Add Image", icon: "mdi-image-multiple-outline" },
       { text: "Displaying Models", icon: "mdi-view-day" },
@@ -144,20 +215,76 @@ export default {
     title: "",
     imageSnackbar: false,
     snackbarText: "",
-    displayData: [],
     isAddImage: false,
     isCreated: true,
     slides: ["", "", "", ""],
+    isModels: false,
+    modelData: [],
+    selectedModels: [],
   }),
+  computed: {
+    selectedModelsCount() {
+      return this.selectedModels.length;
+    },
+  },
   methods: {
     sideBarData(value) {
       this.title = value.toUpperCase();
       if (value == "Add Image") {
-        this.displayData = this.imageData;
         this.isCreated = true;
+        this.isModels = false;
+        this.selectedModels = [];
       } else {
+        this.isModels = true;
         this.isCreated = false;
-        this.displayData = this.createdModelData;
+        const userRole = VueJwtDecode.decode(Cookies.get("jwtToken")).role;
+        if (userRole == "admin") {
+          this.getAdminStoreModels();
+        } else {
+          this.getUserSavedModels();
+        }
+      }
+    },
+    handleCardClick(index) {
+      if (this.selectedModels.includes(index)) {
+        this.selectedModels = this.selectedModels.filter((i) => i !== index);
+      } else {
+        this.selectedModels.push(index);
+      }
+    },
+    async getUserSavedModels() {
+      try {
+        const data = Cookies.get("jwtToken");
+        const userName = VueJwtDecode.decode(data);
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${userName.name}`
+        );
+
+        if (response.status === 200) {
+          this.modelData = response.data.data;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async getAdminStoreModels() {
+      try {
+        const data = Cookies.get("jwtToken");
+
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/dynamic/getdynamicscene`,
+          {
+            headers: {
+              Authorization: `Bearer ${data}`,
+            },
+          }
+        );
+        if (response.status === 200) {
+          this.modelData = response.data;
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
     uploadImage() {
@@ -181,7 +308,10 @@ export default {
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
+}
+.text-capitalize {
+  text-transform: capitalize;
 }
 </style>

@@ -44,7 +44,7 @@ export default class ThreeScene {
     this.group;
     this.initializeDragControls;
     this.disposeDragControls;
-
+    this.imgURl=null;
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.mouseover = this.mouseover.bind(this);
@@ -410,9 +410,10 @@ window.addEventListener("model-drop", (event) => {
     this.camera.lookAt(0, 0, 0);
   }
   predefined(model) {
-     console.log(model);
+     console.log("coordomates",model);
      
     if(model){
+      
       this.controlPoints = model;
       this.finalizePolygon(this.controlPoints);
     } else {
@@ -637,6 +638,8 @@ gl_FragColor = vec4(gridColor, 1.0);
   }
 
   finalizePolygon() {
+    console.log('this.controlPoints',this.controlPoints);
+    
     if (this.controlPoints.length < 3) return;
 
     this.group = new THREE.Group();
@@ -686,12 +689,13 @@ gl_FragColor = vec4(gridColor, 1.0);
 
   blob() {
     let data = this.dataURL;
-
+console.log('data',data);
+   this.imgURl=data
     var link = document.createElement("a");
     link.download = "demo.png";
     link.href = data;
     link.target = "_blank";
-    link.click();
+    // link.click();
   }
 
   ceil(geometry) {
@@ -940,18 +944,17 @@ gl_FragColor = vec4(gridColor, 1.0);
       this.scene.add(gltf.scene);
     });
   }
-  async saveFile(projectname) {
-    const saveModel = {
-      projectname: projectname,
-      coordinates: this.mainArray,
-      gltfObjects: this.modelLoad,
-    };
-    store.commit("setTriggerMethod", saveModel);
-    }
-
+  
    async saveFile(projectname,userName){
-    const saveModel={username:userName,projectName:projectname,coordinates:this.mainArray,gltfObjects:this.modelLoad}
+            const saveModel=  {
+                                username    : userName,
+                                projectName : projectname,
+                                coordinates : this.mainArray,
+                                gltfObjects : this.modelLoad,
+                                imageUrl     : this.imgURl
+                            }
     store.commit('setTriggerMethod', saveModel);          
+console.log('this.saveModel',saveModel);
 
           this.mainArray=[]
           this.modelLoad=[]
@@ -965,7 +968,7 @@ gl_FragColor = vec4(gridColor, 1.0);
     this.render();
     if (this.getImageData == true) {
       this.dataURL = this.renderer.domElement.toDataURL();
-      // this.blob()
+      this.blob()
       this.getImageData = false;
     }
   }

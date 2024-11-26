@@ -3,7 +3,7 @@ import axios from "axios";
 const store = createStore({
   state: {
     triggerMethod: false,
-  
+    loadSavedModel:null,
   },
   mutations: {
 
@@ -22,6 +22,14 @@ const store = createStore({
 
       state.triggerMethod = true;
     },
+    loadModel(state,model){      
+      state.loadSavedModel = model
+      
+    },
+    cancelModel(state){
+      state.loadSavedModel = null
+
+    }
   }    
 });
 

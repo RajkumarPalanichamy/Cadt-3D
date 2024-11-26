@@ -26,34 +26,49 @@
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
       <v-card-title>No Project found</v-card-title>
     </v-card>
-    <v-overlay v-model="isProjectLoad" persistent> </v-overlay>
+
+    <v-overlay
+      v-model="isProjectLoad"
+      persistent
+      class="d-flex justify-center align-center"
+    >
+      <v-progress-circular indeterminate :size="70" :width="5" color="#274E76">
+        {{ value }}
+      </v-progress-circular>
+    </v-overlay>
     <!-- Displaying Cards -->
     <v-card
       height="80vh"
-      class="grid-project mt-1 px-16 py-2 savedprojects overflow"
+      class="grid-project mt-1 pl-10 py-2 savedprojects overflow"
       flat
     >
       <v-card
         v-if="isShow"
         @click="createProject()"
+        style="border-radius: 8px"
         width="240px"
         height="220px"
-        class="hoverCard d-flex flex-column align-center pt-8"
+        class="hoverCard d-flex flex-column align-center pt-8 elevation-4"
       >
         <v-icon size="2em">mdi-plus</v-icon>
         <v-card-text class="text-">Create Project</v-card-text>
       </v-card>
       <v-card
-        class="px-2 pt-2"
+        class="px-2 pt-2 elevation-4"
+        style="border-radius: 8px"
         v-for="(model, index) in filteredModels"
         width="240px"
         height="220px"
         :key="index"
       >
-        <v-container class="bg-grey" height="75%"> </v-container>
-        {{ model.projectName }}
+        <v-container class="bg-grey" height="70%"> </v-container>
+        <v-card-text class="py-1 px-0 text-subtitle-1 text-capitalize">{{
+          model.projectName
+        }}</v-card-text>
         <v-row>
-          <v-col cols="10" class="text-grey">{{ model.createdAt }}</v-col>
+          <v-col cols="10" class="text-subtitle-2 text-grey">{{
+            model.createdAt
+          }}</v-col>
           <v-col cols="2">
             <!-- v-menu for menu list on dots icon hover -->
             <v-menu transition="scale-transition" offset-y open-on-hover>
@@ -95,7 +110,6 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
-import ThreeScene from "@/components/threeContainer.vue";
 
 export default {
   name: "App",
@@ -156,15 +170,13 @@ export default {
         const data = Cookies.get("jwtToken");
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getdynamicscene`,
+          `${import.meta.env.VITE_API_LINK}/dynamic/getdynamicscene`,
           {
             headers: {
               Authorization: `Bearer ${data}`,
             },
           }
         );
-        console.log(response);
-
         if (response.status === 200) {
           this.isProjectLoad = false;
           this.savedModels = response.data;
@@ -182,7 +194,7 @@ export default {
         const userName = VueJwtDecode.decode(data);
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
+          `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${userName.name}`
         );
 
         if (response.status === 200) {
@@ -205,9 +217,10 @@ export default {
       }
     },
     loadSavedModels(model) {
+      // this.$router.push("/createproject");
+      // ThreeScene.methods.loadSaved(model);\
+      this.$store.commit("loadModel", model);
       this.$router.push("/createproject");
-      ThreeScene.methods.loadSaved(model);
-      
     },
     async deleteModel(projectname) {
       try {
@@ -218,7 +231,8 @@ export default {
         };
 
         const response = await axios.delete(
-          `${import.meta.env.VITE_API_LINK}/dynamicscene`,
+          `${import.meta.env.VITE_API_LINK} /dynamic/dynamicscene
+`,
           {
             data: deleteData,
           }
@@ -255,5 +269,8 @@ export default {
   background-color: rgba(33, 150, 243, 0.2);
   border: 1px solid rgba(33, 150, 243, 0.6);
   transition: background-color 0.3s ease, border 0.3s ease;
+}
+.text-capitalize {
+  text-transform: capitalize;
 }
 </style>
