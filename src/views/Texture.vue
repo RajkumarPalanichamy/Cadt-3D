@@ -212,7 +212,7 @@ export default {
     async getTextures() {
       this.textureData = [];
       const response = await axios.get(
-        `${import.meta.env.VITE_API_LINK}/getTextures`
+        `${import.meta.env.VITE_API_LINK}/texture/getTextures`
       );
 
       if (response.status == 200) {
@@ -245,7 +245,7 @@ export default {
 
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_API_LINK}/textures`,
+          `${import.meta.env.VITE_API_LINK}/texture/textures`,
           formData,
           {
             headers: {

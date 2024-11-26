@@ -32,13 +32,7 @@
       persistent
       class="d-flex justify-center align-center"
     >
-      <v-progress-circular
-        :model-value="loadingValue"
-        :rotate="360"
-        :size="70"
-        :width="5"
-        color="#274E76"
-      >
+      <v-progress-circular indeterminate :size="70" :width="5" color="#274E76">
         {{ value }}
       </v-progress-circular>
     </v-overlay>
@@ -68,7 +62,7 @@
         :key="index"
       >
         <v-container class="bg-grey" height="70%"> </v-container>
-        <v-card-text class="py-1 px-0 text-subtitle-1">{{
+        <v-card-text class="py-1 px-0 text-subtitle-1 text-capitalize">{{
           model.projectName
         }}</v-card-text>
         <v-row>
@@ -176,7 +170,7 @@ export default {
         const data = Cookies.get("jwtToken");
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getdynamicscene`,
+          `${import.meta.env.VITE_API_LINK}/dynamic/getdynamicscene`,
           {
             headers: {
               Authorization: `Bearer ${data}`,
@@ -200,7 +194,7 @@ export default {
         const userName = VueJwtDecode.decode(data);
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
+          `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${userName.name}`
         );
 
         if (response.status === 200) {
@@ -237,7 +231,8 @@ export default {
         };
 
         const response = await axios.delete(
-          `${import.meta.env.VITE_API_LINK}/dynamicscene`,
+          `${import.meta.env.VITE_API_LINK} /dynamic/dynamicscene
+`,
           {
             data: deleteData,
           }
@@ -274,5 +269,8 @@ export default {
   background-color: rgba(33, 150, 243, 0.2);
   border: 1px solid rgba(33, 150, 243, 0.6);
   transition: background-color 0.3s ease, border 0.3s ease;
+}
+.text-capitalize {
+  text-transform: capitalize;
 }
 </style>

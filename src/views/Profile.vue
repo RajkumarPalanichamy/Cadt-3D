@@ -161,7 +161,7 @@ export default {
     const decodedToken = VueJwtDecode.decode(data);
     // getting all the user data from the database
     const response = await axios.get(
-      `${import.meta.env.VITE_API_LINK}/clients`
+      `${import.meta.env.VITE_API_LINK}/auth/getclients`
     );
     response.data.forEach((eachUser) => {
       if (decodedToken.name === eachUser.username) {

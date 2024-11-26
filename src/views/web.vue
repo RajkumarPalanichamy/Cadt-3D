@@ -26,12 +26,16 @@
       class="px-0 py-0"
     >
       <v-toolbar
+        style="position: sticky; z-index: 1; top: 0px"
         density="compact"
         :color="selectedModels.length > 0 ? 'black' : 'white'"
       >
         <v-card-title class="text-subtitle-2">{{ title }}</v-card-title>
         <v-spacer> </v-spacer>
-        <v-btn v-if="selectedModels.length > 0" color="whilte"
+        <v-btn
+          v-if="selectedModels.length > 0"
+          @click="isAddShop = true"
+          color="whilte"
           >Add to Web</v-btn
         >
         <v-card-title class="text-subtitle-2" v-if="selectedModels.length > 0">
@@ -58,14 +62,14 @@
             @click="() => handleCardClick(index)"
           >
             <v-scroll-y-transition>
-              <div class="text-h3 flex-grow-1 text-center">
+              <div class="text-h6">
                 {{ selectedModels.includes(index) ? "Selected" : "" }}
               </div>
             </v-scroll-y-transition>
-            <v-container class="bg-grey" height="80%"> 
-              <v-img></v-img>
+            <v-container height="70%" class="px-0 py-0">
+              <v-img src="/public/images/model_display.jpg"></v-img>
             </v-container>
-            <v-card-text class="py-1 px-0 text-subtitle-1">{{
+            <v-card-text class="py-2 text-subtitle-1 text-capitalize">{{
               model.projectName
             }}</v-card-text>
           </v-card>
@@ -162,6 +166,25 @@
         </v-container>
       </v-card>
     </v-dialog>
+    <!-- Add To Shop -->
+    <v-dialog v-model="isAddShop" max-width="800px">
+      <v-card height="200px">
+        <v-toolbar class="px-2" color="#274E76" density="compact">
+          <v-icon @click="isAddShop = false">mdi-close</v-icon>
+          <v-card-title class="text-subtitle-1"
+            >{{ selectedModelsCount }} MODELS SELECTED</v-card-title
+          >
+        </v-toolbar>
+        <v-card-title>Are You sure ?</v-card-title>
+        <v-card-subtitle
+          >Do you want to display the selected model in your application . If '
+          YES' click 'CONFIRM' button at the end</v-card-subtitle
+        >
+        <v-card-actions class="mt-4">
+          <v-btn @click="isAddShop = false">Confirm</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <!-- image Snackbar -->
     <v-snackbar v-model="imageSnackbar" :timeout="2000">
       {{ snackbarText }}
@@ -179,6 +202,7 @@ import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
 export default {
   data: () => ({
+    isAddShop: false,
     items: [
       { text: "Add Image", icon: "mdi-image-multiple-outline" },
       { text: "Displaying Models", icon: "mdi-view-day" },
@@ -234,24 +258,22 @@ export default {
         const userName = VueJwtDecode.decode(data);
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/dynamicscene/${userName.name}`
+          `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${userName.name}`
         );
 
         if (response.status === 200) {
           this.modelData = response.data.data;
-          console.log(this.modelData);
         }
       } catch (error) {
         console.log(error);
       }
     },
     async getAdminStoreModels() {
-      this.isProjectLoad = true;
       try {
         const data = Cookies.get("jwtToken");
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getdynamicscene`,
+          `${import.meta.env.VITE_API_LINK}/dynamic/getdynamicscene`,
           {
             headers: {
               Authorization: `Bearer ${data}`,
@@ -259,13 +281,10 @@ export default {
           }
         );
         if (response.status === 200) {
-          this.isProjectLoad = false;
-          this.savedModels = response.data;
-          this.filteredModels = this.savedModels;
+          this.modelData = response.data;
         }
       } catch (error) {
-        this.isProjectLoad = false;
-        this.isSnackbar = true;
+        console.log(error);
       }
     },
     uploadImage() {
@@ -291,5 +310,8 @@ export default {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
+}
+.text-capitalize {
+  text-transform: capitalize;
 }
 </style>

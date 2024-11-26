@@ -17,16 +17,23 @@
         <v-data-table-virtual
           height="94vh"
           :loading="isLoading"
-          :items="filteredModels"
+          :items="displayModel"
           density="compact"
           item-value="name"
         >
           <template v-slot:top>
             <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
+              <v-col cols="1">
+                <v-icon class="ml-4 mt-2" color="grey">mdi-grid-large</v-icon>
+              </v-col>
+              <v-divider
+                vertical
+                thickness="3"
+                style="transform: rotate(20deg)"
+              ></v-divider>
               <v-spacer class="search_bg_colo"></v-spacer>
               <v-col class="search_bg_colo">
                 <v-text-field
-                  v-model="searchQuery"
                   density="compact"
                   class="mt-1"
                   style="height: 0px"
@@ -162,7 +169,6 @@
 <script>
 import axios from "axios";
 import gltfViewer from "@/components/gltfViewer.vue";
-
 export default {
   name: "glbModels",
   components: {
@@ -171,6 +177,7 @@ export default {
   data() {
     return {
       isLoading: false,
+      showModels: true,
       isView: false,
       modelType: "",
       modelCategory: "",
@@ -178,25 +185,11 @@ export default {
       uploadModelCategories: "",
       isUpload: false,
       allModel: [],
-      filteredModels: [],
       displayModel: [],
-      searchQuery: "",
-      file: null,
+      file: "",
     };
   },
-  computed: {
-    filteredModels() {
-      if (!this.searchQuery) {
-        return this.displayModel;
-      }
-      const query = this.searchQuery.toLowerCase();
-      return this.displayModel.filter(
-        (item) =>
-          item["Model Type"].toLowerCase().includes(query) ||
-          item.categories.toLowerCase().includes(query)
-      );
-    },
-  },
+
   methods: {
     triggerFileInput() {
       this.$refs.fileInput.click();
@@ -208,40 +201,41 @@ export default {
       }
     },
     async getModel() {
+      this.displayModel = [];
       this.isLoading = true;
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_LINK}/getFurnitures`);
-        if (response.status === 200) {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`
+        );
+        if (response.status == 200) {
           this.allModel = response.data;
-          this.displayModel = response.data.map((eachModel) => ({
-            Sno: true,
-            Modelimage: eachModel.FurnituresImagesArraywithGltf[0].furnitureImage,
-            _id: eachModel._id,
-            "Model Type": eachModel.modelType,
-            categories: eachModel.category,
-            view: true,
-          }));
+          this.isLoading = false;
+          response.data.forEach((eachModel) => {
+            const modelObj = {
+              Sno: true,
+              Modelimage:
+                eachModel.FurnituresImagesArraywithGltf[0].furnitureImage,
+              _id: eachModel._id,
+              "Model Type": eachModel.modelType,
+              categories: eachModel.category,
+              view: true,
+            };
+            this.displayModel.push(modelObj);
+          });
         }
       } catch (err) {
-        console.error("Error fetching models:", err);
-      } finally {
-        this.isLoading = false;
+        console.log(err);
       }
     },
-    async postModel() {
-      if (!this.file) {
-        console.error("No file selected");
-        return;
-      }
 
+    async postModel() {
       const formData = new FormData();
       formData.append("glbModel", this.file);
-      formData.append("category", this.uploadModelCategories);
+      formData.append("modelCategories", this.uploadModelCategories);
       formData.append("modelType", this.uploadModelType);
-
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_API_LINK}/glbloaders`,
+            `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
           formData,
           {
             headers: {
@@ -249,26 +243,25 @@ export default {
             },
           }
         );
-
-        if (response.status === 201) {
-          console.log("Model uploaded successfully:", response.data);
-          this.isUpload = false;
-          this.getModel(); // Refresh the model list
-        }
+        console.log("Model uploaded:", response.data);
+        this.isUpload = false;
       } catch (err) {
-        console.error("Error uploading model:", err);
+        console.error("Failed to upload model:", err);
       }
     },
     viewModel(viewFile) {
       this.isView = true;
-      const selectedModel = this.allModel.find((model) => model._id === viewFile._id);
-
-      if (selectedModel) {
-        this.modelType = selectedModel.modelType;
-        this.modelCategory = selectedModel.category;
-        const modelLink = selectedModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
-        this.$refs.gltfViewerComponent.gltf(modelLink);
-      }
+      setTimeout(() => {
+        this.allModel.forEach((eachModel) => {
+          if (eachModel._id == viewFile._id) {
+            this.modelType = eachModel.modelType;
+            this.modelCategory = eachModel.category;
+            const modelLink =
+              eachModel.FurnituresImagesArraywithGltf[0].furnitureGltfLoader;
+            this.$refs.gltfViewerComponent.gltf(modelLink);
+          }
+        });
+      }, 100);
     },
   },
   async mounted() {

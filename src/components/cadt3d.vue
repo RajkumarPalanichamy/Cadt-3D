@@ -14,17 +14,21 @@
       <v-toolbar color="#274E76" class="px-2" density="compact"
         >{{ title }}
         <v-spacer></v-spacer>
-        <v-icon @click="isSidebarCliked = false" v-tooltip="'leave'">mdi-close</v-icon>
+        <v-icon @click="isSidebarCliked = false" v-tooltip="'leave'"
+          >mdi-close</v-icon
+        >
       </v-toolbar>
       <!-- EDIT Content -->
       <v-form class="px-2 mt-10" v-if="isEdit">
         <v-number-input
           label="Height"
+          v-model="height"
           variant="underlined"
           class="mb-2"
         ></v-number-input>
         <v-number-input
           label="width"
+          v-model="width"
           variant="underlined"
           class="mb-2"
         ></v-number-input>
@@ -76,8 +80,12 @@
       >
     </v-card>
     <!-- Scene Container -->
-    <v-container class="px-0 py-0">
-      <div ref="threeContainer" class="three-container"></div>
+    <v-container class="px-0 py-0" :fluid="true">
+      <div
+        ref="threeContainer"
+        class="three-container"
+        style="height: 90vh"
+      ></div>
     </v-container>
   </v-container>
 </template>
@@ -106,6 +114,8 @@ export default {
       isEdit: false,
       isModel: false,
       isModelLoading: false,
+      height: null,
+      width: null,
     };
   },
   methods: {
@@ -146,7 +156,7 @@ export default {
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
-.hover_icon:hover{
-  color:#274E76 ;
+.hover_icon:hover {
+  color: #274e76;
 }
 </style>

@@ -21,6 +21,7 @@
   
     methods: {
       gltf(modelLink){
+      console.log('modelLink',modelLink);
       
       this.threeScene.gltf(modelLink)
      },

@@ -186,7 +186,7 @@ export default {
       try {
         this.isLoading = true;
         const user = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/clients`
+          `${import.meta.env.VITE_API_LINK}/auth/getclients`
         );
         if (user.status == "200") {
           this.isLoading = false;
@@ -216,7 +216,7 @@ export default {
       try {
         this.isDialog = false;
         const user = await axios.post(
-          `${import.meta.env.VITE_API_LINK}/register`,
+          `${import.meta.env.VITE_API_LINK}/auth/register`,
           newUserDetails
         );
         if (user.status == "200") {
@@ -233,7 +233,7 @@ export default {
     async deleteUser() {
       try {
         const response = await axios.delete(
-          `${import.meta.env.VITE_API_LINK}/clients/${this.userId}`
+          `${import.meta.env.VITE_API_LINK}/auth/clients/${this.userId}`
         );
 
         if (response.status == "200") {

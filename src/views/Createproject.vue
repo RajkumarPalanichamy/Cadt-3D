@@ -351,7 +351,7 @@ export default {
       this.availabelModels = [];
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getfurnitures`
+          `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`
         );
 
         response.data.forEach((eachModel) => {
@@ -401,7 +401,7 @@ export default {
         }, 500);
       } else {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/defaultscenevalues`
+          `${import.meta.env.VITE_API_LINK}/default/getdefaultscene`
         );
         response.data.forEach((model) => {
           if (model.name == category.modelname) {
@@ -413,7 +413,7 @@ export default {
     async loadModel(modelId) {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getfurnitures`,
+          `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`,
 
           {
             responseType: "json",
@@ -433,50 +433,52 @@ export default {
         console.error("Error loading model:", error);
       }
     },
-   onDragStart(modelLink) {
-  const draggedModel = modelLink; // The URL or path to the GLTF model
-  event.dataTransfer.setData("text/plain", draggedModel);
+    onDragStart(modelLink) {
+      const draggedModel = modelLink; // The URL or path to the GLTF model
+      event.dataTransfer.setData("text/plain", draggedModel);
 
-  // Dispatch the model-drag-start event with the model link
-  const dragStartEvent = new CustomEvent("model-drag-start", {
-    detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
-  });
-  window.dispatchEvent(dragStartEvent);
-},
+      // Dispatch the model-drag-start event with the model link
+      const dragStartEvent = new CustomEvent("model-drag-start", {
+        detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
+      });
+      window.dispatchEvent(dragStartEvent);
+    },
 
-onDragOver(event) {
-  this.isVisible = false;
-  event.preventDefault();
+    onDragOver(event) {
+      this.isVisible = false;
+      event.preventDefault();
 
-  // Calculate mouse position
-  const mouse = {
-    x: (event.clientX / event.target.clientWidth) * 2 - 1,
-    y: -(event.clientY / event.target.clientHeight) * 2 + 1,
-  };
+      // Calculate mouse position
+      const mouse = {
+        x: (event.clientX / event.target.clientWidth) * 2 - 1,
+        y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+      };
 
-  // Dispatch the model-drag-move event to update placeholder position
-  const dragMoveEvent = new CustomEvent("model-drag-move", { detail: { mouse } });
-  window.dispatchEvent(dragMoveEvent);
-},
+      // Dispatch the model-drag-move event to update placeholder position
+      const dragMoveEvent = new CustomEvent("model-drag-move", {
+        detail: { mouse },
+      });
+      window.dispatchEvent(dragMoveEvent);
+    },
 
-onDrop(event) {
-  const droppedText = event.dataTransfer.getData("text/plain");
-  console.log("Dropped Model:", droppedText);
+    onDrop(event) {
+      const droppedText = event.dataTransfer.getData("text/plain");
+      console.log("Dropped Model:", droppedText);
 
-  this.isVisible = true;
+      this.isVisible = true;
 
-  // Calculate mouse position
-  const mouse = {
-    x: (event.clientX / event.target.clientWidth) * 2 - 1,
-    y: -(event.clientY / event.target.clientHeight) * 2 + 1,
-  };
+      // Calculate mouse position
+      const mouse = {
+        x: (event.clientX / event.target.clientWidth) * 2 - 1,
+        y: -(event.clientY / event.target.clientHeight) * 2 + 1,
+      };
 
-  // Dispatch the model-drop event with model link and position
-  const dropEvent = new CustomEvent("model-drop", {
-    detail: { droppedText, mouse },
-  });
-  window.dispatchEvent(dropEvent);
-},
+      // Dispatch the model-drop event with model link and position
+      const dropEvent = new CustomEvent("model-drop", {
+        detail: { droppedText, mouse },
+      });
+      window.dispatchEvent(dropEvent);
+    },
 
     undo() {
       this.$refs.threeSceneComponent.undoEvent();
@@ -486,7 +488,6 @@ onDrop(event) {
       const userName = VueJwtDecode.decode(data);
       this.$refs.threeSceneComponent.saveFile(projectname, userName.name);
     },
-   
 
     handleBackHome() {
       console.log("returing home");
