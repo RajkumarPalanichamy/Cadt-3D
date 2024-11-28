@@ -30,13 +30,6 @@
       <v-btn icon @click="isSave = true" class="mr-4">
         <v-card-text>SAVE</v-card-text>
       </v-btn>
-      <!-- <v-btn icon>
-        <v-icon>mdi-theme-light-dark</v-icon>
-      </v-btn>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn> -->
     </v-toolbar>
     <v-card
       class="d-flex"
@@ -75,16 +68,17 @@
         style="top: 230px !important; right: 10px"
         class="d-flex flex-column justify-center position px-2 py-2 border-md"
       >
-        <v-icon
-          v-for="(item, index) in sideBar"
-          :key="index"
-          @click="toggleVisibility(item.icon)"
-          class="mt-2"
-          size="1.7em"
-          v-tooltip="`${item.tooltip}`"
-        >
-          {{ item.icon }}</v-icon
-        >
+      <v-icon
+  v-for="(item, index) in sideBar"
+  :key="index"
+  @click="toggleVisibility(item.icon)"
+  class="mt-2"
+  size="1.7em"
+  :v-tooltip="item.tooltip ? item.tooltip : ''"
+>
+  {{ item.icon }}
+</v-icon>
+
       </v-card>
       <v-card
         v-if="isVisible"
@@ -208,9 +202,8 @@
                   style="cursor: grab"
                 >
                   <v-img
-                    draggable="false"
-                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"></v-img>
-                
+                    draggable="true"
+                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage" />
                   <v-card-text class="text-center">{{
                     model.FurnituresImagesArraywithGltf[0].furnitureName
                   }}</v-card-text>
@@ -318,17 +311,10 @@ export default {
       console.log("newValue", newValue);
 
       if (newValue) {
-        console.log("newValue", newValue);
-
         this.handleBackHome();
         this.$store.commit("changeTriggerMethod");
       }
     },
-    //   loadSavedModel(newValue){
-    //     console.log('newValuebrgshnj',newValue);
-
-    //     this.loadSaved(newValue)
-    //   }
   },
 
   methods: {
@@ -435,7 +421,6 @@ export default {
       const draggedModel = modelLink; // The URL or path to the GLTF model
       event.dataTransfer.setData("text/plain", draggedModel);
 
-      // Dispatch the model-drag-start event with the model link
       const dragStartEvent = new CustomEvent("model-drag-start", {
         detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
       });

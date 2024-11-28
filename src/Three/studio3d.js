@@ -3,7 +3,6 @@ import TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tw
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-
 export default class studio3dThreeScene {
     constructor(container) {
       this.container = container;
@@ -15,6 +14,9 @@ export default class studio3dThreeScene {
   this.gltfArray=[];
   this.boxes=[];
   this.group = new THREE.Group();
+  this.raycaster = new THREE.Raycaster();
+  this.mouse = new THREE.Vector2();
+
 
       this.init();
 
@@ -23,8 +25,12 @@ export default class studio3dThreeScene {
       this.scene = new THREE.Scene();
       this.scene.background = new THREE.Color("white");
   
-      this.renderer = new THREE.WebGLRenderer();
-      this.renderer.setSize(
+      this.renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        preserveDrawingBuffer: true
+      });
+      this.renderer.physicallyCorrectLights = true;
+        this.renderer.setSize(
         this.container.clientWidth,
         this.container.clientHeight
       );
@@ -35,9 +41,9 @@ export default class studio3dThreeScene {
       const light = new THREE.AmbientLight("white"); 
       this.scene.add(light);
 
-      // const directionalLight = new THREE.DirectionalLight( 'white', 1 );
-      // directionalLight.castShadow=true
-      // this.scene.add( directionalLight )
+      const directionalLight = new THREE.DirectionalLight( 'white', 1 );
+      directionalLight.castShadow=true
+      this.scene.add( directionalLight )
 
       const pointLight = new THREE.PointLight( 'white', 50, 100 );
       pointLight.position.set( 0, 0.5, 0 );
@@ -49,7 +55,6 @@ export default class studio3dThreeScene {
       this.controls.autoRotateSpeed  =0.5
       this.controls.enableDamping=true
       this.camera.position.set(0, 15, 35);
-  console.log(this.controls);
   
       this.dragControls = new DragControls( this.gltfArray, this.camera, this.renderer.domElement );
 
@@ -67,7 +72,7 @@ export default class studio3dThreeScene {
         this.modelBox.setFromObject(event.object);
     
         if (!this.roomBox.containsBox(this.modelBox)) {
-            event.object.position.copy(event.object.userData.lastValidPosition); // Revert position
+            event.object.position.copy(event.object.userData.lastValidPosition); 
             event.object.material.emissive.set(0xff0000); 
         } else {
             event.object.userData.lastValidPosition.copy(event.object.position);
@@ -80,16 +85,131 @@ export default class studio3dThreeScene {
         this.controls.enabled = true;
     });
     
-    
       window.addEventListener("resize", () => {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
+      //for loading new models in scene
+
+      let placeholder;
+      window.addEventListener("model-drag-start", (event) => {
+        const { droppedText, mouse } = event.detail;
+      
+        const loader = new GLTFLoader();
+        loader.load(
+          droppedText,
+          (gltf) => {
+            if (placeholder) {
+              this.scene.remove(placeholder);
+            }
+      
+            placeholder = gltf.scene;
+      
+            let box = new THREE.Box3().setFromObject(placeholder);
+            let size = new THREE.Vector3();
+            box.getSize(size);
+      
+            let maxSize = Math.max(size.x, size.y, size.z);
+            placeholder.scale.setScalar(1 / (maxSize / 4));
+      
+            this.raycaster.setFromCamera(mouse, this.camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const intersectPoint = new THREE.Vector3();
+            if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+              // placeholder.position.copy(intersectPoint);
+                    const adjustedBox = new THREE.Box3().setFromObject(placeholder);
+                    const adjustedSize = new THREE.Vector3();
+                    const adjustedCenter = new THREE.Vector3();
+                    adjustedBox.getSize(adjustedSize);
+                    adjustedBox.getCenter(adjustedCenter);
+
+                    // Position the model so its bottom aligns with the plane
+                    const bottomY = adjustedBox.min.y;
+                    const offsetY = -bottomY;
+                    //offsetY-(-this.groundValue)-1
+                    placeholder.position.set(intersectPoint.x, offsetY-3, intersectPoint.z);
+          
+            }
+            this.scene.add(placeholder);
+          },
+          undefined,
+          (error) => {
+            console.error("Error loading GLTF model:", error);
+          }
+        );
+      });
+      
+      window.addEventListener("model-drag-move", (event) => {
+        const { mouse } = event.detail;
+      
+        if (placeholder) {
+
+          this.raycaster.setFromCamera(mouse, this.camera);
+          const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+          const intersectPoint = new THREE.Vector3();
+          if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+            placeholder.position.set(intersectPoint.x,intersectPoint.y-2,intersectPoint.z);
+           }
+        }
+      });
+      
+      window.addEventListener("model-drop", (event) => {
+        const { droppedText, mouse } = event.detail;
+      
+        if (placeholder) {
+          this.scene.remove(placeholder);
+          placeholder = null;
+        }
+      
+        const loader = new GLTFLoader();
+        loader.load(
+          droppedText,
+          (gltf) => {
+            this.gltfbox = new THREE.Box3().setFromObject(gltf.scene);
+            this.size = new THREE.Vector3();
+            this.center = new THREE.Vector3();
+            this.gltfbox.getSize(this.size);
+            this.gltfbox.getCenter(this.center);
+
+            let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
+            gltf.scene.scale.setScalar(1 / (maxSize / 4));
+      
+            const model = gltf.scene;
+      
+            this.raycaster.setFromCamera(mouse, this.camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 2);
+            const intersectPoint = new THREE.Vector3();
+            if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+              // model.position.copy(intersectPoint);
+              const adjustedBox = new THREE.Box3().setFromObject(model);
+              const adjustedSize = new THREE.Vector3();
+              const adjustedCenter = new THREE.Vector3();
+              adjustedBox.getSize(adjustedSize);
+              adjustedBox.getCenter(adjustedCenter);
+          
+              // Position the model so its bottom aligns with the plane
+              const bottomY = adjustedBox.min.y;
+              const offsetY = -bottomY;
+            //offsetY-(-this.groundValue)-1
+            model.position.set(intersectPoint.x, offsetY-3, intersectPoint.z);
+           
+            }
+            
+              this.gltfArray.push(model)
+            this.scene.add(model);
+          },
+          undefined,
+          (error) => {
+            console.error("Error loading GLTF model:", error);
+          }
+        );
+      });
+
       this.animate();
       this.create();
-      this.gltfLoading()
+      // this.gltfLoading()
     }
     cube(){
         const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -99,24 +219,39 @@ export default class studio3dThreeScene {
         this.camera.position.z = 1.5;
     
     }
-    create() {
-      // setTimeout(()=>{
-      //   new TWEEN.Tween(this.camera.position)
-      //   .to({ x: 5, y: 5, z: 15 }, 3000)
-      //   .easing(TWEEN.Easing.Quadratic.InOut)
-      //   .start();
+    create(wallValues) {
+      
+      this.scene.remove(this.group); 
+      this.group.clear(); // Remove all children from the group
   
-      // },500)
+      // Clear all references to old walls, boxes, and cubes
+      this.walls = [];
+      this.cubes = [];
+      this.boxes = [];
 
-        this.xAxis=5
-        this.zAxis=5
+      setTimeout(()=>{
+        new TWEEN.Tween(this.camera.position)
+        .to({ x: 5, y: 5, z: 10 }, 3000)
+        .easing(TWEEN.Easing.Quadratic.InOut)
+        .start();
+  
+      },500)
+      
+      // this.xAxis = wallValues?.width ?? 5; 
+      // this.zAxis = wallValues?.height ?? 5; 
+      this.xAxis = wallValues?.width == null ? 5 : wallValues.width;
+      this.zAxis = wallValues?.height == null ? 5 : wallValues.height;
+              // this.zAxis=5
+                 
         this.controlPoints = [  {x : -this.xAxis,  y : 0, z : -this.zAxis},
                                 {x :  this.xAxis,  y : 0, z : -this.zAxis},
                                 {x :  this.xAxis,  y : 9, z :  this.zAxis},
                                 {x : -this.xAxis,  y : 0, z :  this.zAxis},
                                 {x : -this.xAxis,  y : 0, z : -this.zAxis}
                              ];
-    this.yAxis=1.5
+    // this.yAxis=1.5
+    this.yAxis = wallValues?.depth == null ? 1.5 : wallValues.depth;
+
     if (this.controlPoints.length < 2) {
         console.error("Need at least two points");
         return;
@@ -131,13 +266,8 @@ export default class studio3dThreeScene {
 
     shape.lineTo(this.controlPoints[0].x, this.controlPoints[0].z);
 
-    // this.extrudeSettings = {
-    //     depth: 3+this.yAxis,
-    //     steps: 1,
-    // };
 
     var extrudeGeom = new THREE.ShapeGeometry(shape);
-    // extrudeGeom.rotateX(Math.PI / 2);
     let loader = new THREE.TextureLoader();
     let texture = loader.load("./images/wood.jpg", () => {
       texture.wrapS = THREE.RepeatWrapping;
@@ -156,7 +286,7 @@ export default class studio3dThreeScene {
     this.wall.castShadow=true
     this.wall.position.y=-2
     this.wall.lookAt(0,0,0)
-    
+
     this.walls.push(this.wall);
         this.group.add(this.wall);
 
@@ -179,7 +309,6 @@ export default class studio3dThreeScene {
     
             const length = point1.distanceTo(point2)+0.08
             const geometry = new THREE.BoxGeometry(length,6, thickness);
-            console.log('geometry',geometry);
             
             geometry.clearGroups(); 
 
@@ -222,31 +351,35 @@ export default class studio3dThreeScene {
         this.group.scale.x=1
         this.scene.add( this.group );
         
-        console.log('group',this.group);
 
     }
-    gltfLoading(){
+    gltfLoading() {
       const loader = new GLTFLoader();
+    
       loader.load(
         './wardrobe.glb',
         (gltf) => {
-      console.log('gltf',gltf)
+          if (!gltf.scene) {
+            console.error("Loaded GLTF does not contain a scene.");
+            return;
+          }
+    
+          // Calculate bounding box and scale
           const box = new THREE.Box3().setFromObject(gltf.scene);
-
           const size = new THREE.Vector3();
           box.getSize(size);
           const maxSize = Math.max(size.x, size.y, size.z);
-          const desiredSize = 5; 
+          const desiredSize = 5;
           gltf.scene.scale.setScalar(desiredSize / maxSize);
-          // Random position
-          // gltf.scene.position.set(-3,-0.5,-3.5)
-      const gltfScene=gltf.scene
-      this.group2 = new THREE.Group();
-      this.group2.add(gltfScene)
-      this.box2 = new THREE.Box3().setFromObject(this.group2);
 
-      this.gltfArray.push(this.group2)
-      this.scene.add(this.group2);
+          this.group2 = new THREE.Group();
+          this.gltfObj = gltf.scene;
+    
+          this.group2.add(this.gltfObj)
+          this.gltfArray.push(this.group2)
+          this.scene.add( this.group2);
+    
+          this.box2 = new THREE.Box3().setFromObject(this.group2);
         },
         undefined,
         (error) => {
@@ -254,6 +387,8 @@ export default class studio3dThreeScene {
         }
       );
     }
+    
+    
     animate() {
         requestAnimationFrame(() => this.animate());
         this.controls.update();
