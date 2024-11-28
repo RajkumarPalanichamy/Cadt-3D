@@ -142,15 +142,16 @@
             </v-col>
           </v-row>
           <v-divider class="mb-2"></v-divider>
-          <v-card v-if="isCategories" class="grid" flat>
+          <v-card v-if="isCategories" class="grid pl-1 pb-10 pt-1 " flat>
             <v-card
               v-for="(model, index) in showCard"
               :key="index"
-              width="130px"
+              width="120px"
               height="170px"
+              class="border"
               @click="selectedCategory(model)"
             >
-              <v-img :src="model.modelimg"  ></v-img>
+              <v-img :src="model.modelimg"  height="100px" cover></v-img>
               <v-card-text class="text-center text-blue-darken-4">{{
                 model.modelname
               }}</v-card-text>
@@ -259,37 +260,37 @@ export default {
       modelsList: [
         {
           modelname: "Living Room",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg: "/public/images/livingroom.jpg"
         },
         {
           modelname: "Kitchen",
-          modelimg: new URL("@/assets/kitchen.jpeg", import.meta.url).href,
+          modelimg: "/public/images/kitchen.jpeg"
         },
         {
           modelname: "Bathroom",
-          modelimg: new URL("@/assets/Bathroom.jpeg", import.meta.url).href,
+          modelimg: "/public/images/Bathroom.jpeg"
         },
         {
           modelname: "Bed Room",
-          modelimg: new URL("@/assets/bedroom.jpg", import.meta.url).href,
+          modelimg: "/public/images/bedroom.jpg"
         },
         {
           modelname: "Balcony",
-          modelimg: new URL("@/assets/Balcony.jpeg", import.meta.url).href,
+          modelimg: "/public/images/Balcony.jpeg"
         },
       ],
       drawList: [
         {
           modelname: "Draw",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg:  "/public/images/draw.jpg",
         },
         {
           modelname: "Square",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg:  "/public/images/square.jpg",
         },
         {
           modelname: "Lcut",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg:  "/public/images/lcut.jpg"
         },
       ],
       sideBar: [

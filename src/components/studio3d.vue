@@ -69,9 +69,12 @@
           <v-sheet width="100%" height="80%" class="text-center px-0 py-0">
             <v-img
               cover
+
               :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
               draggable="true"
+
               class="hover"
+              :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
             ></v-img>
           </v-sheet>
           <v-sheet class="text-center"> {{ model.modelType }}</v-sheet>
@@ -97,6 +100,7 @@
       >
     </v-card>
     <!-- Scene Container -->
+
     <v-container class="px-0 py-0"
      :fluid="true"
 
@@ -109,10 +113,12 @@
       @drop="onDrop"
 
       ></div>
+
     </v-container>
   </v-container>
 </template>
 <script>
+import axios from "axios";
 import studio3dThreeScene from "@/Three/studio3d.js";
 import axios from "axios";
 export default {
@@ -181,6 +187,7 @@ export default {
     },
     async sidebar(value) {
       this.isSidebarCliked = true;
+
       if (value == "Edit") {
         this.title = "EDIT";
         this.isEdit = true;
