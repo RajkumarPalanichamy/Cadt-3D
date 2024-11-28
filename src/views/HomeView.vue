@@ -1,77 +1,59 @@
 <template>
   <v-card rounded="0">
-    <!-- Toolbar -->
-    <v-toolbar density="compact" color="#274e76" flat>
-      <v-app-bar-nav-icon
-        variant="text"
-        @click.stop="drawer = !drawer"
-      ></v-app-bar-nav-icon>
-      <v-card-title>
-        <v-icon>mdi mdi-cube-outline</v-icon>
-        BLUE 3D
-      </v-card-title>
-      <v-spacer></v-spacer>
-      <v-menu>
-  <template v-slot:activator="{ props }">
-    <v-btn icon v-bind="props">
-      <v-icon color="white">mdi-dots-vertical</v-icon>
-    </v-btn>
-  </template>
-  <v-list width="200px">
-    <v-list-item
-      v-for="(item, i) in hoverOptions"
-      :key="i"
-      @click="hoverValue(item.text)"
-      color="primary"
-    >
-      <template v-slot:prepend>
-        <v-icon :icon="item.icon"></v-icon>
-      </template>
-      <v-list-item-title>{{ item.text }}</v-list-item-title>
-    </v-list-item>
-  </v-list>
-</v-menu>
-
-    </v-toolbar>
-
-    <!-- Main Content -->
-    <v-card class="d-flex" height="93vh" rounded="0">
+    <v-card class="d-flex" height="100vh" rounded="0">
       <v-layout>
-        <!-- Navigation Drawer -->
         <v-navigation-drawer
+          class="navigation-drawer"
           v-model="drawer"
-          class="custom-drawer"
-          :permanent="!isSmallScreen"
-          :temporary="isSmallScreen"
-          :width="240"
-          color="#F6F6F6"
+          :rail="rail"
+          rail-width="75"
+          permanent
+          @click="rail = false"
         >
           <v-list>
-            <v-list-subheader class="my-5"
-              >{{ role }} DASHBOARD</v-list-subheader
-            >
-            <v-list-item
-              v-for="(item, i) in displaySidebarData"
-              :key="i"
-              :value="item"
-              color="primary"
-              @click="sideBar(item.text)"
-              class="hover"
-            >
-              <template v-slot:prepend>
-                <v-icon :icon="item.icon"></v-icon>
+            <v-list-item @click.stop="rail = !rail" class="mb-16 text-white">
+              <template #prepend>
+                <v-icon color="white" style="font-size: 28px; opacity: 1"
+                  >mdi-cube-outline
+                </v-icon>
               </template>
-              <v-list-item-title>{{ item.text }}</v-list-item-title>
+              <v-list-item-title class="font-weight-bold"
+                >BLUE 3D
+              </v-list-item-title>
+            </v-list-item>
+
+            <v-list-item
+              v-for="(icon, i) in displaySidebarData"
+              :key="i"
+              class="text-white mb-2"
+              :class="{ 'active-sidebar-item': activeItem === icon.text }"
+              @click="setActiveItem(icon.text)"
+            >
+              <template #prepend>
+                <v-icon style="font-size: 28px; opacity: 1" color="white">{{
+                  icon.icon
+                }}</v-icon>
+              </template>
+              <v-list-item-title>{{ icon.text }}</v-list-item-title>
+            </v-list-item>
+            <v-spacer style="margin-bottom: 150px"> </v-spacer>
+
+            <v-list-item
+              class="text-white mb-2"
+              v-for="(icon, i) in downListItems"
+              :key="i"
+              :class="{ 'active-sidebar-item': activeItem === icon.text }"
+              @click="setActiveItem(icon.text)"
+            >
+              <template #prepend>
+                <v-icon style="font-size: 28px; opacity: 1" color="white">{{
+                  icon.icon
+                }}</v-icon>
+              </template>
+              <v-list-item-title>{{ icon.text }}</v-list-item-title>
             </v-list-item>
           </v-list>
-          <!-- <v-img
-            src="/public/images/3d.png"
-            max-height="100%"
-            max-width="400"
-          ></v-img> -->
         </v-navigation-drawer>
-
-        <!-- Main Section -->
         <v-main>
           <router-view />
         </v-main>
@@ -88,75 +70,75 @@ export default {
   data() {
     return {
       drawer: true,
-      hoverOptions: [
-        { text: "Profile", icon: "mdi-account-arrow-right-outline" },
-        { text: "Logout", icon: "mdi-logout" },
-      ],
+      rail: true,
+      activeItem: "Home",
       userData: [
-        { text: "Home", icon: "mdi-home-account" },
-        { text: "My Profile", icon: "mdi-account" },
-        { text: "Glb Models", icon: "mdi-table-furniture" },
-        { text: "Textures", icon: "mdi-texture" },
+        { text: "Home", icon: "mdi-home-minus-outline" },
+
+        { text: "Glb Models", icon: "mdi-sofa-outline" },
+        { text: "Textures", icon: "mdi-texture-box" },
         { text: "Web", icon: "mdi-web" },
         { text: "Studio3D", icon: "mdi-cube" },
       ],
       adminData: [
-        { text: "Home", icon: "mdi-home-account" },
-        { text: "My Profile", icon: "mdi-account" },
-        { text: "Glb Models", icon: "mdi-table-furniture" },
-        { text: "Textures", icon: "mdi-texture" },
+        { text: "Home", icon: "mdi-home-minus-outline" },
+
+        { text: "Glb Models", icon: "mdi-sofa-outline" },
+        { text: "Textures", icon: "mdi-texture-box" },
         { text: "Employee", icon: "mdi-account-group-outline" },
         { text: "Web", icon: "mdi-web" },
         { text: "Studio3D", icon: "mdi-cube" },
       ],
+      downListItems: [
+        { text: "My Profile", icon: "mdi-account-outline" },
+        { text: "Logout", icon: "mdi-logout" },
+      ],
+
       displaySidebarData: [],
       role: "",
-      isSmallScreen: false,
     };
   },
   async mounted() {
     this.$router.push("/homeview/home");
     const data = Cookies.get("jwtToken");
     const decodedToken = VueJwtDecode.decode(data);
+
     this.role = decodedToken.role.toUpperCase();
     this.displaySidebarData =
-      decodedToken.role == "admin" ? this.adminData : this.userData;
+      decodedToken.role == "Admin" ? this.adminData : this.userData;
 
     this.isSmallScreen = window.innerWidth <= 960;
     window.addEventListener("resize", this.handleResize);
   },
-  beforeUnmount() {
-    window.removeEventListener("resize", this.handleResize);
-  },
+
   methods: {
-    handleResize() {
-      this.isSmallScreen = window.innerWidth <= 960;
+  
+    setActiveItem(itemText) {
+      this.activeItem = itemText;
+      this.sideBar(itemText);
     },
     sideBar(clickedValue) {
       if (clickedValue == "Studio3D") {
         this.$router.push(`/studio3d`);
+      } else if (clickedValue == "Logout") {
+        Cookies.remove("jwtToken");
+        this.$router.push(`/`);
       } else {
         const value = clickedValue.split(" ").join("").toLowerCase();
         this.$router.push(`/homeview/${value}`);
       }
     },
-    hoverValue(value) {
-      if (value == "Logout") {
-        Cookies.remove("jwtToken");
-        this.$router.push("/");
-      }
-    },
+  
   },
 };
 </script>
 
 <style scoped>
-.custom-drawer {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-image: url("/images/3d.jpeg");
-  width: 100%;
-  height: 200px;
+.navigation-drawer {
+  background: linear-gradient(to bottom, #0c2539, #1d4f72, #0c2539);
+}
+.active-sidebar-item {
+  border-left: 4px solid #ffffff;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>

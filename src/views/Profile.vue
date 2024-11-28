@@ -20,28 +20,32 @@
         </v-list>
       </v-container>
       <!-- Main Content Area -->
-      <v-container width="100%" class="py-0">
+      <v-container width="100%" class="py-0 px- 0" :fluid="true">
+        <v-toolbar density="compact" color="white">
+          <v-card-title class="mb-3">{{ selectedItem }}</v-card-title>
+        </v-toolbar>
         <!-- Account Details -->
-        <v-card-title class="mb-3">{{ selectedItem }}</v-card-title>
-        <v-card class="py-4 pl-2 border" flat v-if="isprofile">
-          <v-row class="d-flex align-center">
-            <v-col cols="3">
-              <v-img
-                src="/images/profile.jpg"
-                width="200px"
-                class="hover"
-              ></v-img>
-            </v-col>
-            <v-col cols="8">
-              <v-card-title>Account Details</v-card-title>
-              <v-card-subtitle class="mt-2"
-                >User Id : {{ lastUserData?.id }}</v-card-subtitle
-              >
-              <v-card-subtitle class="mt-2"
-                >User Name : {{ lastUserData?.name }}</v-card-subtitle
-              >
-            </v-col>
-          </v-row>
+        <v-card class="py-4 pl-2 mt-6 d-flex align-center elevation-2"  v-if="isprofile">
+          <v-sheet  >
+            <v-img
+              src="/images/Dp.jpg"
+              width="200px"
+              class="hover"
+            ></v-img>
+          </v-sheet>
+          <v-sheet>
+            <v-card-title class="mb-2">Account Details</v-card-title>
+             <v-card-subtitle class="mt-4"
+            >User Id : {{ lastUserData?.id }}</v-card-subtitle
+          >
+          <v-card-subtitle class="mt-4"
+            >User Name : {{ lastUserData?.name }}</v-card-subtitle
+          >
+            
+
+          </v-sheet>
+
+         
         </v-card>
         <!-- Edit dialog -->
         <v-dialog
@@ -86,10 +90,10 @@
           >
           <v-row class="d-flex align-center py-2 px-4">
             <v-col cols="10">
-              <v-card-subtitle class="my-2"
+              <v-card-subtitle class="my-4"
                 >User Name :{{ lastUserData.name }}</v-card-subtitle
               >
-              <v-card-subtitle class="mb-2">Email Address:</v-card-subtitle>
+              <v-card-subtitle class="mb-4">Email Address:</v-card-subtitle>
               <v-card-subtitle>Role :{{ lastUserData?.role }}</v-card-subtitle>
             </v-col>
             <v-col cols="2">

@@ -17,8 +17,7 @@ export default class gltfThreeScene {
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.shadowMap.enabled = true;
-this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: soft shadows
-
+this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
     this.renderer.setSize(
       this.container.clientWidth,
       this.container.clientHeight
@@ -31,14 +30,14 @@ this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Optional: soft shadows
       1000
     );
     const directionalLight = new THREE.DirectionalLight("white", 1);
-    directionalLight.position.set(1,1,1); // Adjust to fit your scene
+    directionalLight.position.set(5,5,5); 
 
     directionalLight.castShadow=true
     directionalLight.shadow.mapSize.width = 1024;
 directionalLight.shadow.mapSize.height = 1024;
     this.scene.add(directionalLight);
 
-    const light = new THREE.AmbientLight("white"); // soft white light
+    const light = new THREE.AmbientLight("white"); 
     this.scene.add(light);
 
    
@@ -55,38 +54,55 @@ directionalLight.shadow.mapSize.height = 1024;
     this.group = new THREE.Group();
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
-      let box = new THREE.Box3().setFromObject(gltf.scene);
-      let size = new THREE.Vector3();
+
+      const box = new THREE.Box3().setFromObject(gltf.scene);
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
       box.getSize(size);
-      let maxSize = 0;
-      if (size.x >= size.z && size.x >= size.y) {
-        maxSize = size.x;
-      } else if (size.y >= size.x && size.y >= size.z) {
-        maxSize = size.y;
-      } else if (size.z >= size.x && size.z >= size.y) {
-        maxSize = size.z;
-      }
-      gltf.scene.scale.setScalar(1 / (maxSize / 3));
-      gltf.scene.position.set(0, 0, 0);
+      box.getCenter(center);
+  
+      const maxSize = Math.max(size.x, size.y, size.z);
+      const desiredSize = 3; 
+      const scale = desiredSize / maxSize;
+  
+      gltf.scene.scale.setScalar(scale);
+  
+      const adjustedBox = new THREE.Box3().setFromObject(gltf.scene);
+      const adjustedSize = new THREE.Vector3();
+      const adjustedCenter = new THREE.Vector3();
+      adjustedBox.getSize(adjustedSize);
+      adjustedBox.getCenter(adjustedCenter);
+  
+      const bottomY = adjustedBox.min.y;
+      const offsetY = -bottomY;
+      gltf.scene.position.set(-adjustedCenter.x, offsetY, -adjustedCenter.z);
+  
       gltf.scene.traverse((node) => {
         if (node.isMesh) {
           node.castShadow = true;
-          node.receiveShadow = true; // If you need it to interact with shadows
+          node.receiveShadow = true;
         }
       });
-            // this.scene.add(gltf.scene);
-      this.group.add(gltf.scene)
+  
+      this.group.add(gltf.scene);
     });
-    const geometry = new THREE.PlaneGeometry( 100,100 );
-    const material = new THREE.MeshStandardMaterial( {color:'white', side: THREE.FrontSide,roughness:0} );
-    const plane = new THREE.Mesh( geometry, material );
-    plane.receiveShadow=true
-    plane.rotateX(-Math.PI/2)
-    // this.scene.add( plane );
-    this.group.add(plane)
-    this.scene.add(this.group)
-    this.camera.position.set(0,2.5,5)
+  
+    const geometry = new THREE.PlaneGeometry(100, 100);
+    const material = new THREE.MeshStandardMaterial({
+      color: "white",
+      side: THREE.FrontSide,
+      roughness: 0,
+    });
+    const plane = new THREE.Mesh(geometry, material);
+    plane.receiveShadow = true;
+    plane.rotateX(-Math.PI / 2);
+    this.group.add(plane);
+  
+    this.scene.add(this.group);
+  
+    this.camera.position.set(-5, 1, 0);
   }
+  
   texture(textureLink) {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     let loader = new THREE.TextureLoader();

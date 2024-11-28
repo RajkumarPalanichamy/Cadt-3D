@@ -191,12 +191,12 @@ export default {
         if (user.status == "200") {
           this.isLoading = false;
           user.data.forEach((eachUser) => {
-            if (eachUser.role == "user") {
+            if (eachUser.role.toLowerCase() == "user") {
               const displayObject = {
                 SNO: true,
                 "User Id": eachUser._id,
                 "User Name": eachUser.username,
-                Role: eachUser.role,
+                Role: eachUser.role.toLowerCase(),
                 action: true,
               };
               this.userDetails.push(displayObject);
@@ -213,6 +213,8 @@ export default {
         password: this.password,
         role: this.role,
       };
+      console.log(newUserDetails);
+
       try {
         this.isDialog = false;
         const user = await axios.post(

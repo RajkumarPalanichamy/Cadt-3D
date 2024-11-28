@@ -51,6 +51,7 @@
           class="pl-10 grid"
           :fluid="true"
         >
+          <v-overlay v-model="isLoadingModels"></v-overlay>
           <v-card
             v-for="(model, index) in modelData"
             :key="index"
@@ -130,7 +131,7 @@
     </v-container>
     <!-- Add Image Dialog -->
     <v-dialog v-model="isAddImage" max-width="1000px" persistent>
-      <v-card height="490px">
+      <v-card height="580px">
         <v-toolbar color="#274E76" density="compact">
           <v-icon class="ml-2" @click="isAddImage = false">mdi-close</v-icon>
           <v-card-title class="text-subtitle-1">Upload Image</v-card-title>
@@ -138,20 +139,35 @@
         <v-container class="d-flex" :fluid="true">
           <v-img
             src="/images/login.png"
-            cover
             height="150px"
+            width="150px"
             class="mr-6"
           ></v-img>
           <v-card width="70%" flat class="pb-10">
-            <v-text-field variant="underlined" placeholder="Image Name">
+            <v-text-field
+              variant="underlined"
+              placeholder="Title"
+              v-model="imgTitle"
+            >
             </v-text-field>
-            <v-textarea variant="underlined" placeholder="Image Description">
+            <v-textarea
+              variant="underlined"
+              placeholder="Description"
+              v-model="description"
+            >
             </v-textarea>
+            <v-text-field
+              variant="underlined"
+              placeholder="Button Text"
+              v-model="buttonText"
+            >
+            </v-text-field>
             <v-file-input
               label="File input"
               counter
               variant="underlined"
               multiple
+              v-model="imgFile"
               show-size
             ></v-file-input>
             <v-row class="mt-4">
@@ -203,7 +219,9 @@ import VueJwtDecode from "vue-jwt-decode";
 export default {
   data: () => ({
     isAddShop: false,
-    items: [
+    items: [],
+    userItems: [{ text: "Add Image", icon: "mdi-image-multiple-outline" }],
+    adminItems: [
       { text: "Add Image", icon: "mdi-image-multiple-outline" },
       { text: "Displaying Models", icon: "mdi-view-day" },
     ],
@@ -221,6 +239,10 @@ export default {
     isModels: false,
     modelData: [],
     selectedModels: [],
+    buttonText: null,
+    imgFile: null,
+    imgTitle: null,
+    description: null,
   }),
   computed: {
     selectedModelsCount() {
@@ -237,7 +259,10 @@ export default {
       } else {
         this.isModels = true;
         this.isCreated = false;
-        const userRole = VueJwtDecode.decode(Cookies.get("jwtToken")).role;
+        const userRole = VueJwtDecode.decode(
+          Cookies.get("jwtToken")
+        ).role.toLowerCase();
+
         if (userRole == "admin") {
           this.getAdminStoreModels();
         } else {
@@ -258,7 +283,9 @@ export default {
         const userName = VueJwtDecode.decode(data);
 
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${userName.name}`
+          `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${
+            userName.name
+          }`
         );
 
         if (response.status === 200) {
@@ -287,15 +314,39 @@ export default {
         console.log(error);
       }
     },
-    uploadImage() {
-      this.imageSnackbar = true;
-      this.isAddImage = false;
-      this.snackbarText = "Image Uploaded Successfully";
+    async uploadImage() {
+      const sendingData = new FormData();
+      sendingData.append("heading", this.title);
+      sendingData.append("description", this.description);
+      sendingData.append("button", this.buttonText);
+      sendingData.append("image", this.imgFile);
+         console.log("Image FILE",this.imgFile);
+         
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_LINK}/coursal/postCoursalData`,
+          sendingData
+        );
+        console.log(response);
+
+        // this.imageSnackbar = true;
+        // this.isAddImage = false;
+        // this.snackbarText = "Image Uploaded Successfully";
+      } catch (err) {
+        console.log("Uploading Error in Image", err);
+      }
     },
   },
   mounted() {
-    this.displayData = this.imageData;
     this.title = "ADD IMAGE";
+    const userRole = VueJwtDecode.decode(
+      Cookies.get("jwtToken")
+    ).role.toLowerCase();
+    if (userRole == "admin") {
+      this.items = this.adminItems;
+    } else {
+      this.items = this.userItems;
+    }
   },
 };
 </script>

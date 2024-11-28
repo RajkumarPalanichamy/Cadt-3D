@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
-import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
@@ -208,47 +207,9 @@ window.addEventListener("model-drop", (event) => {
       console.error("Error loading GLTF model:", error);
     }
   );
-});
+  });
 
-
-  // window.addEventListener("drag-start", (event) => {
-  //   const modelUrl = event.detail.modelLink;
-  //   const loader = new GLTFLoader();
-  //   loader.load(modelUrl, (gltf) => {
-  //     this.draggedObject = gltf.scene;
-  //     // console.log('this.draggObject',this.dragObject);
-      
-  //     this.scene.add(this.draggedObject);
-  //     this.isDragging = true;
-  //   });
-  // });
-
-  // window.addEventListener("mousemove", (event) => {
-  //   if (this.isDragging && this.draggObject) {
-  //     // Update mouse position
-  //     const { x, y } = event.detail;
-  //     mouse.x = (x / this.renderer.domElement.clientWidth) * 2 - 1;
-  //     mouse.y = -(y / this.renderer.domElement.clientHeight) * 2 + 1;
-
-  //     // Raycast to find the intersection point
-  //     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // y = 0 plane
-  //     const intersectPoint = new THREE.Vector3();
-  //     this.raycaster.setFromCamera(mouse, this.camera);
-  //     this.raycaster.ray.intersectPlane(groundPlane, intersectPoint);
-
-  //     // Update dragged object's position
-  //     this.draggObject.position.copy(intersectPoint);
-  //   }
-  // });
-  // window.addEventListener("drag-end", () => {
-  //   if (this.isDragging) {
-  //     this.isDragging = false;
-  //     this.draggObject = null; // Clear reference to dragged object
-  //   }
-  // });
     this.animate();
-  }
-  position(){
   }
   createListener() {
     if (!this.listenersActive) {
