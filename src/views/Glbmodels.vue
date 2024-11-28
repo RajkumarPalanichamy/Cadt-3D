@@ -17,23 +17,16 @@
         <v-data-table-virtual
           height="94vh"
           :loading="isLoading"
-          :items="displayModel"
+          :items="filteredModels"
           density="compact"
           item-value="name"
         >
           <template v-slot:top>
             <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
-              <v-col cols="1">
-                <v-icon class="ml-4 mt-2" color="grey">mdi-grid-large</v-icon>
-              </v-col>
-              <v-divider
-                vertical
-                thickness="3"
-                style="transform: rotate(20deg)"
-              ></v-divider>
               <v-spacer class="search_bg_colo"></v-spacer>
               <v-col class="search_bg_colo">
                 <v-text-field
+                  v-model="searchQuery"
                   density="compact"
                   class="mt-1"
                   style="height: 0px"
@@ -87,7 +80,7 @@
                 <v-btn color="#274E76" class="mr-3" @click="postModel"
                   >Upload</v-btn
                 >
-                <v-btn @click="showModels = true">Back</v-btn>
+                <v-btn @click="isUpload = false">Back</v-btn>
               </v-form>
             </v-card>
             <v-card
@@ -152,7 +145,7 @@
                     <v-btn color="#274E76" block>Edit</v-btn>
                   </v-col>
                   <v-col>
-                    <v-btn variant="outlined" color="#274E76" block
+                    <v-btn variant="outlined"  color="#274E76" block
                       >Cancel</v-btn
                     >
                   </v-col>
@@ -162,6 +155,15 @@
           </v-card>
         </v-card>
       </v-dialog>
+      <!-- Error snackbar -->
+      <v-snackbar v-model="isUploadError">
+        {{ uploadErrorText }}
+        <template v-slot:actions>
+          <v-btn color="pink" variant="text" @click="snackbar = false">
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
     </v-container>
   </v-container>
 </template>
@@ -186,8 +188,21 @@ export default {
       isUpload: false,
       allModel: [],
       displayModel: [],
+      searchQuery: "",
       file: "",
+      isUploadError: false,
+      uploadErrorText: "",
     };
+  },
+  computed: {
+    filteredModels() {
+      const query = this.searchQuery.toLowerCase();
+      return this.displayModel.filter(
+        (model) =>
+          model["Model Type"].toLowerCase().includes(query) ||
+          model.categories.toLowerCase().includes(query)
+      );
+    },
   },
 
   methods: {
@@ -235,7 +250,7 @@ export default {
       formData.append("modelType", this.uploadModelType);
       try {
         const response = await axios.post(
-            `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
+          `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
           formData,
           {
             headers: {
@@ -243,9 +258,11 @@ export default {
             },
           }
         );
-        console.log("Model uploaded:", response.data);
         this.isUpload = false;
       } catch (err) {
+        this.isUploadError = true;
+        this.isUpload = false;
+        this.uploadErrorText = " Failed To Upload Models";
         console.error("Failed to upload model:", err);
       }
     },

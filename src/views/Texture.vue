@@ -56,11 +56,25 @@
     <!-- Upload Dialog -->
     <v-dialog v-model="isUpload" width="1000px">
       <v-card height="550px">
+        <!-- Overlay inside the v-dialog -->
+        <v-overlay
+          v-model="uploadOverlay"
+          absolute
+          class="d-flex align-center justify-center"
+        >
+          <v-progress-circular
+            indeterminate
+            :size="70"
+            :width="5"
+            color="#274E76"
+          ></v-progress-circular>
+        </v-overlay>
+
         <v-toolbar density="compact" color="#274e76" flat>
           <v-icon class="py-6 px-6" @click="isUpload = false">mdi-close</v-icon>
-
           <v-card-title>Upload Material</v-card-title>
         </v-toolbar>
+
         <v-card class="d-flex justify-center mt-16" flat>
           <v-card width="50%" class="px-6 py-2" flat>
             <v-form>
@@ -82,6 +96,7 @@
               <v-btn @click="watchChanges">Back</v-btn>
             </v-form>
           </v-card>
+
           <v-card
             width="45%"
             flat
@@ -93,8 +108,9 @@
               @click="triggerFileInput"
               class="mt-16 mb-4"
               color="#274E76"
-              >mdi-cloud-upload-outline</v-icon
             >
+              mdi-cloud-upload-outline
+            </v-icon>
             <v-card-title>Click the Icon to Upload File</v-card-title>
             <input
               ref="fileInput"
@@ -175,10 +191,10 @@ export default {
       filteredTextures: [],
       textureData: [],
       userSavedTextures: [],
-
       file: "",
       uploadTextureName: "",
       uploadTextureType: "",
+      uploadOverlay: false,
     };
   },
   async mounted() {
@@ -234,6 +250,8 @@ export default {
       }
     },
     async uploadTexture() {
+      this.uploadOverlay = true;
+
       if (!this.file || !this.uploadTextureName || !this.uploadTextureType) {
         console.error("Missing required fields");
         return;
@@ -255,6 +273,8 @@ export default {
         );
         if (response.status == "200") {
           this.isUpload = false;
+          this.uploadOverlay = false;
+
         }
       } catch (err) {
         console.error("Upload failed:", err.response?.data || err.message);
@@ -275,7 +295,7 @@ export default {
             this.$refs.gltfViewerComponent.Texture(textureLink);
           }
         });
-      }, 1000);
+      }, 100);
     },
     triggerFileInput() {
       this.$refs.fileInput.click();

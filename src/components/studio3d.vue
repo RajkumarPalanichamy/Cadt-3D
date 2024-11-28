@@ -53,8 +53,8 @@
           <v-sheet width="100%" height="80%" class="text-center px-0 py-0">
             <v-img
               cover
-              :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
               class="hover"
+              :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
             ></v-img>
           </v-sheet>
           <v-sheet class="text-center"> {{ model.modelType }}</v-sheet>
@@ -80,16 +80,13 @@
       >
     </v-card>
     <!-- Scene Container -->
-    <v-container class="px-0 py-0" :fluid="true">
-      <div
-        ref="threeContainer"
-        class="three-container"
-        style="height: 90vh"
-      ></div>
+    <v-container class="px-0 py-0" :fluid="true" >
+      <div ref="threeContainer" class="three-container" style="height: 92vh;"></div>
     </v-container>
   </v-container>
 </template>
 <script>
+import axios from "axios";
 import studio3dThreeScene from "@/Three/studio3d.js";
 export default {
   name: "cadt3d-container",
@@ -123,6 +120,7 @@ export default {
     },
     async sidebar(value) {
       this.isSidebarCliked = true;
+
       if (value == "Edit") {
         this.title = "EDIT";
         this.isEdit = true;
@@ -133,12 +131,11 @@ export default {
         this.title = "MODELS";
         this.isModelLoading = true;
         const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/getFurnitures`
+          `${import.meta.env.VITE_API_LINK}/furniture/getFurnitures`
         );
         if (response.status == "200") {
           this.isModelLoading = false;
           this.modelData = response.data;
-          console.log("models", this.modelData);
         }
       }
     },
