@@ -72,9 +72,7 @@
 
               :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
               draggable="true"
-
               class="hover"
-              :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
             ></v-img>
           </v-sheet>
           <v-sheet class="text-center"> {{ model.modelType }}</v-sheet>
@@ -118,7 +116,6 @@
   </v-container>
 </template>
 <script>
-import axios from "axios";
 import studio3dThreeScene from "@/Three/studio3d.js";
 import axios from "axios";
 export default {

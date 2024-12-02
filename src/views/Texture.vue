@@ -24,8 +24,8 @@
           <!-- Search Bar -->
           <template v-slot:top>
             <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
-              <v-spacer class="search_bg_colo"></v-spacer>
-              <v-col class="search_bg_colo">
+              <v-spacer class="search_bg_color"></v-spacer>
+              <v-col class="search_bg_color">
                 <v-text-field
                   density="compact"
                   v-model="searchQuery"
@@ -44,37 +44,28 @@
           <template v-slot:item.Textureimage="{ item }">
             <v-img :src="item.Textureimage" width="30px" class="hover"></v-img>
           </template>
-
           <template v-slot:item.view="{ item }">
-            <v-icon color="grey" @click="viewTexture(item)"
-              >mdi-eye-outline</v-icon
+            <v-icon color="grey" @click="viewTexture(item)">mdi-eye-outline</v-icon>
+          </template>
+          <template v-slot:item.edit="{ item }">
+            <v-icon
+              color="blue"
+              @click="startEdit(item)"
             >
+              mdi-pencil-outline
+            </v-icon>
           </template>
         </v-data-table-virtual>
       </v-card>
     </v-container>
+
     <!-- Upload Dialog -->
     <v-dialog v-model="isUpload" width="1000px">
       <v-card height="550px">
-        <!-- Overlay inside the v-dialog -->
-        <v-overlay
-          v-model="uploadOverlay"
-          absolute
-          class="d-flex align-center justify-center"
-        >
-          <v-progress-circular
-            indeterminate
-            :size="70"
-            :width="5"
-            color="#274E76"
-          ></v-progress-circular>
-        </v-overlay>
-
         <v-toolbar density="compact" color="#274e76" flat>
           <v-icon class="py-6 px-6" @click="isUpload = false">mdi-close</v-icon>
           <v-card-title>Upload Material</v-card-title>
         </v-toolbar>
-
         <v-card class="d-flex justify-center mt-16" flat>
           <v-card width="50%" class="px-6 py-2" flat>
             <v-form>
@@ -96,7 +87,6 @@
               <v-btn @click="watchChanges">Back</v-btn>
             </v-form>
           </v-card>
-
           <v-card
             width="45%"
             flat
@@ -122,13 +112,15 @@
         </v-card>
       </v-card>
     </v-dialog>
-    <!-- view Dialog -->
-    <v-dialog v-model="isView" max-width="1000px" height="550px">
+
+    <!-- Edit Dialog -->
+    <v-dialog v-model="isEdit" max-width="1000px">
       <v-card rounded="0" flat>
         <v-toolbar density="compact" color="#274E76">
-          <v-icon @click="isView = false" class="px-5">mdi-close</v-icon>
+          <v-icon @click="isEdit = false" class="px-5">mdi-close</v-icon>
+          <v-card-title>Edit Material</v-card-title>
         </v-toolbar>
-        <v-card class="d-flex" height="100vh" flat>
+        <v-card class="d-flex" flat>
           <v-card width="70%" flat rounded="0" class="px-3 py-3">
             <gltfViewer ref="gltfViewerComponent" style="height: 480px" />
           </v-card>
@@ -138,8 +130,8 @@
                 <v-col>
                   <v-text-field
                     variant="underlined"
-                    v-model="textureName"
-                    label=" Texture Name"
+                    v-model="editTextureName"
+                    label="Texture Name"
                     density="compact"
                   ></v-text-field>
                 </v-col>
@@ -147,20 +139,37 @@
               <v-row>
                 <v-col>
                   <v-text-field
-                    v-model="textureType"
-                    label="Texture Type "
+                    v-model="editTextureType"
+                    label="Texture Type"
                     variant="underlined"
                     density="compact"
                   ></v-text-field>
                 </v-col>
               </v-row>
-
               <v-row>
                 <v-col>
-                  <v-btn color="#274E76" block>Edit</v-btn>
+                  <input
+                    ref="editFileInput"
+                    type="file"
+                    class="d-none"
+                    @change="handleEditFileUpload"
+                  />
+                  <v-btn
+                    variant="outlined"
+                    @click="triggerEditFileInput"
+                    color="#274E76"
+                    block
+                  >
+                    Upload New File
+                  </v-btn>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <v-btn color="#274E76" block @click="saveEditedTexture">Save</v-btn>
                 </v-col>
                 <v-col>
-                  <v-btn variant="outlined" color="#274E76" block>Cancel</v-btn>
+                  <v-btn variant="outlined" color="#274E76" block @click="isEdit = false">Cancel</v-btn>
                 </v-col>
               </v-row>
             </v-form>
@@ -184,6 +193,7 @@ export default {
     return {
       isView: false,
       isUpload: false,
+      isEdit: false,
       isLoading: true,
       textureName: "",
       textureType: "",
@@ -192,13 +202,14 @@ export default {
       textureData: [],
       userSavedTextures: [],
       file: "",
+      editFile: null,
       uploadTextureName: "",
       uploadTextureType: "",
+      editTextureName: "",
+      editTextureType: "",
       uploadOverlay: false,
+      viewTextureDetails: {},
     };
-  },
-  async mounted() {
-    this.getTextures();
   },
   computed: {
     filteredTextures() {
@@ -214,88 +225,27 @@ export default {
     },
   },
   methods: {
-    edit() {
-      this.disableInputs = false;
-    },
-    watchChanges() {
-      if (this.file || this.uploadTextureName || this.uploadTextureType) {
-        confirm("are you want to discard the chances");
-        return;
-      } else {
-        this.isUpload = false;
-      }
-    },
     async getTextures() {
       this.textureData = [];
       const response = await axios.get(
         `${import.meta.env.VITE_API_LINK}/texture/getTextures`
       );
-
-      if (response.status == 200) {
+      if (response.status === 200) {
         this.userSavedTextures = response.data;
         this.isLoading = false;
-        response.data.forEach((eachTexture) => {
-          (this.textureName = eachTexture.name),
-            (this.textureType = eachTexture.type);
+        response.data.forEach((texture) => {
           const textureObj = {
             Sno: true,
-            Textureimage: eachTexture.textures[0].url,
-            _id: eachTexture._id,
-            TextureName: eachTexture.name,
-            TextureType: eachTexture.type,
+            Textureimage: texture.textures[0].url,
+            _id: texture._id,
+            TextureName: texture.name,
+            TextureType: texture.type,
             view: true,
+            edit: true,
           };
           this.textureData.push(textureObj);
         });
       }
-    },
-    async uploadTexture() {
-      this.uploadOverlay = true;
-
-      if (!this.file || !this.uploadTextureName || !this.uploadTextureType) {
-        console.error("Missing required fields");
-        return;
-      }
-      const formData = new FormData();
-      formData.append("name", this.uploadTextureName);
-      formData.append("type", this.uploadTextureType);
-      formData.append("Texturesfiles", this.file);
-
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_LINK}/texture/textures`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        if (response.status == "200") {
-          this.isUpload = false;
-          this.uploadOverlay = false;
-
-        }
-      } catch (err) {
-        console.error("Upload failed:", err.response?.data || err.message);
-      }
-    },
-
-    cancel() {
-      this.disableInputs = true;
-    },
-    viewTexture(viewFile) {
-      this.isView = true;
-      this.textureName = viewFile.TextureName;
-      this.textureType = viewFile.TextureType;
-      setTimeout(() => {
-        this.userSavedTextures.forEach((eachTexture) => {
-          if (eachTexture._id === viewFile._id) {
-            const textureLink = eachTexture.textures[0].url;
-            this.$refs.gltfViewerComponent.Texture(textureLink);
-          }
-        });
-      }, 100);
     },
     triggerFileInput() {
       this.$refs.fileInput.click();
@@ -306,9 +256,63 @@ export default {
         this.file = file;
       }
     },
+    startEdit(item) {
+      this.isEdit = true;
+      this.editTextureName = item.TextureName;
+      this.editTextureType = item.TextureType;
+    },
+    handleEditFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.editFile = file;
+      }
+    },
+    async saveEditedTexture() {
+      if (!this.editTextureName || !this.editTextureType) {
+        alert("Please fill all the fields.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("name", this.editTextureName);
+      formData.append("type", this.editTextureType);
+      if (this.editFile) {
+        formData.append("Texturesfiles", this.editFile);
+      }
+
+      try {
+        const response = await axios.put(
+          `${import.meta.env.VITE_API_LINK}/texture/editTexture`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        if (response.status === 200) {
+          alert("Texture updated successfully!");
+          this.isEdit = false;
+          this.getTextures();
+        }
+      } catch (error) {
+        alert("Failed to update texture.");
+      }
+    },
+    triggerEditFileInput() {
+      this.$refs.editFileInput.click();
+    },
+    viewTexture(item) {
+      this.viewTextureDetails = item;
+      this.isView = true;
+    },
+
+  },
+  mounted() {
+    this.getTextures();
   },
 };
 </script>
+
+
 
 <style scoped>
 .d-none {
