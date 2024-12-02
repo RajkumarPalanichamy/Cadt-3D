@@ -64,50 +64,49 @@
       <v-card height="550px">
         <v-toolbar density="compact" color="#274e76" flat>
           <v-icon class="py-6 px-6" @click="isUpload = false">mdi-close</v-icon>
-          <v-card-title>Upload Material</v-card-title>
+          <v-card-title>Upload Texture</v-card-title>
         </v-toolbar>
         <v-card class="d-flex justify-center mt-16" flat>
           <v-card width="50%" class="px-6 py-2" flat>
             <v-form>
               <v-text-field
-                label="Enter Texture Name"
-                variant="outlined"
                 v-model="uploadTextureName"
+                label="Enter Texture Name"
+                variant="underlined"
+                hint="eg:Living Room,Bed Room..."
                 class="mb-6 mt-6"
               ></v-text-field>
               <v-text-field
-                label="Enter Texture Type"
-                variant="outlined"
                 v-model="uploadTextureType"
+                label="Enter Texture Type"
+                hint="eg:Window,Door,Table..."
+                variant="underlined"
                 class="mb-6"
               ></v-text-field>
-              <v-btn color="#274E76" class="mr-3" @click="uploadTexture"
-                >Upload</v-btn
-              >
-              <v-btn @click="watchChanges">Back</v-btn>
+              <v-file-input
+                label="Add Texture"
+                variant="underlined"
+                v-model="file"
+                @change="textureReceived"
+              ></v-file-input>
+              <v-row class="mt-6">
+                <v-col>
+                  <v-btn color="#274E76" block class="mr-3" @click="postModel"
+                    >Upload
+                  </v-btn>
+                </v-col>
+                <v-col>
+                  <v-btn @click="isUpload = false" block>Back</v-btn>
+                </v-col>
+              </v-row>
             </v-form>
           </v-card>
           <v-card
-            width="45%"
+            width="60%"
             flat
-            class="d-flex flex-column align-center px-4"
-            style="border: 2px dotted grey"
+            class="d-flex flex-column align-center my-3 mr-2"
           >
-            <v-icon
-              style="font-size: 100px"
-              @click="triggerFileInput"
-              class="mt-16 mb-4"
-              color="#274E76"
-            >
-              mdi-cloud-upload-outline
-            </v-icon>
-            <v-card-title>Click the Icon to Upload File</v-card-title>
-            <input
-              ref="fileInput"
-              type="file"
-              class="d-none"
-              @change="handleFileUpload"
-            />
+            <gltfViewer ref="gltfViewerComponent" style="height: 550px" />
           </v-card>
         </v-card>
       </v-card>
@@ -225,6 +224,21 @@ export default {
     },
   },
   methods: {
+    edit() {
+      this.disableInputs = false;
+    },
+    textureReceived() {
+      const objectURL = URL.createObjectURL(this.file);
+      this.$refs.gltfViewerComponent.Texture(objectURL);
+    },
+    watchChanges() {
+      if (this.file || this.uploadTextureName || this.uploadTextureType) {
+        confirm("are you want to discard the chances");
+        return;
+      } else {
+        this.isUpload = false;
+      }
+    },
     async getTextures() {
       this.textureData = [];
       const response = await axios.get(

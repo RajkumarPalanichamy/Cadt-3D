@@ -304,6 +304,10 @@ export default {
         this.isLoading = false;
       }
     },
+    modelReceived() {
+      const objectURL = URL.createObjectURL(this.file);
+      this.$refs.gltfViewerComponent.gltf(objectURL);
+    },
     async postModel() {
       this.isLoading = true;
       if (!this.file || !this.uploadModelCategories || !this.uploadModelType) {
@@ -410,6 +414,9 @@ export default {
 }
 .hover:hover {
   transform: scale(3);
-  height: 200px;
+  height: 150px;
 }
+
+
+
 </style>

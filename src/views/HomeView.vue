@@ -3,58 +3,63 @@
     <v-card class="d-flex" height="100vh" rounded="0">
       <v-layout>
         <v-navigation-drawer
-          class="navigation-drawer"
           v-model="drawer"
           :rail="rail"
-          rail-width="75"
+          rail-width="80"
           permanent
-          @click="rail = false"
+          @mouseenter="rail = false"
+          @mouseleave="rail = true"
         >
-          <v-list>
-            <v-list-item @click.stop="rail = !rail" class="mb-16 text-white">
-              <template #prepend>
-                <v-icon color="white" style="font-size: 28px; opacity: 1"
-                  >mdi-cube-outline
-                </v-icon>
-              </template>
-              <v-list-item-title class="font-weight-bold"
-                >BLUE 3D
-              </v-list-item-title>
-            </v-list-item>
+          <v-card rounded="0" height="100vh" class="navigation-drawer flex">
+            <v-list class="mt-4">
+              <v-list-item class="text-white">
+                <template #prepend>
+                  <v-icon color="white" style="font-size: 28px; opacity: 1"
+                    >mdi-cube-outline
+                  </v-icon>
+                </template>
+                <v-list-item-title class="font-weight-bold"
+                  >BLUE 3D
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
 
-            <v-list-item
-              v-for="(icon, i) in displaySidebarData"
-              :key="i"
-              class="text-white mb-2"
-              :class="{ 'active-sidebar-item': activeItem === icon.text }"
-              @click="setActiveItem(icon.text)"
-            >
-              <template #prepend>
-                <v-icon style="font-size: 28px; opacity: 1" color="white">{{
-                  icon.icon
-                }}</v-icon>
-              </template>
-              <v-list-item-title>{{ icon.text }}</v-list-item-title>
-            </v-list-item>
-            <v-spacer style="margin-bottom: 150px"> </v-spacer>
-
-            <v-list-item
-              class="text-white mb-2"
-              v-for="(icon, i) in downListItems"
-              :key="i"
-              :class="{ 'active-sidebar-item': activeItem === icon.text }"
-              @click="setActiveItem(icon.text)"
-            >
-              <template #prepend>
-                <v-icon style="font-size: 28px; opacity: 1" color="white">{{
-                  icon.icon
-                }}</v-icon>
-              </template>
-              <v-list-item-title>{{ icon.text }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
+            <v-list>
+              <v-list-item
+                v-for="(icon, i) in displaySidebarData"
+                :key="i"
+                class="text-white mb-2"
+                :class="{ 'active-sidebar-item': activeItem === icon.text }"
+                @click="setActiveItem(icon.text)"
+              >
+                <template #prepend>
+                  <v-icon style="font-size: 24px; opacity: 1" color="white">{{
+                    icon.icon
+                  }}</v-icon>
+                </template>
+                <v-list-item-title>{{ icon.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+            <v-list>
+              <v-list-item
+                class="text-white mb-2"
+                v-for="(icon, i) in downListItems"
+                :key="i"
+                :class="{ 'active-sidebar-item': activeItem === icon.text }"
+                @click="setActiveItem(icon.text)"
+              >
+                <template #prepend>
+                  <v-icon style="font-size: 24px; opacity: 1" color="white">{{
+                    icon.icon
+                  }}</v-icon>
+                </template>
+                <v-list-item-title>{{ icon.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
         </v-navigation-drawer>
         <v-main>
+          
           <router-view />
         </v-main>
       </v-layout>
@@ -112,23 +117,21 @@ export default {
   },
 
   methods: {
-  
     setActiveItem(itemText) {
       this.activeItem = itemText;
       this.sideBar(itemText);
     },
     sideBar(clickedValue) {
       if (clickedValue == "Studio3D") {
-        this.$router.push(`/studio3d`);
+        this.$router.push("/studio3d");
       } else if (clickedValue == "Logout") {
         Cookies.remove("jwtToken");
-        this.$router.push(`/`);
+        this.$router.push("/");
       } else {
         const value = clickedValue.split(" ").join("").toLowerCase();
         this.$router.push(`/homeview/${value}`);
       }
     },
-  
   },
 };
 </script>
@@ -136,9 +139,23 @@ export default {
 <style scoped>
 .navigation-drawer {
   background: linear-gradient(to bottom, #0c2539, #1d4f72, #0c2539);
+  display: flex;
+  justify-content: space-between;
 }
 .active-sidebar-item {
   border-left: 4px solid #ffffff;
-  background-color: rgba(255, 255, 255, 0.2);
+
 }
+.flex {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+}
+.flex{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
 </style>
