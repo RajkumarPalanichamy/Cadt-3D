@@ -63,7 +63,7 @@ const router = createRouter({
       path: "/createproject",
       name: "createproject",
       component: Createproject,
-      meta: { requiresAuth: true },
+      // meta: { requiresAuth: true },
     },
     {
       path: "/studio3d",

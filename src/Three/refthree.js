@@ -902,4 +902,70 @@ export default class ThreeScene {
       this.scene.add(vertMarker);
       this.vertMarkers.push(vertMarker)
     }
+    
+     // window.addEventListener("drag-start", (event) => {
+    //   const modelUrl = event.detail.modelLink;
+    //   const loader = new GLTFLoader();
+    //   loader.load(modelUrl, (gltf) => {
+    //     this.draggedObject = gltf.scene;
+    //     // console.log('this.draggObject',this.dragObject);
+
+    //     this.scene.add(this.draggedObject);
+    //     this.isDragging = true;
+    //   });
+    // });
+
+    // window.addEventListener("mousemove", (event) => {
+    //   if (this.isDragging && this.draggObject) {
+    //     // Update mouse position
+    //     const { x, y } = event.detail;
+    //     mouse.x = (x / this.renderer.domElement.clientWidth) * 2 - 1;
+    //     mouse.y = -(y / this.renderer.domElement.clientHeight) * 2 + 1;
+
+    //     // Raycast to find the intersection point
+    //     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // y = 0 plane
+    //     const intersectPoint = new THREE.Vector3();
+    //     this.raycaster.setFromCamera(mouse, this.camera);
+    //     this.raycaster.ray.intersectPlane(groundPlane, intersectPoint);
+
+    //     // Update dragged object's position
+    //     this.draggObject.position.copy(intersectPoint);
+    //   }
+    // });
+    // window.addEventListener("drag-end", () => {
+    //   if (this.isDragging) {
+    //     this.isDragging = false;
+    //     this.draggObject = null; // Clear reference to dragged object
+    //   }
+    // });
+
+      // onWallDrag(wall) {
+  //   let polygonGroup = this.polygons.find((group) =>
+  //     group.walls.includes(wall)
+  //   );
+
+  //   if (polygonGroup) {
+  //     const index = polygonGroup.walls.indexOf(wall);
+
+  //     let point1 = polygonGroup.controlPoints[index];
+  //     let point2 =
+  //       index < polygonGroup.controlPoints.length - 1
+  //         ? polygonGroup.controlPoints[index + 1]
+  //         : polygonGroup.controlPoints[0];
+
+  //     let direction = new THREE.Vector3()
+  //       .subVectors(point2, point1)
+  //       .normalize();
+  //     let delta = wall.position.clone().sub(point1);
+
+  //     point1.add(delta); 
+  //     point2.add(delta); 
+
+  //     this.updatePolygonMesh(polygonGroup);
+  //     this.updateLinesInGroup(polygonGroup);
+  //     this.updateWallsInGroup(polygonGroup);
+  //     this.updateTextMeshesInGroup(polygonGroup);
+
+  //   }
+  // }
 */
