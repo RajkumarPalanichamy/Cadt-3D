@@ -69,9 +69,18 @@
             backgroundPosition: 'center',
           }"
         >
-          <v-card-text style="position: absolute; z-index: -1">{{
-            model.name
-          }}</v-card-text>
+          <v-sheet width="100%" height="80%" class="text-center px-0 py-0">
+            <v-img
+              cover
+
+              :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
+              draggable="true"
+
+              class="hover"
+            ></v-img>
+          </v-sheet>
+          <v-sheet class="text-center"> {{ model.modelType }}</v-sheet>
+
         </v-card>
       </v-container>
     </v-card>
@@ -202,11 +211,10 @@ export default {
     },
 
     onDragOver(event) {
-      this.isSidebarCliked = false;
 
       event.preventDefault();
+      this.isSidebarCliked = false;
 
-      // Calculate mouse position
       const mouse = {
         x: (event.clientX / event.target.clientWidth) * 2 - 1,
         y: -(event.clientY / event.target.clientHeight) * 2 + 1,
@@ -219,6 +227,7 @@ export default {
       window.dispatchEvent(dragMoveEvent);
     },
     onDrop(event) {
+
       const droppedText = event.dataTransfer.getData("text/plain");
       event.target.classList.remove("hide-drag-image");
       this.isSidebarCliked = true;

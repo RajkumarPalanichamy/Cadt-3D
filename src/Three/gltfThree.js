@@ -13,7 +13,7 @@ export default class gltfThreeScene {
   }
   init() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#BCBCBC");
+    this.scene.background = new THREE.Color("#D8D8D8");
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.shadowMap.enabled = true;
@@ -29,7 +29,7 @@ this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       0.5,
       1000
     );
-    const directionalLight = new THREE.DirectionalLight("white", 1);
+    const directionalLight = new THREE.DirectionalLight("white", 2);
     directionalLight.position.set(5,5,5); 
 
     directionalLight.castShadow=true
@@ -100,7 +100,9 @@ directionalLight.shadow.mapSize.height = 1024;
   
     this.scene.add(this.group);
   
-    this.camera.position.set(-5, 1, 0);
+    this.camera.position.set(-3, 2, -1);
+    // this.camera.position.z = 1.5;
+
   }
   
   texture(textureLink) {

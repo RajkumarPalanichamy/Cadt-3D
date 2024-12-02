@@ -123,10 +123,10 @@ export default {
     },
     sideBar(clickedValue) {
       if (clickedValue == "Studio3D") {
-        this.$router.push(`/studio3d`);
+        this.$router.push("/studio3d");
       } else if (clickedValue == "Logout") {
         Cookies.remove("jwtToken");
-        this.$router.push(`/`);
+        this.$router.push("/");
       } else {
         const value = clickedValue.split(" ").join("").toLowerCase();
         this.$router.push(`/homeview/${value}`);
@@ -144,10 +144,18 @@ export default {
 }
 .active-sidebar-item {
   border-left: 4px solid #ffffff;
+
 }
 .flex {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
 }
+.flex{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
 </style>
