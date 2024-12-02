@@ -170,7 +170,6 @@ export default class ThreeScene {
     
     this.animate();
   }
-
   createListener() {
     if (!this.listenersActive) {
       this.startDrawing();

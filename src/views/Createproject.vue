@@ -30,16 +30,9 @@
       <v-btn icon @click="isSave = true" class="mr-4">
         <v-card-text>SAVE</v-card-text>
       </v-btn>
-      <!-- <v-btn icon>
-        <v-icon>mdi-theme-light-dark</v-icon>
-      </v-btn>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn> -->
     </v-toolbar>
     <v-card
-      class="d-flex"
+      class="d-flex bg-red"
       @dragover.prevent="onDragOver"
       @drop="onDrop"
       style="cursor: pointer"
@@ -75,16 +68,17 @@
         style="top: 230px !important; right: 10px"
         class="d-flex flex-column justify-center position px-2 py-2 border-md"
       >
-        <v-icon
-          v-for="(item, index) in sideBar"
-          :key="index"
-          @click="toggleVisibility(item.icon)"
-          class="mt-2"
-          size="1.7em"
-          v-tooltip="`${item.tooltip}`"
-        >
-          {{ item.icon }}</v-icon
-        >
+      <v-icon
+  v-for="(item, index) in sideBar"
+  :key="index"
+  @click="toggleVisibility(item.icon)"
+  class="mt-2"
+  size="1.7em"
+  :v-tooltip="item.tooltip ? item.tooltip : ''"
+>
+  {{ item.icon }}
+</v-icon>
+
       </v-card>
       <v-card
         v-if="isVisible"
@@ -148,15 +142,16 @@
             </v-col>
           </v-row>
           <v-divider class="mb-2"></v-divider>
-          <v-card v-if="isCategories" class="grid" flat>
+          <v-card v-if="isCategories" class="grid pl-1 pb-10 pt-1 " flat>
             <v-card
               v-for="(model, index) in showCard"
               :key="index"
-              width="130px"
+              width="120px"
               height="170px"
+              class="border"
               @click="selectedCategory(model)"
             >
-              <v-img :src="model.modelimg"  ></v-img>
+              <v-img :src="model.modelimg"  height="100px" cover></v-img>
               <v-card-text class="text-center text-blue-darken-4">{{
                 model.modelname
               }}</v-card-text>
@@ -266,37 +261,37 @@ export default {
       modelsList: [
         {
           modelname: "Living Room",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg: "/public/images/livingroom.jpg"
         },
         {
           modelname: "Kitchen",
-          modelimg: new URL("@/assets/kitchen.jpeg", import.meta.url).href,
+          modelimg: "/public/images/kitchen.jpeg"
         },
         {
           modelname: "Bathroom",
-          modelimg: new URL("@/assets/Bathroom.jpeg", import.meta.url).href,
+          modelimg: "/public/images/Bathroom.jpeg"
         },
         {
           modelname: "Bed Room",
-          modelimg: new URL("@/assets/bedroom.jpg", import.meta.url).href,
+          modelimg: "/public/images/bedroom.jpg"
         },
         {
           modelname: "Balcony",
-          modelimg: new URL("@/assets/Balcony.jpeg", import.meta.url).href,
+          modelimg: "/public/images/Balcony.jpeg"
         },
       ],
       drawList: [
         {
           modelname: "Draw",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg:  "/public/images/draw.jpg",
         },
         {
           modelname: "Square",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg:  "/public/images/square.jpg",
         },
         {
           modelname: "Lcut",
-          modelimg: new URL("@/assets/livingroom.jpg", import.meta.url).href,
+          modelimg:  "/public/images/lcut.jpg"
         },
       ],
       sideBar: [
@@ -317,17 +312,10 @@ export default {
       console.log("newValue", newValue);
 
       if (newValue) {
-        console.log("newValue", newValue);
-
         this.handleBackHome();
         this.$store.commit("changeTriggerMethod");
       }
     },
-    //   loadSavedModel(newValue){
-    //     console.log('newValuebrgshnj',newValue);
-
-    //     this.loadSaved(newValue)
-    //   }
   },
 
   methods: {
@@ -434,7 +422,6 @@ export default {
       const draggedModel = modelLink; // The URL or path to the GLTF model
       event.dataTransfer.setData("text/plain", draggedModel);
 
-      // Dispatch the model-drag-start event with the model link
       const dragStartEvent = new CustomEvent("model-drag-start", {
         detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
       });
