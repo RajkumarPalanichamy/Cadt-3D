@@ -1,37 +1,70 @@
 <template>
-  <v-container :fluid="true" class="d-flex px-0 py-0" height="100vh">
-    <v-card width="70%" color="black" flat rounded="0">
-      <v-card-title style="position: absolute; z-index: 2;top:10px" class="text-white">
-        <v-icon class="text-primary">mdi mdi-cube-outline</v-icon>
-        Blue 3D
+  <v-container :fluid="true" class="d-flex px-4 py-4" height="100vh">
+    <v-card width="60%" flat rounded="0">
+      <v-card-title
+        style="position: absolute; z-index: 2; top: 10px"
+        class="text-white"
+      >
       </v-card-title>
-      <v-img src="./images/login.png" cover height="100vh"></v-img>
+      <v-img
+        src="./images/login.png"
+        cover
+        height="100vh"
+        style="border-radius: 20px"
+      ></v-img>
     </v-card>
-    <v-card width="30%" flat class="d-flex flex-column justify-center px-4">
-      <v-form v-model="isForm">
-        <v-card-title class="pb-0 text-center">Welcome to Blue 3D</v-card-title>
-        <v-card-subtitle class="text-center">Your Dashboard</v-card-subtitle>
-        <!-- <v-card-text class="pb-0 font-weight-medium mb-1"
-          >Username :</v-card-text
-        > -->
-        <!-- append-inner-icon="mdi-account" -->
+    <v-card width="40%" flat class="d-flex flex-column px-6">
+      <v-sheet class="mb-3">
+        <v-icon style="font-size: 100px" class="mb-6" color="#274E76"
+          >mdi-cube-outline</v-icon
+        >
+        <v-card-title class="px-0">Get Started Now</v-card-title>
+        <v-card-text class="px-0 mt-2"
+          >Enter your credentials to access your account</v-card-text
+        >
+      </v-sheet>
+      <v-sheet>
+        <v-row>
+          <v-col>
+            <v-btn variant="outlined" block class="font-weight-bold btn-class">
+              <v-icon class="mr-2 text-orange">mdi-google</v-icon>
+              Log in with Google
+            </v-btn></v-col
+          >
+          <v-col>
+            <v-btn variant="outlined" block>
+              <v-icon class="mr-2 text-blue">mdi-facebook</v-icon>
+              Log in with Facebook
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-sheet>
+
+      <v-sheet class="d-flex align-center justify-center mt-8">
+        <v-card-subtitle class="px-0">
+          _________________________________</v-card-subtitle
+        >
+        <v-card-text class="text-center">OR</v-card-text>
+        <v-card-subtitle>_________________________________</v-card-subtitle>
+      </v-sheet>
+
+      <v-form v-model="isForm" class="mt-8">
         <v-text-field
           v-model="username"
           label="Username"
           :rules="[rules.required]"
           variant="outlined"
           density="compact"
-          class="ml-3 mt-8"
-         
+          class="ml-3"
         >
         </v-text-field>
-   
+
         <v-text-field
           v-model="password"
-           label="password"
+          label="password"
           density="compact"
           :rules="[rules.required]"
-          class="ml-3 my-4"
+          class="ml-3 mt-5 "
           :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
           variant="outlined"
           :type="show1 ? 'text' : 'password'"
@@ -41,15 +74,19 @@
         <v-card-text class="text-red py-0" v-if="errMsg"
           >* Data Doesn't Match</v-card-text
         >
-        <v-row class="d-flex ">
-          <v-col class="d-flex" cols="6">
-            <v-checkbox></v-checkbox>
-            <v-card-text class="ml-0 pl-0">Remember me</v-card-text>
-          </v-col>
-          <v-col class="text-end" cols="6">
-            <v-card-text class="text-primary">Forgot Password?</v-card-text>
-          </v-col>
-        </v-row>
+        <!-- <v-sheet>
+          <v-row class="d-flex "> -->
+            <!-- <v-col class="d-flexpx-0 py-0" cols="6">
+              <v-checkbox ></v-checkbox>
+              <v-card-text class="ml-0 ">Remember me</v-card-text>
+            </v-col> -->
+            <!-- <v-col class="text-end px-0 pt-0" cols="12"> -->
+            <!-- </v-col>
+          </v-row>
+        </v-sheet> -->
+        <v-card-text class="text-primary text-end px-0 py-0 mb-4">Forgot Password?</v-card-text>
+
+
         <v-btn
           :disabled="!isForm"
           @click="handleLogin"
@@ -142,3 +179,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.btn-class {
+  font-weight: 900 !important;
+}
+</style>
