@@ -5,61 +5,61 @@
         <v-navigation-drawer
           v-model="drawer"
           :rail="rail"
-          rail-width="75"
+          rail-width="80"
           permanent
           @mouseenter="rail = false"
           @mouseleave="rail = true"
         >
-        <v-card rounded="0" height="100vh" class=" navigation-drawer flex">
-          <v-list>
-            <v-list-item class="text-white">
-              <template #prepend>
-                <v-icon color="white" style="font-size: 28px; opacity: 1"
-                  >mdi-cube-outline
-                </v-icon>
-              </template>
-              <v-list-item-title class="font-weight-bold"
-                >BLUE 3D
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
+          <v-card rounded="0" height="100vh" class="navigation-drawer flex">
+            <v-list class="mt-4">
+              <v-list-item class="text-white">
+                <template #prepend>
+                  <v-icon color="white" style="font-size: 28px; opacity: 1"
+                    >mdi-cube-outline
+                  </v-icon>
+                </template>
+                <v-list-item-title class="font-weight-bold"
+                  >BLUE 3D
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
 
-          <v-list>
-            <v-list-item
-              v-for="(icon, i) in displaySidebarData"
-              :key="i"
-              class="text-white mb-2"
-              :class="{ 'active-sidebar-item': activeItem === icon.text }"
-              @click="setActiveItem(icon.text)"
-            >
-              <template #prepend>
-                <v-icon style="font-size: 28px; opacity: 1" color="white">{{
-                  icon.icon
-                }}</v-icon>
-              </template>
-              <v-list-item-title>{{ icon.text }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-          <v-list>
-            <v-list-item
-              class="text-white mb-2"
-              v-for="(icon, i) in downListItems"
-              :key="i"
-              :class="{ 'active-sidebar-item': activeItem === icon.text }"
-              @click="setActiveItem(icon.text)"
-            >
-              <template #prepend>
-                <v-icon style="font-size: 28px; opacity: 1" color="white">{{
-                  icon.icon
-                }}</v-icon>
-              </template>
-              <v-list-item-title>{{ icon.text }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-          
+            <v-list>
+              <v-list-item
+                v-for="(icon, i) in displaySidebarData"
+                :key="i"
+                class="text-white mb-2"
+                :class="{ 'active-sidebar-item': activeItem === icon.text }"
+                @click="setActiveItem(icon.text)"
+              >
+                <template #prepend>
+                  <v-icon style="font-size: 24px; opacity: 1" color="white">{{
+                    icon.icon
+                  }}</v-icon>
+                </template>
+                <v-list-item-title>{{ icon.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+            <v-list>
+              <v-list-item
+                class="text-white mb-2"
+                v-for="(icon, i) in downListItems"
+                :key="i"
+                :class="{ 'active-sidebar-item': activeItem === icon.text }"
+                @click="setActiveItem(icon.text)"
+              >
+                <template #prepend>
+                  <v-icon style="font-size: 24px; opacity: 1" color="white">{{
+                    icon.icon
+                  }}</v-icon>
+                </template>
+                <v-list-item-title>{{ icon.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
         </v-navigation-drawer>
         <v-main>
+          
           <router-view />
         </v-main>
       </v-layout>
@@ -144,6 +144,13 @@ export default {
 }
 .active-sidebar-item {
   border-left: 4px solid #ffffff;
+
+}
+.flex {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
 }
 .flex{
   display: flex;

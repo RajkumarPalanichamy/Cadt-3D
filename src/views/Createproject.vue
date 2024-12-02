@@ -32,7 +32,7 @@
       </v-btn>
     </v-toolbar>
     <v-card
-      class="d-flex"
+      class="d-flex bg-red"
       @dragover.prevent="onDragOver"
       @drop="onDrop"
       style="cursor: pointer"
