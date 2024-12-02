@@ -74,7 +74,6 @@
               draggable="true"
 
               class="hover"
-              :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
             ></v-img>
           </v-sheet>
           <v-sheet class="text-center"> {{ model.modelType }}</v-sheet>
@@ -120,7 +119,6 @@
 <script>
 import axios from "axios";
 import studio3dThreeScene from "@/Three/studio3d.js";
-import axios from "axios";
 export default {
   name: "cadt3d-container",
   data() {
@@ -221,10 +219,9 @@ export default {
     },
 
     onDragOver(event) {
+
       event.preventDefault();
       this.isSidebarCliked = false;
-
-      // Calculate mouse position
       const mouse = {
         x: (event.clientX / event.target.clientWidth) * 2 - 1,
         y: -(event.clientY / event.target.clientHeight) * 2 + 1,
@@ -238,6 +235,7 @@ export default {
     },
 
     onDrop(event) {
+
       const droppedText = event.dataTransfer.getData("text/plain");
       console.log("Dropped Model:", droppedText);
 
