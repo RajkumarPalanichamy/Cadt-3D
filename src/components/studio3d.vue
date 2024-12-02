@@ -75,7 +75,6 @@
 
               :src="model.FurnituresImagesArraywithGltf[0].furnitureImage"
               draggable="true"
-
               class="hover"
             ></v-img>
           </v-sheet>
@@ -120,7 +119,6 @@
   </v-container>
 </template>
 <script>
-import axios from "axios";
 import studio3dThreeScene from "@/Three/studio3d.js";
 export default {
   name: "cadt3d-container",
