@@ -202,8 +202,9 @@
                   style="cursor: grab"
                 >
                   <v-img
-                    draggable="true"
-                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage" />
+                    draggable="false"
+                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage">
+                  </v-img>
                   <v-card-text class="text-center">{{
                     model.FurnituresImagesArraywithGltf[0].furnitureName
                   }}</v-card-text>
