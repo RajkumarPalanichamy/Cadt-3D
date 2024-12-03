@@ -1,19 +1,50 @@
 <template>
-  <v-container class="py-0 px-4" :fluid="true">
+  <v-container class="py-0 px-0 pl-5" :fluid="true">
     <!-- Search Bar -->
-      <v-text-field
+    <v-sheet class="d-flex mt-5 px-16">
+            <v-sheet width="70%">
+              <v-text-field
+                v-model="searchedValue"
+                @input="searchSavedModels"
+                variant="outlined"
+                label="Search My Projects"
+                density="compact"
+                prepend-inner-icon="mdi-magnify"
+                clearable
+                class="mr-16"
+                style="height: 90px"
+              >
+              </v-text-field>
+            </v-sheet>
+            <v-sheet width="30%">
+              <v-btn
+                class="linear-gradient text-white elevation-5"
+                prepend-icon="mdi-plus"
+                variant="none"
+                block
+                @click="createProject"
+                size="x-large"
+              >
+                Create Project</v-btn
+              >
+            </v-sheet>
+          </v-sheet>
+
+    <!-- <v-text-field
         v-model="searchedValue"
         @input="searchSavedModels"
         variant="outlined"
-        placeholder="Search Your Projects"
+        label="Search Your Projects"
         density="compact"
         prepend-inner-icon="mdi-magnify"
         clearable
-        class="mt-6 "
+        class="mt-6 mx-2"
+        rounded
       >
-      </v-text-field>
+      </v-text-field> -->
     <!-- No data found message -->
     <v-card
+     
       flat
       class="d-flex flex-column align-center justify-center mt-16"
       v-if="!isShow && filteredModels.length === 0"
@@ -21,7 +52,7 @@
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
       <v-card-title>No Project found</v-card-title>
     </v-card>
-
+      <v-card-title class="ml-10">My Projects</v-card-title>
     <v-overlay
       v-model="isProjectLoad"
       persistent
@@ -33,16 +64,16 @@
     </v-overlay>
     <!-- Displaying Cards -->
     <v-card
-      height="100vh"
-      class="grid-project px-2 py-2 pb-16  savedprojects overflow"
+      height="78vh"
+      class="grid-project px-2 py-2 mx-2 savedprojects overflow"
       flat
     >
-      <v-card
+      <!-- <v-card
         v-if="isShow"
         @click="createProject()"
         style="border-radius: 8px"
-          width="250px"
-        height="230px"
+        width="270px"
+        height="270px"
         class="hoverCard d-flex flex-column align-center pt-16 blur"
       >
         <v-icon style="font-size: 2.5em">mdi-plus</v-icon>
@@ -51,29 +82,36 @@
           style="letter-spacing: 2px !important"
           >Create Project</v-card-text
         >
-      </v-card>
+      </v-card> -->
       <v-card
-        class="px-3 py-3 blur "
+        class="px-3 py-3 blur"
         style="border-radius: 8px"
         v-for="(model, index) in filteredModels"
-        width="250px"
-        height="230px"
+        width="270px"
+        height="270px"
         :key="index"
       >
-        <v-container class=" px-0 py-0" height="65%" > 
-          <v-img src="/public/images/model_display.jpg" cover style="border-radius: 10px;">  </v-img>
+        <v-container class="px-0 py-0" height="65%">
+          <v-img
+            src="/public/images/model_display.jpg"
+            cover
+            style="border-radius: 10px"
+          >
+          </v-img>
         </v-container>
         <v-row class="pt-3 d-flex align-center justify-center">
           <v-col cols="10" class="text-subtitle-2">
-            <v-card-text class="py-0 px-0 text-subtitle-1 text-capitalize " style="font-weight: 550 !important;">{{
-              model.projectName
-            }}</v-card-text>
+            <v-card-text
+              class="py-0 px-0 text-subtitle-1 text-capitalize"
+              style="font-weight: 550 !important"
+              >{{ model.projectName }}</v-card-text
+            >
           </v-col>
           <v-col cols="2">
             <!-- v-menu for menu list on dots icon hover -->
             <v-menu transition="scale-transition" offset-y open-on-hover>
               <template v-slot:activator="{ props }">
-                <v-icon v-bind="props"  style="cursor: pointer"
+                <v-icon v-bind="props" style="cursor: pointer"
                   >mdi-dots-vertical</v-icon
                 >
               </template>
@@ -92,7 +130,9 @@
             </v-menu>
           </v-col>
         </v-row>
-        <v-card-subtitle class="px-0 mt-2 font-weight-medium"> {{ model.createdAt }}</v-card-subtitle>
+        <v-card-subtitle class="px-0 mt-2 font-weight-medium">
+          {{ model.createdAt }}</v-card-subtitle
+        >
       </v-card>
     </v-card>
     <!-- Snack Bar -->
@@ -256,11 +296,12 @@ export default {
 .grid-project {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
+  justify-items: center;
+  row-gap: 50px;
 }
 .overflow {
-  overflow-y: scroll;
-  scrollbar-width: thin;
+  overflow: scroll;
+  /* scrollbar-width: thin; */
   scrollbar-color: rgb(206, 206, 206) white;
 }
 
@@ -278,6 +319,9 @@ export default {
   text-transform: capitalize;
 }
 .blur {
-  box-shadow: 0px 4px 10px 0px rgba(218, 218, 218, 0.989);
+  box-shadow: 0px 0px 30px 10px rgba(218, 218, 218, 0.3);
+}
+.linear-gradient {
+  background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
 </style>

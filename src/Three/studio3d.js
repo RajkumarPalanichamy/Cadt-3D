@@ -3,6 +3,7 @@ import TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tw
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 export default class studio3dThreeScene {
     constructor(container) {
       this.container = container;
@@ -41,7 +42,7 @@ export default class studio3dThreeScene {
       const light = new THREE.AmbientLight("white"); 
       this.scene.add(light);
 
-      const directionalLight = new THREE.DirectionalLight( 'white', 1 );
+      const directionalLight = new THREE.DirectionalLight( 'white', 2 );
       directionalLight.castShadow=true
       this.scene.add( directionalLight )
 
@@ -55,22 +56,24 @@ export default class studio3dThreeScene {
       this.controls.autoRotateSpeed  =0.5
       this.controls.enableDamping=true
       this.camera.position.set(0, 15, 35);
-  
-      this.dragControls = new DragControls( this.gltfArray, this.camera, this.renderer.domElement );
 
+ 
+      this.dragControls = new DragControls(  this.gltfArray, this.camera, this.renderer.domElement );
+      // this.dragControls.transformGroup = true;
       this.dragControls.addEventListener('dragstart', (event) => {
         event.object.material.emissive.set(0xaaaaaa);
         this.controls.enabled = false;
-    
         event.object.userData.lastValidPosition = event.object.position.clone();
-    
         this.roomBox = new THREE.Box3().setFromObject(this.group); 
         this.modelBox = new THREE.Box3().setFromObject(event.object); 
+
     });
     
     this.dragControls.addEventListener('drag', (event) => {
+      // this.dragControls.transformGroup = false;
+
         this.modelBox.setFromObject(event.object);
-    
+
         if (!this.roomBox.containsBox(this.modelBox)) {
             event.object.position.copy(event.object.userData.lastValidPosition); 
             event.object.material.emissive.set(0xff0000); 
@@ -78,11 +81,17 @@ export default class studio3dThreeScene {
             event.object.userData.lastValidPosition.copy(event.object.position);
             event.object.material.emissive.set(0xaaaaaa); 
         }
+        // this.dragControls.transformGroup = true;
+
     });
     
     this.dragControls.addEventListener('dragend', (event) => {
+      // this.dragControls.transformGroup = false;
+
         event.object.material.emissive.set(0x000000);
         this.controls.enabled = true;
+        // this.dragControls.transformGroup = true;
+
     });
     
       window.addEventListener("resize", () => {
@@ -91,10 +100,12 @@ export default class studio3dThreeScene {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
-      //for loading new models in scene
+
 
       let placeholder;
+      let angleX;
       window.addEventListener("model-drag-start", (event) => {
+        this.camera.position.set(0,10,0)
         const { droppedText, mouse } = event.detail;
       
         const loader = new GLTFLoader();
@@ -143,73 +154,134 @@ export default class studio3dThreeScene {
       
       window.addEventListener("model-drag-move", (event) => {
         const { mouse } = event.detail;
-      
+        const dampingFactor = 1.2;
+    
         if (placeholder) {
+            if (!placeholder.userData.lastValidPosition) {
+                if (!this.roomBox || this.group.needsUpdate) {
+                    this.roomBox = new THREE.Box3().setFromObject(this.group);
+                }
+                this.roomBox.clampPoint(placeholder.position, placeholder.position);
+                placeholder.userData.lastValidPosition = placeholder.position.clone();
+            }
+    
+            this.raycaster.setFromCamera(mouse, this.camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const intersectPoint = new THREE.Vector3();
+    
+            if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+                placeholder.position.set(intersectPoint.x, intersectPoint.y - 2.5, intersectPoint.z);
+                this.roomBox.clampPoint(placeholder.position, placeholder.position); 
+                const placeholderBox = new THREE.Box3().setFromObject(placeholder);
+                let isIntersectingWall = false;
+    
+                this.cubes.forEach((wall) => {
+                    if (wall && wall.geometry) {
+                        const wallBox = new THREE.Box3().setFromObject(wall);
+                        if (wallBox.intersectsBox(placeholderBox)) {
+                            isIntersectingWall = true;
+                        }
+                    }
+                });
+                if (isIntersectingWall) {
+                  console.log('(placeholder.position',placeholder.position);
 
-          this.raycaster.setFromCamera(mouse, this.camera);
-          const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-          const intersectPoint = new THREE.Vector3();
-          if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
-            placeholder.position.set(intersectPoint.x,intersectPoint.y-2,intersectPoint.z);
-           }
+                  if(placeholder.position.z > placeholder.position.x){
+                    angleX = Math.abs(placeholder.position.z) > Math.abs(placeholder.position.x) ? -Math.PI / 2 : -Math.PI;
+                    placeholder.rotation.set(0, angleX, 0); 
+                    console.log('if');
+
+                  }
+                  else{
+                    angleX = Math.abs(placeholder.position.z) > Math.abs(placeholder.position.x) ? Math.PI / 2 : 0;
+                    placeholder.rotation.set(0, angleX, 0); 
+                         console.log('dd');
+                         
+                  }
+                    placeholder.position.lerp(placeholder.userData.lastValidPosition, dampingFactor);
+                    if (this.placeholderBoxHelper) {
+                        this.placeholderBoxHelper.material.color.set(0xff0000); 
+                    }
+                } else {
+                    placeholder.userData.lastValidPosition.copy(placeholder.position);
+                    this.roomBox.clampPoint(placeholder.position, placeholder.position); 
+    
+                    if (this.placeholderBoxHelper) {
+                        this.scene.remove(this.placeholderBoxHelper);
+                    }
+                    this.placeholderBoxHelper = new THREE.Box3Helper(placeholderBox, 0x00ff00);
+                    this.scene.add(this.placeholderBoxHelper);
+                }
+            }
         }
-      });
-      
-      window.addEventListener("model-drop", (event) => {
-        const { droppedText, mouse } = event.detail;
-      
-        if (placeholder) {
+    });
+    
+    
+    window.addEventListener("model-drop", (event) => {
+      this.scene.remove(this.placeholderBoxHelper);
+      const { droppedText, mouse } = event.detail;
+  
+      let finalPosition = null;
+      if (placeholder) {
+          finalPosition = placeholder.position.clone(); 
           this.scene.remove(placeholder);
           placeholder = null;
-        }
-      
-        const loader = new GLTFLoader();
-        loader.load(
+      }
+  
+      const loader = new GLTFLoader();
+      loader.load(
           droppedText,
           (gltf) => {
-            this.gltfbox = new THREE.Box3().setFromObject(gltf.scene);
-            this.size = new THREE.Vector3();
-            this.center = new THREE.Vector3();
-            this.gltfbox.getSize(this.size);
-            this.gltfbox.getCenter(this.center);
+              this.gltfbox = new THREE.Box3().setFromObject(gltf.scene);
+              this.size = new THREE.Vector3();
+              this.center = new THREE.Vector3();
+              this.gltfbox.getSize(this.size);
+              this.gltfbox.getCenter(this.center);
+  
+              let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
+              gltf.scene.scale.setScalar(1 / (maxSize / 4));
+  
+              const model = gltf.scene;
+              model.rotation.set(0, angleX, 0); 
 
-            let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
-            gltf.scene.scale.setScalar(1 / (maxSize / 4));
-      
-            const model = gltf.scene;
-      
-            this.raycaster.setFromCamera(mouse, this.camera);
-            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 2);
-            const intersectPoint = new THREE.Vector3();
-            if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
-              // model.position.copy(intersectPoint);
-              const adjustedBox = new THREE.Box3().setFromObject(model);
-              const adjustedSize = new THREE.Vector3();
-              const adjustedCenter = new THREE.Vector3();
-              adjustedBox.getSize(adjustedSize);
-              adjustedBox.getCenter(adjustedCenter);
-          
-              // Position the model so its bottom aligns with the plane
-              const bottomY = adjustedBox.min.y;
-              const offsetY = -bottomY;
-            //offsetY-(-this.groundValue)-1
-            model.position.set(intersectPoint.x, offsetY-3, intersectPoint.z);
-           
-            }
-            
-              this.gltfArray.push(model)
-            this.scene.add(model);
+              this.raycaster.setFromCamera(mouse, this.camera);
+              const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+              const intersectPoint = new THREE.Vector3();
+              if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+                const adjustedBox = new THREE.Box3().setFromObject(model);
+                const bottomY = adjustedBox.min.y;
+                const offsetY = -bottomY;
+
+              if (finalPosition) {
+                  model.position.set(finalPosition.x,offsetY-3,finalPosition.z); // Set model to placeholder's final position
+                  this.roomBox.clampPoint(model.position, model.position); // Clamp within group bounds
+              } else {
+                  model.position.set(intersectPoint.x, offsetY - 3, intersectPoint.z);
+                  this.roomBox.clampPoint(model.position, model.position);
+                  }
+              }
+              this.group3=new THREE.Group()
+              this.group3.add(model)
+              this.gltfArray.push(this.group3);
+
+              this.scene.add(this.group3);
+
+              new TWEEN.Tween(this.camera.position)
+                  .to({ x: -8, y: 5, z: 10 }, 3000)
+                  .easing(TWEEN.Easing.Quadratic.InOut)
+                  .start();
           },
           undefined,
           (error) => {
-            console.error("Error loading GLTF model:", error);
+              console.error("Error loading GLTF model:", error);
           }
-        );
-      });
-
+      );
+  });
+  
       this.animate();
       this.create();
-      // this.gltfLoading()
+      this.gltfLoading()
+
     }
     cube(){
         const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -326,8 +398,8 @@ export default class studio3dThreeScene {
 
             this.localPlane = new THREE.Plane(new THREE.Vector3);
 
-            const material1 = new THREE.MeshStandardMaterial({ color:'#f2f2f4',side: THREE.FrontSide,roughness:0.7});
-            const material2 = new THREE.MeshStandardMaterial({ color:'#f2f2f4', side: THREE.BackSide,roughness:0.7});
+            const material1 = new THREE.MeshStandardMaterial({ color:'#f2f2f4',side: THREE.FrontSide});
+            const material2 = new THREE.MeshStandardMaterial({ color:'#f2f2f4', side: THREE.BackSide});
             const material3 = new THREE.MeshStandardMaterial({ transparent:true,opacity:0});
 
             this.material=[material1,material2,material3]
@@ -335,8 +407,8 @@ export default class studio3dThreeScene {
             this.room = new THREE.Mesh(geometry, this.material);
             const midpoint = new THREE.Vector3().addVectors(point1, point2).divideScalar(2) ;
             this.room.position.copy(midpoint)
-            // this.room.receiveShadow=true
-            // this.room.castShadow=true
+            this.room.receiveShadow=true
+            this.room.castShadow=true
             this.room.lookAt(point2);
             this.room.rotateY(Math.PI/2)
             this.group.add( this.room );
@@ -350,10 +422,15 @@ export default class studio3dThreeScene {
         this.group.scale.y=this.yAxis
         this.group.scale.x=1
         this.scene.add( this.group );
-        
+
 
     }
     gltfLoading() {
+      if(this.model){
+        this.scene.remove(this.group2); 
+        this.group2.clear(); // Remove all children from the group
+  
+      }
       const loader = new GLTFLoader();
     
       loader.load(
@@ -372,14 +449,14 @@ export default class studio3dThreeScene {
           const desiredSize = 5;
           gltf.scene.scale.setScalar(desiredSize / maxSize);
 
+          this.model = gltf.scene;
+      
+         this.model.position.set(-3,-3,-4)
           this.group2 = new THREE.Group();
-          this.gltfObj = gltf.scene;
-    
-          this.group2.add(this.gltfObj)
+          this.group2.add(this.model)
           this.gltfArray.push(this.group2)
           this.scene.add( this.group2);
-    
-          this.box2 = new THREE.Box3().setFromObject(this.group2);
+
         },
         undefined,
         (error) => {
