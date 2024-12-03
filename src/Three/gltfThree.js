@@ -51,6 +51,8 @@ directionalLight.shadow.mapSize.height = 1024;
     this.animate();
   }
   gltf(modelLink) {
+    console.log('modelLink',modelLink);
+    
     this.group = new THREE.Group();
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
