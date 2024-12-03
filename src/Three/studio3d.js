@@ -3,7 +3,8 @@ import TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tw
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
+
 export default class studio3dThreeScene {
     constructor(container) {
       this.container = container;
@@ -59,29 +60,31 @@ export default class studio3dThreeScene {
 
  
       this.dragControls = new DragControls(  this.gltfArray, this.camera, this.renderer.domElement );
-      // this.dragControls.transformGroup = true;
       this.dragControls.addEventListener('dragstart', (event) => {
         event.object.material.emissive.set(0xaaaaaa);
         this.controls.enabled = false;
+        event.object.position.y = 0;
         event.object.userData.lastValidPosition = event.object.position.clone();
         this.roomBox = new THREE.Box3().setFromObject(this.group); 
         this.modelBox = new THREE.Box3().setFromObject(event.object); 
+        // this.dragControls.transformGroup = true;
 
     });
     
     this.dragControls.addEventListener('drag', (event) => {
       // this.dragControls.transformGroup = false;
-
         this.modelBox.setFromObject(event.object);
 
         if (!this.roomBox.containsBox(this.modelBox)) {
-            event.object.position.copy(event.object.userData.lastValidPosition); 
+            event.object.position.copy(event.object.userData.lastValidPosition);
             event.object.material.emissive.set(0xff0000); 
         } else {
             event.object.userData.lastValidPosition.copy(event.object.position);
             event.object.material.emissive.set(0xaaaaaa); 
         }
+        event.object.position.y = 0;
         // this.dragControls.transformGroup = true;
+        
 
     });
     
@@ -90,7 +93,9 @@ export default class studio3dThreeScene {
 
         event.object.material.emissive.set(0x000000);
         this.controls.enabled = true;
-        // this.dragControls.transformGroup = true;
+        event.object.position.y = 0;
+      //   this.dragControls.transformGroup = false;
+
 
     });
     
@@ -195,7 +200,6 @@ export default class studio3dThreeScene {
                   else{
                     angleX = Math.abs(placeholder.position.z) > Math.abs(placeholder.position.x) ? Math.PI / 2 : 0;
                     placeholder.rotation.set(0, angleX, 0); 
-                         console.log('dd');
                          
                   }
                     placeholder.position.lerp(placeholder.userData.lastValidPosition, dampingFactor);
@@ -240,7 +244,6 @@ export default class studio3dThreeScene {
   
               let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
               gltf.scene.scale.setScalar(1 / (maxSize / 4));
-  
               const model = gltf.scene;
               model.rotation.set(0, angleX, 0); 
 
@@ -281,16 +284,35 @@ export default class studio3dThreeScene {
       this.animate();
       this.create();
       this.gltfLoading()
+    // this.cube();
+    }
+    cube() {
+      this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+      console.log(' this.transformControls ', this.transformControls );
+      
+      this.transformControls.setMode('translate');
 
-    }
-    cube(){
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color:'red', side: THREE.FrontSide });
-        const cube = new THREE.Mesh(geometry, material);
-        this.scene.add(cube);
-        this.camera.position.z = 1.5;
-    
-    }
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({ color: 'red', side: THREE.FrontSide });
+      const cube = new THREE.Mesh(geometry, material);
+      this.scene.add(cube);
+  
+      // Ensure transformControls is initialized
+      console.log(this.transformControls);
+      if (this.transformControls) {
+          this.transformControls.attach(cube);
+          this.transformControls.enabled = true;
+          this.scene.add(this.transformControls);
+          const gizmo = this.transformControls.getHelper();
+          this.scene.add(gizmo);
+      }
+      this.transformControls.addEventListener( 'dragging-changed', function ( event ) {
+
+        this.controls.enabled = ! event.value;
+
+      } );
+  }
+  
     create(wallValues) {
       
       this.scene.remove(this.group); 
@@ -469,6 +491,7 @@ export default class studio3dThreeScene {
     animate() {
         requestAnimationFrame(() => this.animate());
         this.controls.update();
+        // this.transformControls.update();
         TWEEN.update()
         this.render();
       }

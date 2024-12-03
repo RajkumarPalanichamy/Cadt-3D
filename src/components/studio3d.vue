@@ -64,7 +64,7 @@
           flat
           :style="{
             cursor: 'move',
-            backgroundImage: `url(${model.FurnituresImagesArraywithGltf[0].furnitureImage})`,
+            // backgroundImage: `url(${model.FurnituresImagesArraywithGltf[0].furnitureImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }"
@@ -120,6 +120,7 @@
 </template>
 <script>
 import studio3dThreeScene from "@/Three/studio3d.js";
+import axios from "axios";
 export default {
   name: "cadt3d-container",
   data() {
