@@ -10,6 +10,7 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { CSG } from "three-csg-ts";
 import store from "../Store/index.js";
 
 export default class ThreeScene {
@@ -24,34 +25,29 @@ export default class ThreeScene {
     this.mouse = new THREE.Vector2();
     this.intersects = null;
     this.controlPoints = [];
-    this.vertMarkers = [];
     this.bbBoxes = [];
     this.plane = null;
     this.controls = null;
     this.spheres = [];
     this.walls = [];
-    this.hel;
     this.gridSize = 100;
     this.lines = [];
+    this.helper;
     this.textMeshes = [];
     this.tempLine = null;
     this.Dragcontrols = null;
     this.isDrawing = false;
     this.gltf = [];
     this.getImageData = false;
-    this.transformControls;
+    this.wallGeo;
+    this.draggedobjects;
     this.dragObjects = [];
     this.mainArray = [];
     this.modelLoad = [];
     this.globalArray = [];
     this.group;
-    this.model;
-    this.modelBox;
-    this.box;
     this.polygons = [];
     this.polygonGroup;
-    this.initializeDragControls;
-    this.disposeDragControls;
 
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
@@ -60,12 +56,12 @@ export default class ThreeScene {
     this.draggedObject = null;
 
     this.init();
-     this.transformControls = new TransformControls(
-       this.camera,
-       this.renderer.domElement
-     );
-     this.transformControls.setMode("translate");
-     this.scene.add(this.transformControls);
+    this.transformControls = new TransformControls(
+      this.camera,
+      this.renderer.domElement
+    );
+    this.transformControls.setMode("translate");
+    this.scene.add(this.transformControls);
   }
 
   init() {
@@ -90,10 +86,6 @@ export default class ThreeScene {
     this.light = new THREE.AmbientLight(0xffffff);
     this.scene.add(this.light);
 
-    let pointLight = new THREE.DirectionalLight("white", 10);
-    pointLight.position.set(10, 10, 0);
-    this.scene.add(pointLight);
-
     this.mesh();
     this.updateCamera();
     window.addEventListener("resize", () => {
@@ -115,7 +107,7 @@ export default class ThreeScene {
     this.scene.add(sky);
 
     this.renderer.domElement.addEventListener(
-      "mousemove",
+      "click",
       this.selectingProperty.bind(this)
     );
 
@@ -154,12 +146,9 @@ export default class ThreeScene {
             model.position.x = intersectPoint.x;
             model.position.z = intersectPoint.z;
           }
-
+          model.userData.name = "model";
           this.gltf.push(model);
-          // this.bbBoxes.push(model);
           this.scene.add(model);
-        // this.collisionForModels()
-          
         },
         undefined,
         (error) => {
@@ -167,7 +156,7 @@ export default class ThreeScene {
         }
       );
     });
-    
+
     this.animate();
   }
   createListener() {
@@ -221,10 +210,17 @@ export default class ThreeScene {
     if (this.controls) {
       this.controls.dispose();
     }
-    
-
+    this.addCollisionDetection();
     if (this.cam) {
-      this.AddGeometries();
+      this.polygons.forEach((polygonGroup) => {
+        polygonGroup.textMeshes.forEach((textMesh) => {
+          this.scene.add(textMesh);
+        });
+        polygonGroup.spheres.forEach((sphere) => {
+          this.scene.add(sphere);
+        });
+      });
+
       this.scene.background = new THREE.Color("white");
       this.scene.add(this.plane);
       this.objects.push(this.plane);
@@ -251,6 +247,20 @@ export default class ThreeScene {
       this.scene.add(this.gridHelper);
     } else {
       this.RemoveGeometries();
+
+      this.polygons.forEach((polygonGroup) => {
+        polygonGroup.textMeshes.forEach((textMesh) => {
+          this.scene.remove(textMesh);
+          if (textMesh.geometry) textMesh.geometry.dispose();
+          if (textMesh.material) textMesh.material.dispose();
+        });
+        polygonGroup.spheres.forEach((sphere) => {
+          this.scene.remove(sphere);
+          if (sphere.geometry) sphere.geometry.dispose();
+          if (sphere.material) sphere.material.dispose();
+        });
+      });
+
       this.scene.remove(this.gridHelper);
       this.scene.remove(this.plane);
       this.objects.pop(this.plane);
@@ -274,7 +284,6 @@ export default class ThreeScene {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
-
     if (this.camera instanceof THREE.PerspectiveCamera) {
       this.controls.minDistance = 0.2;
       this.controls.maxDistance = 40;
@@ -283,7 +292,6 @@ export default class ThreeScene {
       this.camera.position.set(5, 5, 5);
       this.camera.updateProjectionMatrix();
     } else if (this.camera instanceof THREE.OrthographicCamera) {
-
       this.camera.zoom = 1;
       this.controls.minZoom = 0.2;
       this.controls.maxZoom = 3.0;
@@ -312,17 +320,140 @@ export default class ThreeScene {
     }
   }
 
-  collisionForModels() {
+  // performCSGCut() {
+  //   let draggedGeometry = null;
+
+  //   this.draggedobjects.traverse((child) => {
+  //     if (child.isMesh && !draggedGeometry) {
+  //       draggedGeometry = child.geometry.clone();
+  //     }
+  //   });
+  //   const draggedBox = new THREE.Box3().setFromObject(this.draggedobjects);
+
+  //   const boxSize = new THREE.Vector3();
+  //   draggedBox.getSize(boxSize);
+
+  //   const boxGeometry = new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z);
+
+  //   const boxMesh = new THREE.Mesh(boxGeometry);
+  //   boxMesh.position.copy(this.draggedobjects.position);
+  //   boxMesh.rotation.copy(this.draggedobjects.rotation);
+  //   boxMesh.updateWorldMatrix();
+
+  //   const draggedCSG = CSG.fromGeometry(boxMesh.geometry.clone());
+
+  //   const wallCSG = CSG.fromGeometry(this.wallGeo.geometry.clone());
+
+  //   const cutWallCSG = wallCSG.subtract(draggedCSG);
+  //   // const combinedCSG = cutWallCSG.intersect(draggedCSG);
+
+  //   const combinedMesh = CSG.toMesh(
+  //     cutWallCSG,
+  //     new THREE.Matrix4(),
+  //     this.wallGeo.material
+  //   );
+
+  //   combinedMesh.position.copy(this.wallGeo.position);
+  //   combinedMesh.rotation.copy(this.wallGeo.rotation);
+  //   combinedMesh.scale.copy(this.wallGeo.scale);
+
+  //   this.group.remove(this.wallGeo);
+  //   this.scene.remove(this.wallGeo);
+  //   this.scene.add(combinedMesh);
+
+  //   this.wallGeo = combinedMesh;
+  // }
+  performCSGCut() {
+    // Extract the geometry of the GLTF object in world space
+    let draggedGeometry = null;
+
+    this.draggedobjects.traverse((child) => {
+      if (child.isMesh && !draggedGeometry) {
+        draggedGeometry = child.geometry.clone();
+        draggedGeometry.applyMatrix4(child.matrixWorld); // Convert to world space
+      }
+    });
+
+    const draggedBox = new THREE.Box3().setFromObject(this.draggedobjects);
+
+    const boxSize = new THREE.Vector3();
+    draggedBox.getSize(boxSize);
+
+    const boxGeometry = new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z);
+
+    const boxMesh = new THREE.Mesh(boxGeometry);
+    boxMesh.position.copy(this.draggedobjects.position);
+    boxMesh.rotation.copy(this.draggedobjects.rotation);
+    boxMesh.updateWorldMatrix();
+
+    const draggedCSG = CSG.fromGeometry(boxMesh.geometry.clone());
+
+    const wallCSG = CSG.fromGeometry(this.wallGeo.geometry.clone());
+
+    const cutWallCSG = wallCSG.subtract(draggedCSG);
+
+    const combinedCSG = cutWallCSG.union(draggedGeometry);
+
+    const combinedMesh = CSG.toMesh(
+      combinedCSG,
+      new THREE.Matrix4(),
+      new THREE.MeshNormalMaterial()
+    );
+
+    combinedMesh.position.copy(this.wallGeo.position);
+    combinedMesh.rotation.copy(this.wallGeo.rotation);
+    combinedMesh.scale.copy(this.wallGeo.scale);
+
+    this.scene.remove(this.wallGeo);
+    this.scene.add(combinedMesh);
+    this.wallGeo = combinedMesh;
+  }
+
+  addTransformControlToGlobalArray(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    const raycastTargets = [...this.globalArray, ...this.gltf];
+
+    const intersects = this.raycaster.intersectObjects(raycastTargets, true);
+
+    if (intersects.length > 0) {
+      let intersectedObject = intersects[0].object;
+
+      while (
+        intersectedObject.parent &&
+        !raycastTargets.includes(intersectedObject)
+      ) {
+        intersectedObject = intersectedObject.parent;
+      }
+
+      let box = new THREE.Box3().setFromObject(intersectedObject);
+      let center = new THREE.Vector3();
+      box.getCenter(center);
+
+      this.transformControls.detach();
+      this.transformControls.attach(intersectedObject);
+
+      let gizmo = this.transformControls.getHelper();
+      if (gizmo) {
+        gizmo.position.copy(center);
+        this.scene.add(gizmo);
+      }
+    } else {
+      this.transformControls.detach();
+    }
+  }
+  addCollisionDetection() {
     let lastValidPosition = new THREE.Vector3();
+    this.renderer.domElement.addEventListener("click", (event) => {
+      this.addTransformControlToGlobalArray(event);
+    });
+    if (!this.transformControls) return;
 
-  this.renderer.domElement.addEventListener("click", (event) => {
-        this.onMouseMove(event);
-      });
-
-    // this.boundingBoxArray = [];
-    // this.updateBoundingBoxes(this.globalArray, this.boundingBoxArray);
-
-  
     this.transformControls.addEventListener("dragging-changed", (event) => {
       if (event.value) {
         this.controls.enabled = false;
@@ -334,83 +465,69 @@ export default class ThreeScene {
 
     this.transformControls.addEventListener("objectChange", () => {
       const draggedObject = this.transformControls.object;
+      const allObjects = [...this.globalArray, ...this.gltf];
+      let collisionWithObjects;
+      let collisionWithWalls;
 
-      const collisionWithWalls = this.checkGroupCollisionWithWalls(
-        draggedObject,
-        this.bbBoxes
-      );
-      // const collisionWithGlobalArray =
-      //   this.checkGroupCollisionWithGlobalObjects(
-      //     draggedObject,
-      //     this.globalArray,
-      //     this.boundingBoxArray
-      //   );
+      if ((draggedObject.userData.name = "model")) {
+        collisionWithWalls = this.checkCollisionWithWalls(
+          draggedObject,
+          this.bbBoxes
+        );
+      } else {
+        collisionWithObjects = this.checkCollisionWithObjects(
+          draggedObject,
+          allObjects
+        );
+      }
 
-      if (collisionWithWalls || collisionWithGlobalArray) {
+      if (collisionWithWalls || collisionWithObjects) {
+        // this.draggedobjects.position = lastValidPosition;
+        this.performCSGCut();
         draggedObject.position.copy(lastValidPosition);
       } else {
         lastValidPosition.copy(draggedObject.position);
       }
     });
   }
-
-  onMouseMove(event, lastValidPosition) {
-    console.log(event);
-    const rect = this.renderer.domElement.getBoundingClientRect();
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    this.raycaster.setFromCamera(this.mouse, this.camera);
-
-    const intersects = this.raycaster.intersectObjects(this.scene.children, true);
-
-    if (intersects.length > 0) {
-      const intersectedObject = intersects[0].object;
-      console.log(intersectedObject);
-      
-  
-
-      if (this.transformControls.object !== intersectedObject) {
-          	this.transformControls.attach(intersectedObject);
-            const gizmo = this.transformControls.getHelper();
-            this.scene.add(gizmo);
-      }
-    } else {
-      this.transformControls.detach();
+  checkCollisionWithWalls(object, walls) {
+    if (this.helper) {
+      this.scene.remove(this.helper);
     }
-  }
 
-  updateBoundingBoxes(globalArray, boundingBoxArray) {
-    globalArray.forEach((group, index) => {
-      const box = new THREE.Box3().setFromObject(group);
-      boundingBoxArray[index] = box;
-    });
-  }
+    const objectBox = new THREE.Box3().setFromObject(object);
+    this.helper = new THREE.Box3Helper(objectBox);
+    this.scene.add(this.helper);
 
-  checkGroupCollisionWithWalls(draggedGroup, boundingWalls) {
-    const draggedBox = new THREE.Box3().setFromObject(draggedGroup);
+    let collidedWall = null;
 
-    let boundingWallsBox = new THREE.Box3();
-    boundingWalls.forEach((wall) => {
+    for (const wall of walls) {
       const wallBox = new THREE.Box3().setFromObject(wall);
-      boundingWallsBox.union(wallBox);
-    });
 
-    return !boundingWallsBox.containsBox(draggedBox);
+      if (objectBox.intersectsBox(wallBox)) {
+        collidedWall = wall;
+        break;
+      }
+    }
+
+    if (collidedWall) {
+      this.wallGeo = collidedWall;
+      this.draggedobjects = object;
+      return true;
+    }
+
+    return false;
   }
 
-  checkGroupCollisionWithGlobalObjects(
-    draggedGroup,
-    globalArray,
-    boundingBoxArray
-  ) {
-    const draggedBox = new THREE.Box3().setFromObject(draggedGroup);
+  checkCollisionWithObjects(draggedObject, allObjects) {
+    const draggedBox = new THREE.Box3().setFromObject(draggedObject);
+    this.draggedobjects = draggedObject;
+    for (const otherObject of allObjects) {
+      if (otherObject === draggedObject) continue;
 
-    for (let i = 0; i < globalArray.length; i++) {
-      const otherGroup = globalArray[i];
-      if (otherGroup === draggedGroup) continue;
+      const otherBox = new THREE.Box3().setFromObject(otherObject);
+      this.wallGeo = otherObject;
 
-      const otherBox = boundingBoxArray[i];
       const expandedBox = otherBox.clone().expandByScalar(0.001);
 
       if (draggedBox.intersectsBox(expandedBox)) {
@@ -438,23 +555,85 @@ export default class ThreeScene {
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    this.intersects = this.raycaster.intersectObjects(this.walls);
+    this.intersectObject = [];
 
-    if (this.intersects.length > 0) {
-      if (this.INTERSECTED) {
-        this.INTERSECTED.material[2] = this.INTERSECTED.material[2];
-      }
-      this.INTERSECTED = this.intersects[0].object;
-      this.INTERSECTED.material[2] = new THREE.MeshBasicMaterial({
-        color: "green",
+    this.polygons.forEach((polygonGroup) => {
+      polygonGroup.walls.forEach((wall) => {
+        this.intersectObject.push(wall);
       });
-    } else {
+    });
+
+    this.intersects = this.raycaster.intersectObjects(this.intersectObject);
+    if (this.intersects.length > 0) {
+      this.INTERSECTED = this.intersects[0].object;
       if (this.INTERSECTED) {
+        store.commit("wall", e);
+
+        this.INTERSECTED.material[2] = new THREE.MeshBasicMaterial({
+          color: "green",
+        });
+      } else {
         this.INTERSECTED.material[2] = new THREE.MeshLambertMaterial({
           color: 0x3b3b3b,
         });
       }
     }
+  }
+  AddTextureForOudoor(texture) {
+    let textures = new THREE.TextureLoader().load(texture);
+    if (this.intersects.length > 0) {
+      console.log(texture);
+
+      this.INTERSECTED = this.intersects[0].object;
+
+      this.INTERSECTED.material[4] = new THREE.MeshLambertMaterial({
+        map: textures,
+      });
+      console.log(this.INTERSECTED.material);
+    }
+  }
+  AddVertices() {
+    if (this.intersects.length > 0) {
+      this.INTERSECTED = this.intersects[0].object;
+      let point = this.intersects[0].point.clone();
+      let cp = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 20, 20),
+        new THREE.MeshBasicMaterial({
+          color: "blue",
+          transparent: true,
+          opacity: 0.3,
+        })
+      );
+      cp.position.copy(point);
+      this.scene.add(cp);
+      this.polygons.forEach((polygonGroup) => {
+        polygonGroup.spheres.push(cp);
+      });
+    }
+  }
+  removeTheWall() {
+    if (this.intersects.length > 0) {
+      this.INTERSECTED = this.intersects[0].object;
+      this.group.remove(this.INTERSECTED);
+    }
+  }
+
+  AddTextureForIndoor(texture) {
+    let textures = new THREE.TextureLoader().load(texture);
+    if (this.intersects.length > 0) {
+      this.INTERSECTED = this.intersects[0].object;
+      this.INTERSECTED.material[5] = new THREE.MeshLambertMaterial({
+        map: textures,
+      });
+    }
+  }
+  ApplyFeatures(dimension) {
+    this.INTERSECTED.geometry = new THREE.BoxGeometry(
+      dimension.width,
+      dimension.height,
+      dimension.thickness
+    );
+    this.INTERSECTED.geometry.rotateY(Math.PI / 2);
   }
 
   meshSelect(e) {
@@ -495,7 +674,6 @@ export default class ThreeScene {
       this.updateMeasurementLabels();
     }
   }
-
   onMouseDown(e) {
     if (!this.isDrawing) return;
 
@@ -503,6 +681,7 @@ export default class ThreeScene {
 
     if (this.intersects.length > 0) {
       let point = this.intersects[0].point.clone();
+
       if (
         this.controlPoints.length > 0 &&
         point.distanceTo(this.controlPoints[0]) < 1
@@ -510,7 +689,7 @@ export default class ThreeScene {
         point.copy(this.controlPoints[0]);
         this.controlPoints.push(point);
         this.addControlPoint(point);
-        this.addLine(this.controlPoints[this.controlPoints.length - 2], point);
+        this.addArc(this.controlPoints[this.controlPoints.length - 2], point);
         this.finalizePolygon();
         this.stopDrawing();
         this.getImageData = true;
@@ -518,15 +697,41 @@ export default class ThreeScene {
         this.controlPoints.push(point);
         this.addControlPoint(point);
         if (this.controlPoints.length > 1) {
-          this.addLine(
-            this.controlPoints[this.controlPoints.length - 2],
-            point
-          );
+          this.addArc(this.controlPoints[this.controlPoints.length - 2], point);
         }
       }
     }
   }
 
+  addArc(startPoint, endPoint) {
+    const midpoint = new THREE.Vector3()
+      .addVectors(startPoint, endPoint)
+      .multiplyScalar(0.5);
+
+    const perpendicular = new THREE.Vector3()
+      .subVectors(endPoint, startPoint)
+      .cross(new THREE.Vector3(0, 1, 0))
+      .normalize()
+      .multiplyScalar(5);
+
+    const arcControlPoint = new THREE.Vector3().addVectors(
+      midpoint,
+      perpendicular
+    );
+
+    const curve = new THREE.QuadraticBezierCurve3(
+      startPoint,
+      arcControlPoint,
+      endPoint
+    );
+    const points = curve.getPoints(50);
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    const arcLine = new THREE.Line(geometry, material);
+
+    this.scene.add(arcLine);
+  }
   findNearestPoint(currentPoint, threshold) {
     for (let i = 0; i < this.controlPoints.length; i++) {
       if (currentPoint.distanceTo(this.controlPoints[i]) < threshold) {
@@ -537,19 +742,11 @@ export default class ThreeScene {
   }
   mouseover(e) {
     this.raycastDefined(e);
-    this.disableDragControls();
-    // this.disposeDragControls();
 
     if (this.intersects.length > 0) {
       if (!this.dragcontrols) {
         this.setupDragControls();
       }
-    }
-  }
-
-  disableDragControls() {
-    if (this.dragControls) {
-      this.dragControls.enabled = false;
     }
   }
 
@@ -711,6 +908,12 @@ export default class ThreeScene {
       if (textMesh.material) textMesh.material.dispose();
     });
 
+    polygonGroup.textMeshes.forEach((textMesh) => {
+      this.scene.remove(textMesh);
+      if (textMesh.geometry) textMesh.geometry.dispose();
+      if (textMesh.material) textMesh.material.dispose();
+    });
+
     this.textMeshes = [];
 
     for (let i = 0; i < polygonGroup.controlPoints.length; i++) {
@@ -776,7 +979,7 @@ export default class ThreeScene {
     }
 
     let loader = new THREE.TextureLoader();
-    let texture = loader.load("./images/download.jpg", () => {
+    let texture = loader.load("./images/floor3.jpeg", () => {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(1, 1);
@@ -784,8 +987,7 @@ export default class ThreeScene {
     let geometry = new THREE.ShapeGeometry(shape);
     geometry.rotateX(Math.PI / 2);
     let material = new THREE.MeshBasicMaterial({
-      // map: texture,
-      color: "lightgreen",
+      map: texture,
       side: THREE.DoubleSide,
     });
 
@@ -860,54 +1062,109 @@ export default class ThreeScene {
   }
 
   createNewTemporaryLine(newPoint) {
-    let points = [
-      this.controlPoints[this.controlPoints.length - 1].x,
-      this.controlPoints[this.controlPoints.length - 1].y + 0.5,
-      this.controlPoints[this.controlPoints.length - 1].z,
-      newPoint.x,
-      newPoint.y + 0.5,
-      newPoint.z,
-    ];
+    if (this.controlPoints.length === 0) {
+      console.error("No previous control point to create a line from.");
+      return;
+    }
 
-    let geometry = new LineGeometry();
-    geometry.setPositions(points);
+    const startPoint = this.controlPoints[this.controlPoints.length - 1];
 
-    let material = new LineMaterial({
-      color: "blue",
-      transparent: true,
-      opacity: 0.5,
-      linewidth: 10,
-      resolution: new THREE.Vector2(this.width, this.height),
-    });
+    const midpoint = new THREE.Vector3()
+      .addVectors(startPoint, newPoint)
+      .multiplyScalar(0.5);
 
-    this.tempLine = new Line2(geometry, material);
-    this.tempLine.computeLineDistances();
-    this.scene.add(this.tempLine);
+    const perpendicular = new THREE.Vector3()
+      .subVectors(newPoint, startPoint)
+      .cross(new THREE.Vector3(0, 1, 0))
+      .normalize()
+      .multiplyScalar(5);
 
-    this.addMeasurementLabel(
-      this.controlPoints[this.controlPoints.length - 1],
+    const arcControlPoint = new THREE.Vector3().addVectors(
+      midpoint,
+      perpendicular
+    );
+
+    const curve = new THREE.QuadraticBezierCurve3(
+      startPoint,
+      arcControlPoint,
       newPoint
     );
+
+    const points = curve.getPoints(50);
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+
+    this.tempLine = new THREE.Line(geometry, material);
+    this.scene.add(this.tempLine);
+
+    this.addMeasurementLabel(startPoint, newPoint);
+
+    // let points = [
+    //   this.controlPoints[this.controlPoints.length - 1].x,
+    //   this.controlPoints[this.controlPoints.length - 1].y + 0.5,
+    //   this.controlPoints[this.controlPoints.length - 1].z,
+    //   newPoint.x,
+    //   newPoint.y + 0.5,
+    //   newPoint.z,
+    // ];
+
+    // let geometry = new LineGeometry();
+    // geometry.setPositions(points);
+
+    // let material = new LineMaterial({
+    //   color: "blue",
+    //   transparent: true,
+    //   opacity: 0.5,
+    //   linewidth: 10,
+    //   resolution: new THREE.Vector2(this.width, this.height),
+    // });
+
+    // this.tempLine = new Line2(geometry, material);
+    // this.tempLine.computeLineDistances();
+    // this.scene.add(this.tempLine);
+
+    // this.addMeasurementLabel(
+    //   this.controlPoints[this.controlPoints.length - 1],
+    //   newPoint
+    // );
   }
 
   updateExistingTemporaryLine(newPoint) {
-    let points = [
-      this.controlPoints[this.controlPoints.length - 1].x,
-      this.controlPoints[this.controlPoints.length - 1].y + 0.5,
-      this.controlPoints[this.controlPoints.length - 1].z,
-      newPoint.x,
-      newPoint.y + 0.5,
-      newPoint.z,
-    ];
+    if (!this.tempLine) {
+      console.error("No temporary line to update.");
+      return;
+    }
 
-    this.tempLine.geometry.setPositions(points);
+    const startPoint = this.controlPoints[this.controlPoints.length - 1];
 
-    this.tempLine.geometry.attributes.position.needsUpdate = true;
+    const midpoint = new THREE.Vector3()
+      .addVectors(startPoint, newPoint)
+      .multiplyScalar(0.5);
 
-    this.addMeasurementLabel(
-      this.controlPoints[this.controlPoints.length - 1],
+    const perpendicular = new THREE.Vector3()
+      .subVectors(newPoint, startPoint)
+      .cross(new THREE.Vector3(0, 1, 0))
+      .normalize()
+      .multiplyScalar(5);
+    const arcControlPoint = new THREE.Vector3().addVectors(
+      midpoint,
+      perpendicular
+    );
+
+    const curve = new THREE.QuadraticBezierCurve3(
+      startPoint,
+      arcControlPoint,
       newPoint
     );
+
+    const points = curve.getPoints(50);
+
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+    this.tempLine.geometry.dispose();
+    this.tempLine.geometry = geometry;
+
+    this.addMeasurementLabel(startPoint, newPoint);
   }
   addMeasurementLabel(point1, point2) {
     let distance = point1.distanceTo(point2).toFixed(2);
@@ -937,6 +1194,51 @@ export default class ThreeScene {
     );
   }
 
+  // addLine(point1, point2) {
+  //   // Calculate the midpoint for the arc
+  //   const midpoint = new THREE.Vector3()
+  //     .addVectors(point1, point2)
+  //     .multiplyScalar(0.5);
+
+  //   // Raise the midpoint to form the arc (adjust arc height as needed)
+  //   const arcHeight = 5; // Adjust this value for the arc's curvature
+  //   const normal = new THREE.Vector3(0, 1, 0); // Normal for upward direction
+  //   midpoint.add(normal.multiplyScalar(arcHeight));
+
+  //   // Create a curve using a Quadratic Bezier Curve
+  //   const curve = new THREE.QuadraticBezierCurve3(point1, midpoint, point2);
+
+  //   // Generate points along the curve
+  //   const points = curve.getPoints(50); // Increase points for smoother arcs
+
+  //   // Create geometry and material for the line
+  //   const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  //   const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+  //   geometry.rotateX(-Math.PI / 2);
+
+  //   // Create the arc line
+  //   const arcLine = new THREE.Line(geometry, material);
+
+  //   // Add the arc line to the scene
+  //   this.scene.add(arcLine);
+
+  //   // Optionally, add measurements or labels
+  //   this.addMeasurementLabel(point1, point2);
+
+  //   console.log("Arc line added between points:", point1, point2);
+  // }
+
+  updateMeasurementLabels() {
+    this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
+    this.textMeshes = [];
+
+    for (let i = 0; i < this.controlPoints.length - 1; i++) {
+      this.addMeasurementLabel(
+        this.controlPoints[i],
+        this.controlPoints[i + 1]
+      );
+    }
+  }
   addLine(point1, point2) {
     let positions = [];
     positions.push(point1.x, point1.y, point1.z);
@@ -957,18 +1259,125 @@ export default class ThreeScene {
 
     this.addMeasurementLabel(point1, point2);
   }
-  updateMeasurementLabels() {
-    this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
-    this.textMeshes = [];
 
-    for (let i = 0; i < this.controlPoints.length - 1; i++) {
-      this.addMeasurementLabel(
-        this.controlPoints[i],
-        this.controlPoints[i + 1]
-      );
-    }
-  }
+  // threeDimension() {
+  //   let height = 2; // Wall height
+  //   let thickness = 0.15; // Wall thickness
 
+  //   for (let i = 0; i < this.controlPoints.length - 1; i++) {
+  //     let point1 = this.controlPoints[i];
+  //     let point2 = this.controlPoints[i + 1];
+
+  //     // Define a curved path using a quadratic bezier curve
+  //     let curve = new THREE.QuadraticBezierCurve3(
+  //       point1,
+  //       new THREE.Vector3(
+  //         (point1.x + point2.x) / 2,
+  //         (point1.y + point2.y) / 2 + 2, // Adjust midpoint height for the arc
+  //         (point1.z + point2.z) / 2
+  //       ),
+  //       point2
+  //     );
+
+  //     // Get points along the curve for the shape
+  //     let curvePoints = curve.getPoints(50);
+
+  //     // Create a 2D shape representing the cross-section of the wall
+  //     let shape = new THREE.Shape();
+  //     shape.moveTo(-thickness / 2, 0);
+  //     shape.lineTo(thickness / 2, 0);
+  //     shape.lineTo(thickness / 2, height);
+  //     shape.lineTo(-thickness / 2, height);
+  //     shape.closePath();
+
+  //     // Create extrude settings for the curved wall
+  //     let extrudeSettings = {
+  //       steps: 50, // Number of curve subdivisions
+  //       bevelEnabled: false,
+  //       extrudePath: new THREE.CatmullRomCurve3(curvePoints),
+  //     };
+
+  //     // Extrude the shape along the curved path
+  //     let geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+  //     // Material for the wall
+  //     let material = new THREE.MeshLambertMaterial({
+  //       color: 0x3b3b3b,
+  //       transparent: true,
+  //       opacity: 0.8,
+  //     });
+
+  //     // Create the wall mesh
+  //     let wall = new THREE.Mesh(geometry, material);
+
+  //     // Add to the scene
+  //     this.scene.add(wall);
+
+  //     // Track the wall for collision detection and further use
+  //     this.bbBoxes.push(wall);
+  //     this.walls.push(wall);
+
+  //     // Add the wall to the polygon group
+  //     this.polygonGroup.walls.push(wall);
+  //   }
+
+  //   // Remove the temporary line
+  //   if (this.tempLine) {
+  //     this.scene.remove(this.tempLine);
+  //     this.tempLine = null;
+  //   }
+
+  //   this.addLight();
+  // }
+  // threeDimension() {
+  //   if (this.controlPoints.length < 2) {
+  //     console.warn("Not enough control points to create geometry.");
+  //     return;
+  //   }
+
+  //   let height = 2; 
+  //   let thickness = 0.1; 
+
+  //   const curve = new THREE.CatmullRomCurve3(
+  //     this.controlPoints.map((point) => new THREE.Vector3(point.x, 1, point.z)),
+  //     true,
+  //     "centripetal"
+  //   );
+
+  //   const tubeGeometry = new THREE.TubeGeometry(
+  //     curve,
+  //     100,
+  //     thickness,
+  //     8,
+  //     false
+  //   );
+  //   const loader = new THREE.TextureLoader();
+
+  //   const texture = loader.load("./images/images.jpg", () => {
+  //     texture.wrapS = THREE.RepeatWrapping;
+  //     texture.wrapT = THREE.RepeatWrapping;
+  //     texture.repeat.set(1, 1); 
+  //   });
+
+  //   const material = new THREE.MeshLambertMaterial({
+  //     // map: texture,
+  //     color: "white",
+  //     transparent: true,
+  //     opacity: 0.8,
+  //   });
+
+  //   const wall = new THREE.Mesh(tubeGeometry, material);
+  //   wall.castShadow = true;
+  //   wall.receiveShadow = true;
+
+  //   this.scene.add(wall);
+
+  //   this.bbBoxes.push(wall);
+  //   this.walls.push(wall);
+
+  //   this.scene.remove(this.tempLine);
+  //   this.tempLine = null;
+  // }
   threeDimension() {
     let point1 = new THREE.Vector3();
     let point2 = new THREE.Vector3();
@@ -990,16 +1399,21 @@ export default class ThreeScene {
         texture.repeat.set(1, 1);
       });
       let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
-      let material = [
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-        new THREE.MeshLambertMaterial({
-          map: texture,
-        }),
-        new THREE.MeshLambertMaterial({ color: "white" }),
-      ];
+      // let material = [
+      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
+      //   new THREE.MeshLambertMaterial({
+      //     map: texture,
+      //   }),
+      //   new THREE.MeshLambertMaterial({ color: "white" }),
+      // ];
+      let material = new THREE.MeshMatcapMaterial({
+        // color: "white",
+        // transparent: true,
+        // opacity: 0.6,
+      });
       geometry.rotateY(Math.PI / 2);
 
       let wall = new THREE.Mesh(geometry, material);
@@ -1011,24 +1425,29 @@ export default class ThreeScene {
       wall.position.copy(midpoint);
 
       wall.lookAt(point2);
-      this.scene.add(wall);
+      wall.castShadow = true;
+      wall.receiveShadow = true;
+      let box = new THREE.Box3().setFromObject(wall);
       this.bbBoxes.push(wall);
+      this.scene.add(wall);
+
       this.walls.push(wall);
-
-      this.polygonGroup.walls.push(wall);
     }
-
     this.scene.remove(this.tempLine);
-    this.tempLine = null;
 
-    this.addLight();
+    this.tempLine = null;
   }
 
   addLight() {
     let box = new THREE.Box3().setFromObject(this.polygonMesh);
+    let size = new THREE.Vector3();
+    box.getSize(size);
+
     let centre = box.getCenter(new THREE.Vector3());
-    let spotlight = new THREE.PointLight(0xffffff, 10, 4);
+    let spotlight = new THREE.PointLight("white", size.x + size.y + size.z, 4);
     spotlight.position.set(centre.x, centre.y + 1, centre.z);
+    let helper = new THREE.PointLightHelper(spotlight);
+    // this.scene.add(helper);
     this.scene.add(spotlight);
     this.group.add(spotlight);
   }

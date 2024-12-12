@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import Texture from "@/views/Texture.vue";
 import ThreeScene from "../Three/three.js";
 // import Createproject from "@/views/Createproject.vue";
 export default {
@@ -39,7 +40,6 @@ export default {
       this.threeContainer = this.$refs.threeContainer;
       this.threeScene = new ThreeScene(this.threeContainer);
       this.threeScene.predefined();
-      console.log("three", this.threeScene);
     },
     update() {
       this.threeScene.cam = !this.threeScene.cam;
@@ -85,6 +85,23 @@ export default {
         });
       });
       this.threeScene.predefined(array);
+    },
+    indoortextures(material) {
+      this.threeScene.AddTextureForIndoor(material);
+    },
+    outdoortextures(material) {
+      this.threeScene.AddTextureForOudoor(material);
+    },
+    ApplyFeature(dimension) {
+      console.log(dimension);
+      
+      this.threeScene.ApplyFeatures(dimension);
+    },
+    addVertice() {
+       this.threeScene.AddVertices();
+    },
+    remove() {
+      this.threeScene.removeTheWall();
     },
     backHome() {
       // this.$parent.methods.return()
