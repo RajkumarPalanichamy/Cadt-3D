@@ -25,11 +25,15 @@ export default class ThreeScene {
     this.mouse = new THREE.Vector2();
     this.intersects = null;
     this.controlPoints = [];
+
+    this.vertMarkers = [];
+
     this.bbBoxes = [];
     this.plane = null;
     this.controls = null;
     this.spheres = [];
     this.walls = [];
+    this.hel;
     this.gridSize = 100;
     this.lines = [];
     this.helper;
@@ -39,13 +43,21 @@ export default class ThreeScene {
     this.isDrawing = false;
     this.gltf = [];
     this.getImageData = false;
+    this.transformControls;
     this.dragObjects = [];
     this.mainArray = [];
     this.modelLoad = [];
     this.globalArray = [];
     this.group;
+
+    this.model;
+    this.modelBox;
+    this.box;
     this.polygons = [];
     this.polygonGroup;
+    this.initializeDragControls;
+    this.disposeDragControls;
+
 
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
@@ -54,12 +66,14 @@ export default class ThreeScene {
     this.draggedObject = null;
 
     this.init();
-    this.transformControls = new TransformControls(
-      this.camera,
-      this.renderer.domElement
-    );
-    this.transformControls.setMode("translate");
-    this.scene.add(this.transformControls);
+
+     this.transformControls = new TransformControls(
+       this.camera,
+       this.renderer.domElement
+     );
+     this.transformControls.setMode("translate");
+     this.scene.add(this.transformControls);
+
   }
 
   init() {
@@ -83,6 +97,12 @@ export default class ThreeScene {
 
     this.light = new THREE.AmbientLight(0xffffff);
     this.scene.add(this.light);
+
+
+    let pointLight = new THREE.DirectionalLight("white", 10);
+    pointLight.position.set(10, 10, 0);
+    this.scene.add(pointLight);
+
 
     this.mesh();
     this.updateCamera();
@@ -144,9 +164,11 @@ export default class ThreeScene {
             model.position.x = intersectPoint.x;
             model.position.z = intersectPoint.z;
           }
+
           model.userData.name = "model";
           this.gltf.push(model);
           this.scene.add(model);
+
         },
         undefined,
         (error) => {
@@ -208,8 +230,10 @@ export default class ThreeScene {
     if (this.controls) {
       this.controls.dispose();
     }
+    
 
     if (this.cam) {
+
       this.polygons.forEach((polygonGroup) => {
         polygonGroup.textMeshes.forEach((textMesh) => {
           this.scene.add(textMesh);
@@ -218,6 +242,7 @@ export default class ThreeScene {
           this.scene.add(sphere);
         });
       });
+
 
       this.scene.background = new THREE.Color("white");
       this.scene.add(this.plane);
@@ -246,6 +271,7 @@ export default class ThreeScene {
     } else {
       this.RemoveGeometries();
 
+
       this.polygons.forEach((polygonGroup) => {
         polygonGroup.textMeshes.forEach((textMesh) => {
           this.scene.remove(textMesh);
@@ -258,6 +284,7 @@ export default class ThreeScene {
           if (sphere.material) sphere.material.dispose();
         });
       });
+
 
       this.scene.remove(this.gridHelper);
       this.scene.remove(this.plane);
@@ -282,6 +309,7 @@ export default class ThreeScene {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
+
     if (this.camera instanceof THREE.PerspectiveCamera) {
       this.controls.minDistance = 0.2;
       this.controls.maxDistance = 40;
@@ -290,7 +318,9 @@ export default class ThreeScene {
       this.camera.position.set(5, 5, 5);
       this.camera.updateProjectionMatrix();
     } else if (this.camera instanceof THREE.OrthographicCamera) {
+
       this.addCollisionDetection();
+
       this.camera.zoom = 1;
       this.controls.minZoom = 0.2;
       this.controls.maxZoom = 3.0;
@@ -452,6 +482,7 @@ export default class ThreeScene {
     });
     if (!this.transformControls) return;
 
+
     this.transformControls.addEventListener("dragging-changed", (event) => {
       if (event.value) {
         this.controls.enabled = false;
@@ -463,6 +494,7 @@ export default class ThreeScene {
 
     this.transformControls.addEventListener("objectChange", () => {
       const draggedObject = this.transformControls.object;
+
       const allObjects = [...this.globalArray, ...this.gltf];
       let collisionWithObjects;
       let collisionWithWalls;
@@ -481,38 +513,72 @@ export default class ThreeScene {
 
       if (collisionWithWalls || collisionWithObjects) {
        
+
         draggedObject.position.copy(lastValidPosition);
       } else {
         lastValidPosition.copy(draggedObject.position);
       }
     });
   }
-  checkCollisionWithWalls(object, walls) {
-    if (this.helper) {
-      this.scene.remove(this.helper);
+
+
+  onMouseMove(event, lastValidPosition) {
+    console.log(event);
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
+    if (intersects.length > 0) {
+      const intersectedObject = intersects[0].object;
+      console.log(intersectedObject);
+      
+  
+
+      if (this.transformControls.object !== intersectedObject) {
+          	this.transformControls.attach(intersectedObject);
+            const gizmo = this.transformControls.getHelper();
+            this.scene.add(gizmo);
+      }
+    } else {
+      this.transformControls.detach();
     }
+  }
 
-    const objectBox = new THREE.Box3().setFromObject(object);
-    this.helper = new THREE.Box3Helper(objectBox);
-    this.scene.add(this.helper);
-    let combinedWallBox = new THREE.Box3();
+  updateBoundingBoxes(globalArray, boundingBoxArray) {
+    globalArray.forEach((group, index) => {
+      const box = new THREE.Box3().setFromObject(group);
+      boundingBoxArray[index] = box;
+    });
+  }
 
-    walls.forEach((wall) => {
+  checkGroupCollisionWithWalls(draggedGroup, boundingWalls) {
+    const draggedBox = new THREE.Box3().setFromObject(draggedGroup);
+
+    let boundingWallsBox = new THREE.Box3();
+    boundingWalls.forEach((wall) => {
       const wallBox = new THREE.Box3().setFromObject(wall);
-       this.performCSGCut(object, wall);
-      combinedWallBox.union(wallBox);
+      boundingWallsBox.union(wallBox);
     });
 
-    return !combinedWallBox.containsBox(objectBox);
+    return !boundingWallsBox.containsBox(draggedBox);
   }
-  checkCollisionWithObjects(draggedObject, allObjects) {
-    console.log(draggedObject);
-    const draggedBox = new THREE.Box3().setFromObject(draggedObject);
 
-    for (const otherObject of allObjects) {
-      if (otherObject === draggedObject) continue;
+  checkGroupCollisionWithGlobalObjects(
+    draggedGroup,
+    globalArray,
+    boundingBoxArray
+  ) {
+    const draggedBox = new THREE.Box3().setFromObject(draggedGroup);
 
-      const otherBox = new THREE.Box3().setFromObject(otherObject);
+    for (let i = 0; i < globalArray.length; i++) {
+      const otherGroup = globalArray[i];
+      if (otherGroup === draggedGroup) continue;
+
+      const otherBox = boundingBoxArray[i];
 
       const expandedBox = otherBox.clone().expandByScalar(0.001);
 
@@ -700,12 +766,24 @@ export default class ThreeScene {
   mouseover(e) {
     this.raycastDefined(e);
 
+    this.disableDragControls();
+    // this.disposeDragControls();
+
+
     if (this.intersects.length > 0) {
       if (!this.dragcontrols) {
         this.setupDragControls();
       }
     }
   }
+
+
+  disableDragControls() {
+    if (this.dragControls) {
+      this.dragControls.enabled = false;
+    }
+  }
+
 
   setupDragControls() {
     this.dragControls = new DragControls(
@@ -865,6 +943,7 @@ export default class ThreeScene {
       if (textMesh.material) textMesh.material.dispose();
     });
 
+
     polygonGroup.textMeshes.forEach((textMesh) => {
       this.scene.remove(textMesh);
       if (textMesh.geometry) textMesh.geometry.dispose();
@@ -938,8 +1017,10 @@ export default class ThreeScene {
     let geometry = new THREE.ShapeGeometry(shape);
     geometry.rotateX(Math.PI / 2);
     let material = new THREE.MeshBasicMaterial({
+
       // color: texture,
       color: "lightblue",
+
       side: THREE.DoubleSide,
     });
 
@@ -978,8 +1059,7 @@ export default class ThreeScene {
 
   blob() {
     let data = this.dataURL;
-    console.log("uuuuu",data);
-    
+
     var link = document.createElement("a");
     link.download = "demo.png";
     link.href = data;
@@ -1193,8 +1273,7 @@ export default class ThreeScene {
     this.group.add(spotlight);
   }
   gltfLoader(modelLink) {
-     console.log('dawdqd',modelLink);
-     
+
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
       this.box = new THREE.Box3().setFromObject(gltf.scene);
@@ -1249,8 +1328,7 @@ export default class ThreeScene {
     if (this.getImageData == true) {
       
       this.dataURL = this.renderer.domElement.toDataURL();
-   
-      
+
       this.blob();
       this.getImageData = false;
     }

@@ -76,6 +76,8 @@ export default class gltfThreeScene {
     // link.click();
   }
   gltf(modelLink) {
+    console.log('modelLink',modelLink);
+    
     this.group = new THREE.Group();
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {

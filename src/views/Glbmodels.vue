@@ -1,5 +1,6 @@
 <template>
   <v-container class="py-0 px-0" :fluid="true">
+
     <v-container :fluid="true">
       <v-row>
         <v-col cols="9" md="9" sm="6">
@@ -29,6 +30,7 @@
     <v-card flat>
       <!-- <v-data-table
         height="86vh"
+
         :loading="isLoading"
         :items="filteredModels"
         item-value="name"
@@ -40,6 +42,7 @@
         <template v-slot:item.Modelimage="{ item }">
           <v-img :src="item.Modelimage" width="30px" class="hover"></v-img>
         </template>
+
 
         <template v-slot:item.action="{ item }">
           <v-icon color="grey" @click="viewModel(item)">mdi-open-in-new</v-icon>
@@ -66,6 +69,7 @@
     </v-card>
     <!-- Upload Dialog -->
     <v-dialog v-model="isUpload" width="1000px" persistent>
+
       <v-card height="600px" flat>
         <v-toolbar density="compact" color="#274e76" flat>
           <v-icon class="py-6 px-6" @click="isUpload = false">mdi-close</v-icon>
@@ -75,6 +79,7 @@
           <v-card width="40%" class="px-4 py-6" flat>
             <v-form>
               <v-text-field
+
                 variant="underlined"
                 label="Enter Model Name"
                 v-model="uploadModelType"
@@ -93,12 +98,15 @@
                 label="Select Variant"
                 :items="['Top', 'Bottom']"
               ></v-select>
+
               <v-file-input
                 accept=".glb"
                 label="Add Model"
                 variant="underlined"
                 v-model="file"
+
                 @change="modelReceived(file)"
+
               ></v-file-input>
               <v-row class="mt-6">
                 <v-col>
@@ -113,7 +121,9 @@
             </v-form>
           </v-card>
           <v-card
+
             ref="captureDiv"
+
             width="60%"
             flat
             class="d-flex flex-column align-center my-3 mr-2"
@@ -124,6 +134,7 @@
       </v-card>
     </v-dialog>
     <!-- view Dialog -->
+
     <v-dialog v-model="isView" persistent max-width="1000px" height="550px">
       <v-card rounded="0" flat>
         <!-- LOADING -->
@@ -145,6 +156,7 @@
             color="white"
             indeterminate
           ></v-progress-circular>
+
         </v-card>
         <v-toolbar density="compact" color="#274E76">
           <v-icon @click="closeView" class="px-5">mdi-close</v-icon>
@@ -249,7 +261,9 @@
           </v-card>
         </v-card>
       </v-card>
+
     </v-dialog>
+
     <!-- Error snackbar -->
     <v-snackbar v-model="isUploadError">
       {{ uploadErrorText }}
@@ -260,7 +274,9 @@
       </template>
     </v-snackbar>
 
+
     <!-- <div style="width: 400px;height: 400px;background-color: green;" ref="captureDiv">green </div> -->
+
   </v-container>
 </template>
 
@@ -319,7 +335,9 @@ export default {
   },
 
   methods: {
+
     async getModel() {
+      this.displayModel = [];
       this.isLoading = true;
       try {
         const response = await this.$axios.get(
@@ -327,8 +345,10 @@ export default {
         );
 
         if (response.status == 200) {
+
           this.displayModel = response.data;
           this.isLoading = false;
+
         }
       } catch (err) {
         console.log(err);
@@ -360,8 +380,10 @@ export default {
       formData.append("modelImg", this.modelimg);
 
       try {
+
         const response = await this.$axios.post(
           `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
+
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -383,7 +405,9 @@ export default {
         return;
       }
       try {
+
         this.isSaveChange = true;
+
         const formData = new FormData();
         formData.append("modelType", this.modelType);
         formData.append("category", this.modelCategory);
@@ -399,7 +423,9 @@ export default {
         );
 
         if (response.status === 200) {
+
           this.isSaveChange = false;
+
           this.isEdit = false;
           this.selectedFile = null;
           this.isView = false;
@@ -419,15 +445,20 @@ export default {
     },
     viewModel(viewFile) {
       this.isView = true;
+
       const selectedModel = this.displayModel.find(
+
         (model) => model._id === viewFile._id
       );
+      console.log(selectedModel);
 
       if (selectedModel) {
-        this.modelId = selectedModel._id;
+        // this.modelId = selectedModel._id;
         this.modelType = selectedModel.modelType;
         this.modelCategory = selectedModel.category;
+
         this.variantType = selectedModel.variant;
+
 
         this.$nextTick(() => {
           if (this.$refs.gltfViewerComponent) {
@@ -452,4 +483,4 @@ export default {
 .linear-gradient {
   background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
-</style>
+

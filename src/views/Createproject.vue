@@ -373,7 +373,12 @@
                   outlined
                   style="cursor: grab"
                 >
-                  <!-- <v-img draggable="true" /> -->
+
+                  <v-img
+                    draggable="false"
+                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage">
+                  </v-img>
+
                   <v-card-text class="text-center">{{
                     model.modelType
                   }}</v-card-text>

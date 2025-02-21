@@ -4,15 +4,14 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
+
 import { CSG } from 'three-csg-ts'; 
 import { Sky } from "three/addons/objects/Sky.js";
 import { MathUtils, Vector3 } from "three";
 import store from "../Store/index.js";
 
 
-// import { CSG } from 'three-bvh-csg';
-import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-// import { MeshBVH, computeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+
 export default class studio3dThreeScene {
     constructor(container) {
       this.container = container;
@@ -86,8 +85,17 @@ export default class studio3dThreeScene {
       this.camera.position.set(0, 15, 35);
 
  
-// this.dragControls = new DragControls(this.gltfArray, this.camera, this.renderer.domElement);
-// this.dragControls.transformGroup = true;
+
+      this.dragControls = new DragControls(  this.gltfArray, this.camera, this.renderer.domElement );
+      this.dragControls.addEventListener('dragstart', (event) => {
+        event.object.material.emissive.set(0xaaaaaa);
+        this.controls.enabled = false;
+        event.object.position.y = 0;
+        event.object.userData.lastValidPosition = event.object.position.clone();
+        this.roomBox = new THREE.Box3().setFromObject(this.group); 
+        this.modelBox = new THREE.Box3().setFromObject(event.object); 
+        // this.dragControls.transformGroup = true;
+
 
 // let boxHelper;
 
@@ -96,14 +104,21 @@ export default class studio3dThreeScene {
 //     this.controls.enabled = false;
 //     console.log('event',event);
     
-//     event.object.userData.lastValidPosition = event.object.position.clone();
 
-//     boxHelper = new THREE.BoxHelper(event.object, 0x00ff00); 
-//     this.scene.add(boxHelper);
+    this.dragControls.addEventListener('drag', (event) => {
+      // this.dragControls.transformGroup = false;
+        this.modelBox.setFromObject(event.object);
 
-//     this.roomBox = new THREE.Box3().setFromObject(this.group); 
-//     this.modelBox = new THREE.Box3().setFromObject(event.object); 
-// });
+        if (!this.roomBox.containsBox(this.modelBox)) {
+            event.object.position.copy(event.object.userData.lastValidPosition);
+            event.object.material.emissive.set(0xff0000); 
+        } else {
+            event.object.userData.lastValidPosition.copy(event.object.position);
+            event.object.material.emissive.set(0xaaaaaa); 
+        }
+        event.object.position.y = 0;
+        // this.dragControls.transformGroup = true;
+
 
 // this.dragControls.addEventListener('drag', (event) => {
 //     this.modelBox.setFromObject(event.object);
@@ -138,6 +153,13 @@ export default class studio3dThreeScene {
 //         boxHelper = null;
 //     }
 // });
+
+
+        event.object.material.emissive.set(0x000000);
+        this.controls.enabled = true;
+        event.object.position.y = 0;
+      //   this.dragControls.transformGroup = false;
+
 
 
     
@@ -295,12 +317,14 @@ export default class studio3dThreeScene {
   
               let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
               gltf.scene.scale.setScalar(1 / (maxSize / 4));
+
               gltf.scene.traverse((node) => {
                 if (node.isMesh) {
                   node.castShadow = true;
                   node.receiveShadow = true;
                 }
               });   
+
               const model = gltf.scene;
               model.rotation.set(0, angleX, 0); 
 
@@ -396,6 +420,7 @@ export default class studio3dThreeScene {
       this.animate();
       this.create();
       this.gltfLoading()
+
       this.windowPD()
     // this.cube();
     }
@@ -468,6 +493,7 @@ export default class studio3dThreeScene {
       this.scene.add(intRes)
       this.camera.position.z = 5;
   }
+
 
   
     create(wallValues) {

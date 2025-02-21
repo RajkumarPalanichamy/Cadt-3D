@@ -1,6 +1,7 @@
 <template>
   <v-container class="py-0 px-0" :fluid="true">
     <v-container class="py-0 px-0" :fluid="true">
+
       <v-container :fluid="true">
         <v-row>
           <v-col md="9" sm="6">
@@ -12,6 +13,7 @@
             ></v-text-field>
           </v-col>
           <v-col md="3" sm="6">
+
             <v-btn
               block
               class="linear-gradient text-white elevation-6"
@@ -23,9 +25,11 @@
               ></v-btn
             >
           </v-col>
+
         </v-row>
       </v-container>
       <v-card height="100vh" flat>
+
         <v-data-table-virtual
           height="86vh"
           :items="filteredTextures"
@@ -40,9 +44,11 @@
           <template v-slot:item.Textureimage="{ item }">
             <v-img :src="item.Textureimage" width="30px" class="hover"></v-img>
           </template>
+
           <template v-slot:item.Action="{ item }">
             <v-icon color="grey" @click="viewTexture(item)"
               >mdi-open-in-new</v-icon
+
             >
           </template>
         </v-data-table-virtual>
@@ -78,11 +84,13 @@
               ></v-file-input>
               <v-row class="mt-6">
                 <v-col>
+
                   <v-btn
                     color="#274E76"
                     block
                     class="mr-3"
                     @click="uploadTexture"
+
                     >Upload
                   </v-btn>
                 </v-col>
@@ -226,7 +234,9 @@ export default {
             _id: eachTexture._id,
             TextureName: eachTexture.name,
             TextureType: eachTexture.type,
+
             Action: true,
+
           };
           this.textureData.push(textureObj);
         });
@@ -245,7 +255,9 @@ export default {
       formData.append("Texturesfiles", this.file);
 
       try {
+
         const response = await this.$axios.post(
+
           `${import.meta.env.VITE_API_LINK}/texture/textures,
           formData`,
           {
@@ -311,7 +323,9 @@ export default {
 .search_bg_color {
   background-color: #fafafa;
 }
+
 .linear-gradient {
   background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
 </style>
+

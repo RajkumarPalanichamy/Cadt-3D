@@ -68,8 +68,10 @@
         <!-- loding -->
         <v-card
           flat
+
           class="d-flex flex-column align-center justify-center mt-16 pt-16"
           v-if="modelLoader"
+
         >
           <v-progress-circular color="primary" indeterminate>
           </v-progress-circular>
@@ -171,7 +173,9 @@
 <script>
 import studio3dThreeScene from "@/Three/studio3d.js";
 import axios from "axios";
+
 import { mapState } from "vuex";
+
 export default {
   name: "cadt3d-container",
   data() {
