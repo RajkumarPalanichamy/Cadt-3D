@@ -6,6 +6,9 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    include: ['three/examples/jsm/utils/BufferGeometryUtils.js'],
+},
   plugins: [
     vue(),
     vueDevTools(),

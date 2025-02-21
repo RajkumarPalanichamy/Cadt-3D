@@ -1,28 +1,30 @@
 <template>
   <v-container class="py-0 px-0" :fluid="true">
-    <v-card color="white" flat class="d-flex align-center mx-8">
+    <v-card color="white" flat class="d-flex align-center px-8">
       <v-text-field
         width="70%"
         v-model="searchQuery"
         class="mt-5 mr-5"
-        density="comfortable"
         variant="outlined"
         prepend-inner-icon="mdi-magnify"
         label="Search"
       ></v-text-field>
       <v-spacer></v-spacer>
       <v-btn
+        class="linear-gradient text-white elevation-6"
         @click="isUpload = true"
-        width="200px"
-        prepend-icon="mdi-upload-outline"
-        color="#274E76"
-        size="large"
-        >Upload</v-btn
+        width="300px"
+        prepend-icon="mdi-upload"
+        size="x-large"
       >
+        <v-card-text class="text-subtitle-1 font-weight-bold"
+          >UPLOAD</v-card-text
+        >
+      </v-btn>
     </v-card>
     <v-card flat class="px-0">
       <v-data-table-virtual
-        height="87vh"
+        height="86vh"
         :loading="isLoading"
         :items="filteredModels"
         item-value="name"
@@ -41,7 +43,7 @@
       </v-data-table-virtual>
     </v-card>
     <!-- Upload Dialog -->
-    <v-dialog v-model="isUpload" width="1000px">
+    <v-dialog v-model="isUpload" width="1000px" persistent>
       <v-card height="600px" flat>
         <v-toolbar density="compact" color="#274e76" flat>
           <v-icon class="py-6 px-6" @click="isUpload = false">mdi-close</v-icon>
@@ -50,21 +52,29 @@
         <v-card class="d-flex justify-center" flat>
           <v-card width="40%" class="px-4 py-6" flat>
             <v-form>
-              <v-text-field
+              <v-select
+                append-icon="mdi-exclamation"
                 v-model="uploadModelCategories"
-                label="Enter Model Categories"
                 variant="underlined"
-                hint="eg:Living Room,Bed Room..."
-                class="mb-6 mt-6"
-              ></v-text-field>
+                label="Select Model Category"
+                :items="['Living Room', 'Bed Room', 'Kitchen']"
+              ></v-select>
               <v-text-field
-                v-model="uploadModelType"
-                label="Enter Model Type"
-                hint="eg:Window,Door,Table..."
                 variant="underlined"
-                class="mb-6"
-              ></v-text-field>
+                append-icon="mdi-exclamation"
+                label="Enter Model Type"
+                v-model="uploadModelType"
+              >
+              </v-text-field>
+              <v-select
+                append-icon="mdi-exclamation"
+                v-model="uploadVariant"
+                variant="underlined"
+                label="Select Variant"
+                :items="['Top', 'Bottom']"
+              ></v-select>
               <v-file-input
+                append-icon="mdi-exclamation"
                 accept=".glb"
                 label="Add Model"
                 variant="underlined"
@@ -95,103 +105,98 @@
     </v-dialog>
     <!-- view Dialog -->
     <v-dialog v-model="isView" max-width="1000px" height="550px">
-    <v-card rounded="0" flat>
-      <v-toolbar density="compact" color="#274E76">
-        <v-icon @click="isView = false" class="px-5">mdi-close</v-icon>
-      </v-toolbar>
-      <v-card class="d-flex" height="100vh" flat>
-        <v-card width="70%" flat rounded="0" class="px-3 py-3">
-          <!-- GLTF Viewer -->
-          <gltfViewer ref="gltfViewerComponent" style="height: 480px" />
-        </v-card>
-        <v-card width="30%" flat class="pl-4 px-4 pt-10 mt-16">
-          <!-- Model Details -->
-          <v-form>
-            <v-row>
-              <v-col>
-                <v-text-field
-                  variant="underlined"
-                  v-model="modelType"
-                  label="Model Type"
-                  density="compact"
-                  :readonly="!isEdit"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-text-field
-                  v-model="modelCategory"
-                  label="Model Category"
-                  variant="underlined"
-                  density="compact"
-                  :readonly="!isEdit"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row v-if="isEdit">
-              <v-col>
-                <v-btn
-                  variant="outlined"
-                  @click="triggerFileInput"
-                  color="#274E76"
-                  block
-                >
-                  Update GLTF File
-                </v-btn>
-                <input
-                  ref="updateFileInput"
-                  type="file"
-                  class="d-none"
-                  @change="handleUpdateFile"
-                />
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>
-                <v-btn
-                  v-if="!isEdit"
-                  color="#274E76"
-                  block
-                  @click="isEdit = true"
-                >
-                  Edit
-                </v-btn>
-                <v-btn
-                  v-if="isEdit"
-                  color="#274E76"
-                  block
-                  @click="saveModel"
-                >
-                  Save
-                </v-btn>
-              </v-col>
-              <v-col>
-                <v-btn
-                  v-if="isEdit"
-                  variant="outlined"
-                  color="#274E76"
-                  block
-                  @click="cancelEdit"
-                >
-                  Cancel
-                </v-btn>
-                <v-btn
-                  v-if="!isEdit"
-                  variant="outlined"
-                  color="#274E76"
-                  block
-                  @click="isView = false"
-                >
-                  Close
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-form>
+      <v-card rounded="0" flat>
+        <v-toolbar density="compact" color="#274E76">
+          <v-icon @click="isView = false" class="px-5">mdi-close</v-icon>
+        </v-toolbar>
+        <v-card class="d-flex" height="100vh" flat>
+          <v-card width="70%" flat rounded="0" class="px-3 py-3">
+            <!-- GLTF Viewer -->
+            <gltfViewer ref="gltfViewerComponent" style="height: 480px" />
+          </v-card>
+          <v-card width="30%" flat class="pl-4 px-4 pt-10 mt-16">
+            <!-- Model Details -->
+            <v-form>
+              <v-row>
+                <v-col>
+                  <v-text-field
+                    variant="underlined"
+                    v-model="modelType"
+                    label="Model Type"
+                    density="compact"
+                    :readonly="!isEdit"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <v-text-field
+                    v-model="modelCategory"
+                    label="Model Category"
+                    variant="underlined"
+                    density="compact"
+                    :readonly="!isEdit"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row v-if="isEdit">
+                <v-col>
+                  <v-btn
+                    variant="outlined"
+                    @click="triggerFileInput"
+                    color="#274E76"
+                    block
+                  >
+                    Update GLTF File
+                  </v-btn>
+                  <input
+                    ref="updateFileInput"
+                    type="file"
+                    class="d-none"
+                    @change="handleUpdateFile"
+                  />
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col>
+                  <v-btn
+                    v-if="!isEdit"
+                    color="#274E76"
+                    block
+                    @click="isEdit = true"
+                  >
+                    Edit
+                  </v-btn>
+                  <v-btn v-if="isEdit" color="#274E76" block @click="saveModel">
+                    Save
+                  </v-btn>
+                </v-col>
+                <v-col>
+                  <v-btn
+                    v-if="isEdit"
+                    variant="outlined"
+                    color="#274E76"
+                    block
+                    @click="cancelEdit"
+                  >
+                    Cancel
+                  </v-btn>
+                  <v-btn
+                    v-if="!isEdit"
+                    variant="outlined"
+                    color="#274E76"
+                    block
+                    @click="isView = false"
+                  >
+                    Close
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-form>
+          </v-card>
         </v-card>
       </v-card>
-    </v-card>
-  </v-dialog>
+    </v-dialog>
     <!-- Error snackbar -->
     <v-snackbar v-model="isUploadError">
       {{ uploadErrorText }}
@@ -220,6 +225,7 @@ export default {
       modelType: "",
       modelCategory: "",
       uploadModelType: "",
+      uploadVariant:"",
       uploadModelCategories: "",
       isUpload: false,
       allModel: [],
@@ -231,6 +237,8 @@ export default {
       isEdit: false,
       selectedFile: null,
       modelId: undefined,
+      categoriesList: ["Living Room", "Bed Room"],
+      variant: ["Living Room", "Bed Room"],
     };
   },
   computed: {
@@ -244,9 +252,6 @@ export default {
     },
   },
   methods: {
-    // triggerFileInput1() {
-    //   this.$refs.fileInput.click();
-    // },
     triggerFileInput() {
       this.$refs.updateFileInput.click();
     },
@@ -256,16 +261,8 @@ export default {
         this.selectedFile = file;
       }
     },
-    // handleFileUpload(event) {
-    //   console.log("Event", event.files);
-
-    //   const file = event.target.files[0];
-    //   if (file) {
-    //     this.file = file;
-    //   }
-    //   console.log(this.file);
-    // },
     async getModel() {
+      
       this.displayModel = [];
       this.isLoading = true;
       try {
@@ -275,6 +272,8 @@ export default {
 
         if (response.status == 200) {
           this.allModel = response.data;
+          console.log(response.data);
+
           this.isLoading = false;
           response.data.forEach((eachModel) => {
             const modelObj = {
@@ -297,8 +296,9 @@ export default {
       this.$refs.gltfViewerComponent.gltf(objectURL);
     },
     async postModel() {
+
       this.isLoading = true;
-      if (!this.file || !this.uploadModelCategories || !this.uploadModelType) {
+      if (!this.file || !this.uploadModelCategories || !this.uploadModelType || !this.uploadVariant) {
         this.uploadErrorText = "All fields are required.";
         this.isUploadError = true;
         return;
@@ -308,10 +308,11 @@ export default {
       formData.append("category", this.uploadModelCategories);
       formData.append("modelType", this.uploadModelType);
       formData.append("file", this.file);
-
+      formData.append("variant",this.uploadVariant)
+       
       try {
         const response = await axios.post(
-         `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
+          `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
@@ -366,13 +367,11 @@ export default {
       const selectedModel = this.allModel.find(
         (model) => model._id === viewFile._id
       );
-      console.log(selectedModel);
 
       if (selectedModel) {
         // this.modelId = selectedModel._id;
         this.modelType = selectedModel.modelType;
         this.modelCategory = selectedModel.category;
-       
 
         this.$nextTick(() => {
           if (this.$refs.gltfViewerComponent) {
@@ -404,5 +403,8 @@ export default {
 .hover:hover {
   transform: scale(3);
   height: 150px;
+}
+.linear-gradient {
+  background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
 </style>

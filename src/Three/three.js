@@ -121,6 +121,7 @@ export default class ThreeScene {
 
     window.addEventListener("model-drop", (event) => {
       let { droppedText, mouse } = event.detail;
+console.log('droppedText',droppedText);
 
       //  if (placeholder) {
       //    this.scene.remove(placeholder);
@@ -157,6 +158,10 @@ export default class ThreeScene {
 
           this.gltf.push(model);
           // this.bbBoxes.push(model);
+          const saveModel = { gltfLink: droppedText, gltfScene: model.position };
+          this.modelLoad.push(saveModel);
+          console.log('saveModel',saveModel);
+    
           this.scene.add(model);
         // this.collisionForModels()
           
@@ -298,8 +303,12 @@ export default class ThreeScene {
   }
   predefined(model) {
     if (model) {
-      this.controlPoints = model;
-      this.finalizePolygon(this.controlPoints);
+      console.log('threee',model);
+      model.forEach((eachModel)=>{
+        this.controlPoints = eachModel;
+        this.finalizePolygon(this.controlPoints);
+      })
+     
     } else {
       this.controlPoints = [
         { x: -5, y: 0, z: -3 },
@@ -778,7 +787,7 @@ export default class ThreeScene {
     let loader = new THREE.TextureLoader();
     let texture = loader.load("./images/download.jpg", () => {
       texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping; 
       texture.repeat.set(1, 1);
     });
     let geometry = new THREE.ShapeGeometry(shape);
@@ -829,8 +838,6 @@ export default class ThreeScene {
     link.download = "demo.png";
     link.href = data;
     link.target = "_blank";
-
-    // link.click();
   }
 
   ceil(geometry) {
@@ -1032,12 +1039,15 @@ export default class ThreeScene {
     this.scene.add(spotlight);
     this.group.add(spotlight);
   }
-  gltfLoader(modelLink) {
+  gltfLoader(modelLink,modelArea) {
+    console.log('modelArea',modelArea);
+    console.log('modelLink',modelLink);
+
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
       this.box = new THREE.Box3().setFromObject(gltf.scene);
       let size = new THREE.Vector3();
-      box.getSize(size);
+      this.box.getSize(size);
       let maxSize = 0;
       if (size.x >= size.z && size.x >= size.y) {
         maxSize = size.x;
@@ -1049,22 +1059,20 @@ export default class ThreeScene {
       gltf.scene.scale.setScalar(1 / (maxSize / 2));
 
       this.gltf.push(gltf.scene);
-      gltf.scene.position.set(Math.random() * 10, 0, Math.random() * 10);
+      gltf.scene.position.set(modelArea.x,modelArea.y,modelArea.z);
 
-      const saveModel = { gltfLink: modelLink, gltfScene: gltf.scene.position };
-      this.modelLoad.push(saveModel);
 
       this.scene.add(gltf.scene);
     });
   }
-  async saveFile(projectname) {
-    const saveModel = {
-      projectname: projectname,
-      coordinates: this.mainArray,
-      gltfObjects: this.modelLoad,
-    };
-    store.commit("setTriggerMethod", saveModel);
-  }
+  // async saveFile(projectname) {
+  //   const saveModel = {
+  //     projectname: projectname,
+  //     coordinates: this.mainArray,
+  //     gltfObjects: this.modelLoad,
+  //   };
+  //   store.commit("setTriggerMethod", saveModel);
+  // }
 
   async saveFile(projectname, userName) {
     const saveModel = {

@@ -222,6 +222,8 @@ export default {
         if (response.status === 200) {
           this.isProjectLoad = false;
           this.savedModels = response.data;
+          console.log('this.savedModels',this.savedModels);
+          
           this.filteredModels = this.savedModels;
         }
       } catch (error) {
@@ -244,6 +246,8 @@ export default {
         if (response.status === 200) {
           this.isProjectLoad = false;
           this.savedModels = response.data.data;
+          console.log('this.savedModels',this.savedModels);
+          
           this.filteredModels = this.savedModels;
         }
       } catch (error) {
@@ -264,6 +268,7 @@ export default {
       // this.$router.push("/createproject");
       // ThreeScene.methods.loadSaved(model);\
       this.$store.commit("loadModel", model);
+      console.log('model',model);
       this.$router.push("/createproject");
     },
     async deleteModel(projectname) {

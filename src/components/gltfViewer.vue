@@ -21,7 +21,7 @@ export default {
   methods: {
     gltf(modelLink) {
       this.threeScene.gltf(modelLink);
-    },
+    },  
     Texture(textureLink) {
       this.threeScene.texture(textureLink);
     },
