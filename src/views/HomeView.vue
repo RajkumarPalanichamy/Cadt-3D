@@ -28,7 +28,7 @@
               <v-list-item
                 v-for="(icon, i) in displaySidebarData"
                 :key="i"
-                class="text-white mb-2"
+                class="text-white mb-2 rounded-lg"
                 :class="{ 'active-sidebar-item': activeItem === icon.text }"
                 @click="setActiveItem(icon.text)"
               >
@@ -42,7 +42,8 @@
             </v-list>
             <v-list>
               <v-list-item
-                class="text-white mb-2"
+              class="text-white mb-2 rounded-lg"
+
                 v-for="(icon, i) in downListItems"
                 :key="i"
                 :class="{ 'active-sidebar-item': activeItem === icon.text }"
@@ -59,7 +60,6 @@
           </v-card>
         </v-navigation-drawer>
         <v-main>
-          
           <router-view />
         </v-main>
       </v-layout>
@@ -79,20 +79,22 @@ export default {
       activeItem: "Home",
       userData: [
         { text: "Home", icon: "mdi-home-minus-outline" },
-
         { text: "Glb Models", icon: "mdi-sofa-outline" },
         { text: "Textures", icon: "mdi-texture-box" },
         { text: "Web", icon: "mdi-web" },
         { text: "Studio3D", icon: "mdi-cube" },
+        { text: "Configurator", icon: "mdi-texture" },
+
       ],
       adminData: [
         { text: "Home", icon: "mdi-home-minus-outline" },
-
         { text: "Glb Models", icon: "mdi-sofa-outline" },
         { text: "Textures", icon: "mdi-texture-box" },
         { text: "Employee", icon: "mdi-account-group-outline" },
         { text: "Web", icon: "mdi-web" },
         { text: "Studio3D", icon: "mdi-cube" },
+        { text: "Configurator", icon: "mdi-texture" },
+
       ],
       downListItems: [
         { text: "My Profile", icon: "mdi-account-outline" },
@@ -110,7 +112,7 @@ export default {
 
     this.role = decodedToken.role.toUpperCase();
     this.displaySidebarData =
-      decodedToken.role == "Admin" ? this.adminData : this.userData;
+      decodedToken.role == "admin" ? this.adminData : this.userData;
 
     this.isSmallScreen = window.innerWidth <= 960;
     window.addEventListener("resize", this.handleResize);
@@ -124,7 +126,12 @@ export default {
     sideBar(clickedValue) {
       if (clickedValue == "Studio3D") {
         this.$router.push("/studio3d");
-      } else if (clickedValue == "Logout") {
+      } 
+      else if(clickedValue == "Configurator")
+      {
+        this.$router.push("/configurator")
+      }
+      else if (clickedValue == "Logout") {
         Cookies.remove("jwtToken");
         this.$router.push("/");
       } else {
@@ -144,18 +151,11 @@ export default {
 }
 .active-sidebar-item {
   border-left: 4px solid #ffffff;
-
 }
 .flex {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-}
-.flex{
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
 }
 
 </style>

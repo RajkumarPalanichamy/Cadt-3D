@@ -12,27 +12,48 @@
 
       <v-btn icon @click="undo">
         <v-tooltip activator="parent" location="top">undo</v-tooltip>
-
         <v-icon>mdi-arrow-left-top</v-icon>
       </v-btn>
+
       <v-btn icon>
         <v-tooltip activator="parent" location="top">Redo</v-tooltip>
-
         <v-icon>mdi-arrow-right-top</v-icon>
       </v-btn>
 
       <v-spacer></v-spacer>
 
-      <v-btn icon class="mr-16" @click="triggerCreate">
-        <v-icon>{{ is3DView ? "mdi-video-2d" : "mdi-video-3d" }}</v-icon>
-      </v-btn>
+      <v-btn-toggle
+        density="compact"
+        v-model="view"
+        rounded
+        class="mr-16 center-toggle"
+      >
+        <v-btn
+          class="switch-button"
+          :class="{ active: view === '2D' }"
+          :disabled="view === '2D'"
+          @click="triggerCreate('2D')"
+        >
+          2D
+        </v-btn>
+        <v-btn
+          class="switch-button"
+          :class="{ active: view === '3D' }"
+          :disabled="view === '3D'"
+          @click="triggerCreate('3D')"
+        >
+          3D
+        </v-btn>
+      </v-btn-toggle>
+
       <v-spacer></v-spacer>
-      <v-btn icon @click="isSave = true" class="mr-4">
+      <v-btn icon @click="isSave = true">
         <v-card-text>SAVE</v-card-text>
       </v-btn>
     </v-toolbar>
+    <!-- Threee Container -->
     <v-card
-      class="d-flex bg-red"
+      class="d-flex"
       @dragover.prevent="onDragOver"
       @drop="onDrop"
       style="cursor: pointer"
@@ -63,23 +84,165 @@
           </template>
         </v-card>
       </v-dialog>
+      <!-- icon card-model -->
+      <v-btn
+        icon
+        v-if="showModelIcon"
+        v-for="(icon, index) in IconForModel"
+        :key="index"
+        size="3em"
+        :style="getIconStyle(index)"
+        v-tooltip="icon.text"
+        @click="clickedIcon(icon.text)"
+        class="position-absolute btn-hover"
+      >
+        <v-icon>{{ icon.icon }}</v-icon>
+      </v-btn>
+      <!-- Sidebar -->
       <v-card
         color="#F6F6F6"
         style="top: 230px !important; right: 10px"
         class="d-flex flex-column justify-center position px-2 py-2 border-md"
       >
-      <v-icon
-  v-for="(item, index) in sideBar"
-  :key="index"
-  @click="toggleVisibility(item.icon)"
-  class="mt-2"
-  size="1.7em"
-  :v-tooltip="item.tooltip ? item.tooltip : ''"
->
-  {{ item.icon }}
-</v-icon>
-
+        <v-icon
+          v-for="(item, index) in sideBar"
+          :key="index"
+          @click="toggleVisibility(item.icon)"
+          class="mt-2"
+          size="1.7em"
+          :v-tooltip="item.tooltip ? item.tooltip : ''"
+        >
+          {{ item.icon }}
+        </v-icon>
       </v-card>
+      <!-- Texture Card -->
+      <v-card
+        v-if="textureCard"
+        height="85vh"
+        width="300px"
+        class="mr-6 pb-2 position"
+      >
+        <v-toolbar class="px-2" density="compact" color="#274E76">
+          <v-card-title>Texture</v-card-title>
+          <v-spacer></v-spacer>
+          <v-icon @click="textureCard = false">mdi-close</v-icon>
+        </v-toolbar>
+        <!-- LOader Before texture Loading -->
+        <v-card
+          height="100%"
+          v-if="isTextureLoader"
+          class="d-flex flex-column justify-center align-center mt-16 pt-16"
+        >
+          <v-progress-circular indeterminate> </v-progress-circular>
+          <v-card-text class="text-subtitle-2">
+            Please Wait , It will take some time
+          </v-card-text>
+        </v-card>
+
+        <v-icon v-if="!textureCategoryCard" @click="textureCategoryCard = true"
+          >mdi-arrow-left</v-icon
+        >
+        <v-card
+          height="75vh"
+          class="overflow px-2 py-2 mt-4"
+          flat
+          style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px"
+        >
+          <v-card
+            v-if="textureCategoryCard"
+            v-for="(texture, i) in textureCategories"
+            :key="i"
+            @click="selectedTextureCategory(texture.type.toLowerCase())"
+            height="150px"
+            class="elevation-4"
+          >
+            <v-img cover height="100px" :src="texture.image"></v-img>
+            <v-card-text class="text-center text-subtitle-2">
+              {{ texture.type }}</v-card-text
+            >
+          </v-card>
+
+          <v-card
+            v-if="!textureCategoryCard"
+            height="100px"
+            v-for="(texture, i) in textureData"
+            :key="i"
+          >
+            <v-img cover height="100%" :src="texture.textures[0].url" />
+          </v-card>
+        </v-card>
+      </v-card>
+
+      <!-- Texture Details Card -->
+      <v-card
+        v-if="textureDetailsSection && !textureCard"
+        height="85vh"
+        width="300px"
+        class="mr-6 position elevation-4"
+      >
+        <v-toolbar color="#274E76" class="px-2" density="compact">
+          <v-card-text class="text-subtitle-1 font-weight-bold px-0"
+            >Wall</v-card-text
+          >
+          <v-icon @click="textureDetailsSection = false">mdi-close</v-icon>
+        </v-toolbar>
+
+        <v-expansion-panels
+          class="border-md"
+          flat
+          v-model="panel"
+          :readonly="readonly"
+          multiple
+        >
+          <v-expansion-panel>
+            <v-expansion-panel-title
+              class="font-weight-bold text-subtitle-2 py-0"
+              >Basic</v-expansion-panel-title
+            >
+            <v-expansion-panel-text>
+              <v-row class="mt-1">
+                <v-col class="d-flex justify-space-between align-center py-0">
+                  <v-card-text class="py-0 px-0">Width:</v-card-text>
+                </v-col>
+                <v-col class="py-0"
+                  ><v-number-input
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    control-variant="stacked"
+                  ></v-number-input
+                ></v-col>
+              </v-row>
+              <v-row>
+                <v-col class="d-flex justify-space-between align-center py-0">
+                  <v-card-text class="py-0 px-0">Height:</v-card-text>
+                </v-col>
+                <v-col class="py-2"
+                  ><v-number-input
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    control-variant="stacked"
+                  ></v-number-input
+                ></v-col>
+              </v-row>
+              <v-row>
+                <v-col class="d-flex justify-space-between align-center py-0">
+                  <v-card-text class="py-0 px-0">Thickness:</v-card-text>
+                </v-col>
+                <v-col class="py-1"
+                  ><v-number-input
+                    variant="outlined"
+                    density="compact"
+                    control-variant="stacked"
+                  ></v-number-input
+                ></v-col>
+              </v-row>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card>
+
       <v-card
         v-if="isVisible"
         height="85vh"
@@ -96,7 +259,6 @@
           <v-spacer></v-spacer>
           <v-icon class="pr-3" @click="cancel">mdi-window-close</v-icon>
         </v-toolbar>
-
         <v-row class="pl-2 pr-2">
           <v-col>
             <v-text-field
@@ -110,11 +272,6 @@
             />
           </v-col>
         </v-row>
-        <!-- <v-list v-if="!isModelCard">
-          <v-list-subheader class="text-blue-darken-4 m"
-            >REACENT ACTIVITIES</v-list-subheader
-          >
-        </v-list> -->
 
         <!-- model card -->
         <v-card
@@ -142,7 +299,7 @@
             </v-col>
           </v-row>
           <v-divider class="mb-2"></v-divider>
-          <v-card v-if="isCategories" class="grid pl-1 pb-10 pt-1 " flat>
+          <v-card v-if="isCategories" class="grid pl-1 pb-10 pt-1" flat>
             <v-card
               v-for="(model, index) in showCard"
               :key="index"
@@ -151,13 +308,32 @@
               class="border"
               @click="selectedCategory(model)"
             >
-              <v-img :src="model.modelimg"  height="100px" cover></v-img>
+              <v-img :src="model.modelimg" height="100px" cover></v-img>
               <v-card-text class="text-center text-blue-darken-4">{{
                 model.modelname
               }}</v-card-text>
             </v-card>
           </v-card>
-
+          <!-- inside model Categories -->
+          <v-card v-if="categorySelected" flat>
+            <v-icon
+              @click="
+                (isCategories = true),
+                  (categories = true),
+                  (categorySelected = false)
+              "
+              >mdi-arrow-left</v-icon
+            >
+            <v-card class="grid py-2 px-4" flat width="100%">
+              <v-card
+                v-for="(model, i) in modelInSelectedCategory"
+                :key="i"
+                class="text-center px-2 py-4 elevation-4"
+              >
+                {{ model.modelType }}</v-card
+              >
+            </v-card>
+          </v-card>
           <v-card v-if="isModel" flat>
             <v-list v-if="modelList">
               <v-list-subheader class="text-blue-darken-4">
@@ -187,25 +363,19 @@
                 >
                 {{ totalmodel }} Model Available</v-card-text
               >
-              <v-card class="grid">
+              <v-card density="compact" flat>
                 <v-card
                   v-for="(model, index) in availabelModels"
                   :key="index"
-                  @dragstart="
-                    onDragStart(
-                      model.FurnituresImagesArraywithGltf[0].furnitureGltfLoader
-                    )
-                  "
-                  :draggable="isDrag"
-                  class="ma-2 pt-2"
+                  @dragstart="onDragStart(model)"
+                  draggable="true"
+                  class="ma-2 elevation-2"
                   outlined
                   style="cursor: grab"
                 >
-                  <v-img
-                    draggable="true"
-                    :src="model.FurnituresImagesArraywithGltf[0].furnitureImage" />
+                  <!-- <v-img draggable="true" /> -->
                   <v-card-text class="text-center">{{
-                    model.FurnituresImagesArraywithGltf[0].furnitureName
+                    model.modelType
                   }}</v-card-text>
                 </v-card>
               </v-card>
@@ -219,7 +389,6 @@
 
 <script>
 import ThreeScene from "@/components/threeContainer.vue";
-import axios from "axios";
 import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
 import { mapState } from "vuex";
@@ -233,74 +402,93 @@ export default {
       rules: {
         required: (value) => !!value || "Field is required",
       },
-      is3DView: false,
-      isDrag: true,
+      showModelIcon: false,
+      panel: [0],
+      readonly: false,
+
+      textureCard: false,
+      textureCategoryCard: true,
+      textureDetailsSection: false,
+      textureData: [],
+      isTextureLoader: false,
+
+      view: "2D",
       isVisible: false,
+
       isModel: false,
       modelList: true,
       isModelCard: false,
+
       categories: false,
       isCategories: true,
+      categorySelected: false,
+      modelInSelectedCategory: [],
+
       isSave: false,
       showCard: [],
       clickModel: false,
       projectName: "",
       availabelModels: [],
+
       models: [
-        { name: "Door", icon: "mdi-door" },
-        { name: "Window", icon: "mdi-window-closed" },
-        { name: "Table", icon: "mdi-table" },
-        { name: "Sofas", icon: "mdi-sofa" },
-        { name: "Beds", icon: "mdi-bed" },
-        { name: "Chairs", icon: "mdi-seat" },
-        { name: "Plants", icon: "mdi-flower" },
-        { name: "Curtains", icon: "mdi-curtains" },
-        { name: "Musical Instrument", icon: "mdi-music" },
+        // { name: "Door", icon: "mdi-door" },
+        // { name: "Window", icon: "mdi-window-closed" },
+        // { name: "Table", icon: "mdi-table" },
+        // { name: "Sofas", icon: "mdi-sofa" },
+        // { name: "Beds", icon: "mdi-bed" },
+        // { name: "Chairs", icon: "mdi-seat" },
+        // { name: "Plants", icon: "mdi-flower" },
+        // { name: "Curtains", icon: "mdi-curtains" },
+        // { name: "Musical Instrument", icon: "mdi-music" },
       ],
       modelsList: [
         {
           modelname: "Living Room",
-          modelimg: "/public/images/livingroom.jpg"
+          modelimg: "/public/images/livingroom.jpg",
         },
         {
           modelname: "Kitchen",
-          modelimg: "/public/images/kitchen.jpeg"
+          modelimg: "/images/kitchen.jpeg",
         },
-        {
-          modelname: "Bathroom",
-          modelimg: "/public/images/Bathroom.jpeg"
-        },
+
         {
           modelname: "Bed Room",
-          modelimg: "/public/images/bedroom.jpg"
-        },
-        {
-          modelname: "Balcony",
-          modelimg: "/public/images/Balcony.jpeg"
+          modelimg: "/images/bedroom.jpg",
         },
       ],
       drawList: [
         {
           modelname: "Draw",
-          modelimg:  "/public/images/draw.jpg",
+          modelimg: "/images/draw.jpg",
         },
         {
           modelname: "Square",
-          modelimg:  "/public/images/square.jpg",
+          modelimg: "/images/square.jpg",
         },
         {
           modelname: "Lcut",
-          modelimg:  "/public/images/lcut.jpg"
+          modelimg: "/images/lcut.jpg",
         },
       ],
       sideBar: [
         { icon: "mdi-draw-pen", tooltip: "Draw" },
         { icon: "mdi-table-furniture", tooltip: "Furnitures" },
       ],
+      IconForModel: [
+        { icon: "mdi-format-paint", text: "Texture" },
+        { icon: "mdi-delete", text: "Delete" },
+        { icon: "mdi-ray-vertex", text: "Vertices" },
+        { icon: "mdi-rotate-right-variant", text: "Rotate" },
+      ],
+      iconPosition: [],
+      textureCategories: [
+        { type: "INDOOR", image: "/images/indoor.jpg" },
+        { type: "OUTDOOR", image: "/images/outdoor.webp" },
+      ],
     };
   },
   computed: {
-    ...mapState(["triggerMethod", "loadSavedModel"]),
+    ...mapState(["triggerMethod", "loadSavedModel", "wallValue"]),
 
     totalmodel() {
       return this.availabelModels.length;
@@ -308,47 +496,138 @@ export default {
   },
   watch: {
     triggerMethod(newValue) {
-      console.log("newValue", newValue);
-
       if (newValue) {
         this.handleBackHome();
         this.$store.commit("changeTriggerMethod");
       }
     },
+    wallValue(newValue) {
+      if (newValue) {
+        this.newValue = newValue;
+        this.addingIcons(newValue);
+        this.$store.commit("revertWall", false);
+      }
+    },
   },
 
   methods: {
-    loadSaved(newValue) {
-      console.log("newValue", newValue);
+    addingIcons(event) {
+      // window.addEventListener("click", (event) => {
+      console.log("EVENETEE", event);
 
+      this.textureDetailsSection = true;
+      const rect = event.target.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      this.iconPosition = [
+        { x: x - 70, y: y - 50 },
+        { x: x + 70, y: y - 50 },
+        { x: x, y: y - 100 },
+        { x: x, y: y + 50 },
+      ];
+      this.showModelIcon = true;
+      // });3
+    },
+    getIconStyle(index) {
+      const position = this.iconPosition[index];
+      if (position) {
+        return {
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+        };
+      }
+      return {};
+    },
+    clickedIcon(text) {
+      this.isModel =
+        this.isModelCard =
+        this.isCategories =
+        this.categories =
+          false;
+      this.isVisible = false;
+
+      if (text == "Texture") {
+        this.textureCard = true;
+      } else {
+        this.textureCard = false;
+      }
+    },
+    selectedTextureCategory(category) {
+      this.textureCategoryCard = false;
+      this.isTextureLoader = true;
+      if (category == "indoor") {
+        console.log("te");
+
+        this.getTextures();
+      } else {
+        this.getTextures();
+      }
+    },
+    async getTextures() {
+      const response = await this.$axios.get(
+        `${import.meta.env.VITE_API_LINK}/texture/getTextures`
+      );
+
+      if (response.status == 200) {
+        this.isTextureLoader = false;
+        this.textureData = response.data;
+      }
+    },
+    loadSaved(newValue) {
       this.$refs.threeSceneComponent.loadSaved(newValue);
     },
     setView(view) {
-      console.log(view);
       if (view == "models") {
-        (this.isModel = true), (this.isCategories = false);
+        this.isModel = true;
+        this.isCategories = false;
+        this.categorySelected = false;
       } else {
-        (this.isModel = false), (this.isCategories = true);
+        this.isModel = false;
+        this.isCategories = true;
       }
     },
     async selectedModel(selectedmodel) {
       this.availabelModels = [];
+      this.clickModel = true;
+      this.modelList = false;
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`
+        const response = await this.$axios.get(
+          `${import.meta.env.VITE_API_LINK}/glb/getglbloaders`
         );
+        console.log("selecetdModel", response.data);
 
         response.data.forEach((eachModel) => {
           if (selectedmodel == eachModel.modelType) {
             this.availabelModels.push(eachModel);
           }
-          this.modelList = false;
-          this.clickModel = true;
         });
       } catch (err) {
         console.log(err);
       }
     },
+    async getModel() {
+      try {
+        const response = await this.$axios.get(
+          `${import.meta.env.VITE_API_LINK}/glb/getglbloaders`
+        );
+        if (response.status == "200") {
+          response.data.forEach((eachModel) => {
+            if (
+              eachModel.modelType &&
+              !this.models.some((model) => model.name === eachModel.modelType)
+            ) {
+              this.models.push({
+                name: eachModel.modelType,
+                icon: "mdi-help-box",
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+
     backToHome() {
       this.$router.push("/homeview");
     },
@@ -359,44 +638,79 @@ export default {
     cancel() {
       this.isVisible = false;
     },
-    triggerCreate() {
-      this.is3DView = !this.is3DView;
+    triggerCreate(selectedView) {
+      if (this.view === selectedView) {
+        return;
+      }
+      this.view = selectedView;
       this.$refs.threeSceneComponent.update();
     },
     toggleVisibility(selectedValue) {
       this.isVisible = true;
       if (selectedValue == "mdi-table-furniture") {
+        this.setView("categories");
         this.isModelCard = true;
         this.categories = true;
         this.showCard = this.modelsList;
       } else {
         (this.isModelCard = true), (this.categories = false);
         this.showCard = this.drawList;
+        this.categorySelected = false;
         this.isCategories = true;
         this.isModel = false;
       }
     },
 
     async selectedCategory(category) {
-      if (category.modelname == "Draw") {
-        this.isVisible = false;
-        setTimeout(() => {
-          this.$refs.threeSceneComponent.create();
-        }, 500);
-      } else {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/default/getdefaultscene`
+      const selectedCategory = category.modelname
+        .split(" ")
+        .join("")
+        .toLowerCase();
+
+      if (
+        selectedCategory === "livingroom" ||
+        selectedCategory === "bedroom" ||
+        selectedCategory === "kitchen"
+      ) {
+        this.modelInSelectedCategory = [];
+        const response = await this.$axios.get(
+          `${import.meta.env.VITE_API_LINK}/glb/getglbloaders`
         );
-        response.data.forEach((model) => {
-          if (model.name == category.modelname) {
-            this.$refs.threeSceneComponent.modelLoad(model);
-          }
-        });
+        if (response.status == "200") {
+          this.categorySelected = true;
+          this.isCategories = false;
+          this.categories = false;
+
+          response.data.forEach((model) => {
+            if (
+              selectedCategory ==
+              model.category.split(" ").join("").toLowerCase()
+            ) {
+              this.modelInSelectedCategory.push(model);
+            }
+          });
+        }
+      } else {
+        if (category.modelname == "Draw") {
+          this.isVisible = false;
+          setTimeout(() => {
+            this.$refs.threeSceneComponent.create();
+          }, 500);
+        } else {
+          const response = await this.$axios.get(
+            `${import.meta.env.VITE_API_LINK}/default/getdefaultscene`
+          );
+          response.data.forEach((model) => {
+            if (model.name == category.modelname) {
+              this.$refs.threeSceneComponent.modelLoad(model);
+            }
+          });
+        }
       }
     },
     async loadModel(modelId) {
       try {
-        const response = await axios.get(
+        const response = await this.$axios.get(
           `${import.meta.env.VITE_API_LINK}/furniture/getfurnitures`,
 
           {
@@ -418,8 +732,9 @@ export default {
       }
     },
     onDragStart(modelLink) {
-      const draggedModel = modelLink; // The URL or path to the GLTF model
-      event.dataTransfer.setData("text/plain", draggedModel);
+      
+      const draggedModel = JSON.stringify(modelLink);
+      event.dataTransfer.setData("modelData", draggedModel);
 
       const dragStartEvent = new CustomEvent("model-drag-start", {
         detail: { droppedText: draggedModel, mouse: { x: 0, y: 0 } },
@@ -445,9 +760,7 @@ export default {
     },
 
     onDrop(event) {
-      const droppedText = event.dataTransfer.getData("text/plain");
-      console.log("Dropped Model:", droppedText);
-
+      const droppedText = JSON.parse(event.dataTransfer.getData("modelData"));
       this.isVisible = true;
 
       // Calculate mouse position
@@ -473,13 +786,11 @@ export default {
     },
 
     handleBackHome() {
-      console.log("returing home");
-      console.log("triggerMethod2", this.triggerMethod);
-
       this.$router.push("/homeview");
     },
   },
   mounted() {
+    this.getModel();
     if (this.loadSavedModel) {
       this.loadSaved(this.loadSavedModel);
     }
@@ -496,6 +807,7 @@ export default {
   scrollbar-width: thin;
   scrollbar-color: #386b9e white;
 }
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -513,5 +825,39 @@ export default {
 .models:hover {
   color: #274e76;
 }
+.btn-hover:hover {
+  color: blue;
+}
+.position-texture {
+  z-index: 1;
+  position: absolute;
+  top: 50px;
+  right: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid #274e76;
+}
 
+.switch-button {
+  background-color: #f0f0f0;
+  color: black;
+  font-weight: bold;
+  justify-content: center;
+}
+
+.switch-button.active {
+  background-color: #274e76;
+  color: white;
+}
+
+.v-btn-toggle {
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  background-color: #f9f9f9;
+}
+.center-toggle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
 </style>
