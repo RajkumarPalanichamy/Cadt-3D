@@ -8,9 +8,8 @@ import Texture from "@/views/Texture.vue";
 import Profile from "@/views/Profile.vue";
 import Createproject from "@/views/Createproject.vue";
 import Employee from "@/views/Employee.vue"
-
 import Web from "@/views/web.vue";
-
+import Configurator from "@/components/Configurator.vue";
 import studio3d from "@/components/studio3d.vue";
 
 const router = createRouter({
@@ -32,6 +31,7 @@ const router = createRouter({
           name: "home",
           component: Home,
         },
+       
         {
           path: "glbmodels",
           name: "Glbmodels",
@@ -47,6 +47,7 @@ const router = createRouter({
           name: "texture",
           component: Texture,
         },
+      
         {
           path: "employee",
           name: "employee",
@@ -69,8 +70,17 @@ const router = createRouter({
       path: "/studio3d",
       name: "studio3d-container",
       component: studio3d,
+      meta: { requiresAuth: true },
 
-    }
+
+    },
+    {
+      path: "/configurator",
+      name: "configurator",
+      component: Configurator,
+      meta: { requiresAuth: true },
+
+    },
 
   ],
 });

@@ -1,110 +1,176 @@
 <template>
-  <v-container :fluid="true" class="d-flex px-4 py-4" height="100vh">
-    <v-card width="60%" flat rounded="0">
-      <v-card-title
-        style="position: absolute; z-index: 2; top: 10px"
-        class="text-white"
-      >
-      </v-card-title>
-      <v-img
-        src="./images/login.png"
-        cover
-        height="100vh"
-        style="border-radius: 20px"
-      ></v-img>
-    </v-card>
-    <v-card width="40%" flat class="d-flex flex-column px-6">
-      <v-sheet class="mb-3">
-        <v-icon style="font-size: 100px" class="mb-6" color="#274E76"
-          >mdi-cube-outline</v-icon
-        >
-        <v-card-title class="px-0">Get Started Now</v-card-title>
-        <v-card-text class="px-0 mt-2"
-          >Enter your credentials to access your account</v-card-text
-        >
-      </v-sheet>
-      <v-sheet>
-        <v-row>
-          <v-col>
-            <v-btn variant="outlined" block class="font-weight-bold btn-class">
-              <v-icon class="mr-2 text-orange">mdi-google</v-icon>
-              Log in with Google
-            </v-btn></v-col
-          >
-          <v-col>
-            <v-btn variant="outlined" block>
-              <v-icon class="mr-2 text-blue">mdi-facebook</v-icon>
-              Log in with Facebook
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-sheet>
-
-      <v-sheet class="d-flex align-center justify-center mt-8">
-        <v-card-subtitle class="px-0">
-          _________________________________</v-card-subtitle
-        >
-        <v-card-text class="text-center">OR</v-card-text>
-        <v-card-subtitle>_________________________________</v-card-subtitle>
-      </v-sheet>
-
-      <v-form v-model="isForm" class="mt-8">
-        <v-text-field
-          v-model="username"
-          label="Username"
-          :rules="[rules.required]"
-          variant="outlined"
-          density="compact"
-          class="ml-3"
-        >
-        </v-text-field>
-
-        <v-text-field
-          v-model="password"
-          label="password"
-          density="compact"
-          :rules="[rules.required]"
-          class="ml-3 mt-5 "
-          :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
-          variant="outlined"
-          :type="show1 ? 'text' : 'password'"
-          @click:append-inner="show1 = !show1"
-        >
-        </v-text-field>
-        <v-card-text class="text-red py-0" v-if="errMsg"
-          >* Data Doesn't Match</v-card-text
-        >
-        <!-- <v-sheet>
-          <v-row class="d-flex "> -->
-            <!-- <v-col class="d-flexpx-0 py-0" cols="6">
-              <v-checkbox ></v-checkbox>
-              <v-card-text class="ml-0 ">Remember me</v-card-text>
-            </v-col> -->
-            <!-- <v-col class="text-end px-0 pt-0" cols="12"> -->
-            <!-- </v-col>
+  <v-container :fluid="true">
+    <v-row>
+      <v-col md="7" sm="6" xs="6">
+        <v-img
+          src="./images/login.png"
+          cover
+          class="rounded-xl"
+          height="95vh"
+        ></v-img>
+      </v-col>
+      <v-col md="5" sm="6" xs="6" class="d-flex align-center justify-center">
+        <v-card flat class="px-2">
+          <v-row no-gutters>
+            <v-col>
+              <v-icon
+                style="font-size: 70px"
+                class="rotate-animation"
+                color="#274E76"
+                >mdi-cube-outline</v-icon
+              >
+            </v-col>
           </v-row>
-        </v-sheet> -->
-        <v-card-text class="text-primary text-end px-0 py-0 mb-4">Forgot Password?</v-card-text>
-
-
-        <v-btn
-          :disabled="!isForm"
-          @click="handleLogin"
-          block
-          class="py-5"
-          color="#274E76"
-          :loading="isLoading"
-          >Login
-        </v-btn>
-      </v-form>
-    </v-card>
+          <v-row no-gutters>
+            <v-col>
+              <v-card-title class="px-0 text-h5 font-weight-bold"
+                >Get Started Now</v-card-title
+              >
+              <v-card-text class="px-0 text-subtitle-2 font-weight-medium"
+                >Enter your credentials to access your account</v-card-text
+              >
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="12" md="6" lg="6">
+              <v-btn
+                block
+                class="font-weight-bolder border rounded-lg elevation-0"
+              >
+                <v-icon class="mr-2 text-orange">mdi-google</v-icon>
+                <v-card-title class="text-body-2 font-weight-medium">
+                  Log in with Google</v-card-title
+                >
+              </v-btn>
+            </v-col>
+            <v-col cols="12" md="6" lg="6">
+              <v-btn class="border rounded-lg elevation-0" block>
+                <v-icon class="mr-2 text-blue">mdi-facebook</v-icon>
+                <v-card-title class="text-body-2 font-weight-medium">
+                  Log in with Facebook</v-card-title
+                >
+              </v-btn>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-card-subtitle class="text-no-wrap"
+                >___________________________________________or___________________________________________</v-card-subtitle
+              >
+            </v-col>
+          </v-row>
+          <v-row class="d-flex flex-column py-6" no-gutters>
+            <v-col>
+              <v-form v-model="isForm">
+                <v-card-text class="py-0 mb-2 text-subtitle-2 font-weight-bold">
+                  Name
+                </v-card-text>
+                <v-text-field
+                  v-model="username"
+                  rounded="lg"
+                  :rules="[rules.required]"
+                  variant="outlined"
+                  density="compact"
+                  class="ml-3"
+                >
+                </v-text-field>
+                <v-card-text class="py-0 mb-2 text-subtitle-2 font-weight-bold"
+                  >Password
+                </v-card-text>
+                <v-text-field
+                  v-model="password"
+                  density="compact"
+                  rounded="lg"
+                  :rules="[rules.required]"
+                  class="ml-3"
+                  :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                  variant="outlined"
+                  :type="show1 ? 'text' : 'password'"
+                  @click:append-inner="show1 = !show1"
+                >
+                </v-text-field>
+                <v-card-text class="text-red py-0" v-if="errMsg"
+                  >* Data Doesn't Match</v-card-text
+                >
+              </v-form>
+            </v-col>
+            <v-col>
+              <v-row class="d-flex align-center" no-gutters>
+                <v-col class="d-flex">
+                  <v-checkbox
+                    v-model="remember"
+                    label="Remember me"
+                    density="compact"
+                  ></v-checkbox>
+                </v-col>
+                <v-col class="py-0">
+                  <v-dialog persistent fullscreen v-model="forgotPassword">
+                    <template v-slot:activator="{ props: activatorProps }">
+                      <v-card-text
+                        v-bind="activatorProps"
+                        @click="forgotPassword = true"
+                        class="text-primary text-end px-0 font-weight-bold cursor-pointer"
+                        >Forgot Password?</v-card-text
+                      >
+                    </template>
+                    <template v-slot:default="{ isActive }">
+                      <v-card class="d-flex align-center pt-16">
+                        <v-icon style="font-size: 50px" color="blue"
+                          >mdi-lock-reset</v-icon
+                        >
+                        <v-card
+                          class="d-flex flex-column px-4 py-4"
+                          flat
+                          min-width="450px"
+                        >
+                          <v-card-title class="text-center"
+                            >Forgot Password</v-card-title
+                          >
+                          <v-card-text class="text-center"
+                            >No Worries , we'll send you reset
+                            instruction</v-card-text
+                          >
+                          <v-card-text class="px-0 py-1"> Email</v-card-text>
+                          <v-text-field
+                            variant="outlined"
+                            placeholder="Enter your Email"
+                          >
+                          </v-text-field>
+                          <v-btn color="#1B3D56">Reset Password</v-btn>
+                          <v-card-text
+                            @click="forgotPassword = false"
+                            class="text-center mt-2 cursor-pointer"
+                          >
+                            <v-icon>mdi-arrow-left</v-icon>
+                            Back to Log in
+                          </v-card-text>
+                        </v-card>
+                      </v-card>
+                    </template>
+                  </v-dialog>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col>
+              <v-btn
+                :disabled="!isForm"
+                @click="handleLogin"
+                block
+                class="py-5"
+                color="#274E76"
+                :loading="isLoading"
+                >Login
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script>
 import Cookies from "js-cookie";
-import axios from "axios";
-
 export default {
   name: "loginPage",
   data() {
@@ -116,8 +182,10 @@ export default {
       isForm: false,
       password: "",
       username: "",
+      remember: null,
       isLoading: false,
       errMsg: false,
+      forgotPassword: false,
     };
   },
   methods: {
@@ -125,7 +193,7 @@ export default {
       this.isLoading = true;
       if (this.username && this.password) {
         try {
-          const response = await axios.post(
+          const response = await this.$axios.post(
             `${import.meta.env.VITE_API_LINK}/auth/login`,
             {
               username: this.username,
@@ -136,8 +204,12 @@ export default {
           if (response.status === 200) {
             const token = response.data.accessToken;
             if (token) {
-              Cookies.set("jwtToken", token, { expires: 7 });
-              await this.fetchUserFurnitures(token);
+              if (this.remember) {
+                Cookies.set("jwtToken", token, { expires: 7 });
+              } else {
+                Cookies.set("jwtToken", token, { expires: 1 });
+              }
+              // await this.fetchUserFurnitures(token);
               this.$router.push("/homeview");
             } else {
               this.errors.username =
@@ -156,20 +228,6 @@ export default {
         }
       }
     },
-    async fetchUserFurnitures(token) {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_LINK}/furniture/furnitures`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        console.log("Furniture data:", response.data);
-      } catch (error) {
-        console.error("Error fetching furniture data:", error);
-      }
-    },
   },
   mounted() {
     const cookies = Cookies.get("jwtToken");
@@ -181,7 +239,20 @@ export default {
 </script>
 
 <style scoped>
-.btn-class {
-  font-weight: 900 !important;
+@keyframes rotateCube {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.font-600 {
+  font-weight: 600;
+}
+
+.rotate-animation {
+  animation: rotateCube 5s ease infinite;
 }
 </style>

@@ -25,8 +25,10 @@ const vuetify = createVuetify({
           mdi,
         },}
   });
-
+  
 const app = createApp(App)
+app.config.globalProperties.$axios = axios;
+
 app.config.globalProperties.$axios = axios; 
 app.use(store);
 app.use(router)

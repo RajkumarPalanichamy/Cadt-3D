@@ -1,41 +1,35 @@
 <template>
   <v-container :fluid="true" class="py-0 px-0" height="100vh">
-    <v-row
-      @click="isUpload = true"
-      style="position: absolute; bottom: 50px; right: 80px"
-    >
-      <v-col>
-        <v-btn
-          @click="isDialog = true"
-          size="x-large"
-          icon="mdi-plus"
-          color="#274E76"
-        ></v-btn>
-      </v-col>
-    </v-row>
+    <v-container :fluid="true">
+      <v-row>
+        <v-col md="9" sm="6">
+          <v-text-field
+            v-model="searchText"
+            variant="outlined"
+            prepend-inner-icon="mdi-magnify"
+            label="Search"
+          ></v-text-field>
+        </v-col>
+        <v-col md="3" sm="6">
+          <v-btn
+            block
+            class="linear-gradient text-white elevation-6"
+            @click="isDialog = true"
+            prepend-icon="mdi-plus"
+            size="x-large"
+            ><v-card-text class="text-subtitle-1 font-weight-bold"
+              >ADD USER</v-card-text
+            ></v-btn
+          >
+        </v-col>
+      </v-row>
+    </v-container>
+    <!--  -->
     <v-data-table-virtual
       height="94vh"
       :items="filteredUsers"
-      density="compact"
       :loading="isLoading"
     >
-      <template v-slot:top>
-        <v-row dense style="height: 44px; border-bottom: 1px solid #e4e4e4">
-          <v-spacer class="search_bg_colo"></v-spacer>
-          <v-col class="search_bg_colo">
-            <v-text-field
-              density="compact"
-              v-model="searchText"
-              class="mt-1"
-              style="height: 0px"
-              variant="plain"
-              prepend-icon="mdi-magnify"
-              placeholder="Search"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </template>
-
       <template v-slot:item.SNO="{ index }">
         {{ index + 1 }}
       </template>
@@ -45,81 +39,86 @@
         </v-icon>
       </template>
     </v-data-table-virtual>
-    <v-dialog width="600px" v-model="isDialog">
-      <v-card class="pl-2 pr-2">
-        <v-row class="d-flex align-center">
-          <v-col>
-            <v-card-title class="text-h6">Add User</v-card-title>
-          </v-col>
-          <v-col class="text-end">
-            <v-icon @click="isDialog = false">mdi-close</v-icon>
-          </v-col>
-        </v-row>
-        <v-divider class="mb-4"></v-divider>
-
-        <v-form>
-          <v-row class="py-0">
-            <v-col class="d-flex align-center">
-              <v-col cols="4"> <v-card-text>User Name</v-card-text> </v-col>
-              <v-col class="py-0 px-0">
-                <v-text-field
-                  v-model="username"
-                  density="compact"
-                  variant="outlined"
-                  label="Name"
-                ></v-text-field>
-              </v-col>
-            </v-col>
-          </v-row>
-          <v-row class="mt-0">
-            <v-col class="d-flex align-center">
-              <v-col cols="4"> <v-card-text>User Role</v-card-text> </v-col>
-              <v-col class="py-0 px-0">
-                <v-select
-                  v-model="role"
-                  label="Role"
-                  density="compact"
-                  variant="outlined"
-                  :items="['user', 'admin']"
-                ></v-select>
-              </v-col>
-            </v-col>
-          </v-row>
-          <v-row class="mt-0">
-            <v-col class="d-flex align-center">
-              <v-col cols="4"> <v-card-text>Set Password</v-card-text> </v-col>
-              <v-col class="py-0 px-0">
-                <v-text-field
-                  v-model="password"
-                  label="Set Password"
-                  density="compact"
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-            </v-col>
-          </v-row>
-          <v-divider class="mb-4"></v-divider>
-          <v-row>
+    <v-dialog width="700px" v-model="isDialog">
+      <v-card>
+        <v-card flat>
+          <v-row
+            class="d-flex align-center text-white px-4"
+            style="background-color: #11324b"
+          >
             <v-col>
-              <v-btn
-                block
-                color="#274E76"
-                variant="outlined"
-                @click="isDialog = false"
-                >Cancel</v-btn
-              >
+              <v-card-title class="text-h6">Add User</v-card-title>
             </v-col>
-            <v-col>
-              <v-btn
-                color="#274E76"
-                prepend-icon="mdi-plus"
-                block
-                @click="addUser"
-                >Add User</v-btn
-              >
+            <v-col class="text-end">
+              <v-icon @click="isDialog = false">mdi-close</v-icon>
             </v-col>
           </v-row>
-        </v-form>
+          <v-form class="px-4 py-4">
+            <v-row class="py-0">
+              <v-col class="d-flex align-center">
+                <v-col cols="4"> <v-card-text>User Name</v-card-text> </v-col>
+                <v-col class="py-0 px-0">
+                  <v-text-field
+                    v-model="username"
+                    density="compact"
+                    variant="outlined"
+                    label="Name"
+                  ></v-text-field>
+                </v-col>
+              </v-col>
+            </v-row>
+            <v-row class="mt-0">
+              <v-col class="d-flex align-center">
+                <v-col cols="4"> <v-card-text>User Role</v-card-text> </v-col>
+                <v-col class="py-0 px-0">
+                  <v-select
+                    v-model="role"
+                    label="Role"
+                    density="compact"
+                    variant="outlined"
+                    :items="['user', 'admin']"
+                  ></v-select>
+                </v-col>
+              </v-col>
+            </v-row>
+            <v-row class="mt-0">
+              <v-col class="d-flex align-center">
+                <v-col cols="4">
+                  <v-card-text>Set Password</v-card-text>
+                </v-col>
+                <v-col class="py-0 px-0">
+                  <v-text-field
+                    v-model="password"
+                    label="Set Password"
+                    density="compact"
+                    variant="outlined"
+                  ></v-text-field>
+                </v-col>
+              </v-col>
+            </v-row>
+            <v-divider class="mb-4"></v-divider>
+            <v-row>
+              <v-col>
+                <v-btn
+                  block
+                  color="#274E76"
+                  variant="outlined"
+                  @click="isDialog = false"
+                  >Cancel</v-btn
+                >
+              </v-col>
+              <v-col>
+                <v-btn
+                  color="#274E76"
+                  prepend-icon="mdi-plus"
+                  block
+                  @click="addUser"
+                  >Add User</v-btn
+                >
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card>
       </v-card>
     </v-dialog>
     <!-- Success Dialogi -->
@@ -163,7 +162,6 @@
   </v-container>
 </template>
 <script>
-import axios from "axios";
 export default {
   name: "employeePage",
   data() {
@@ -185,7 +183,7 @@ export default {
       this.userDetails = [];
       try {
         this.isLoading = true;
-        const user = await axios.get(
+        const user = await this.$axios.get(
           `${import.meta.env.VITE_API_LINK}/auth/getclients`
         );
         if (user.status == "200") {
@@ -213,11 +211,10 @@ export default {
         password: this.password,
         role: this.role,
       };
-      console.log(newUserDetails);
 
       try {
         this.isDialog = false;
-        const user = await axios.post(
+        const user = await this.$axios.post(
           `${import.meta.env.VITE_API_LINK}/auth/register`,
           newUserDetails
         );
@@ -234,7 +231,7 @@ export default {
     },
     async deleteUser() {
       try {
-        const response = await axios.delete(
+        const response = await this.$axios.delete(
           `${import.meta.env.VITE_API_LINK}/auth/clients/${this.userId}`
         );
 
@@ -269,5 +266,8 @@ export default {
   border-radius: 50%;
   position: relative;
   left: 200px;
+}
+.linear-gradient {
+  background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
 </style>
