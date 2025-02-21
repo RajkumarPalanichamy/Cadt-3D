@@ -43,7 +43,6 @@ export default {
     },
     update() {
       this.threeScene.cam = !this.threeScene.cam;
-
       this.threeScene.updateCamera();
     },
     modelLoad(model) {

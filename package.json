@@ -15,9 +15,12 @@
     "axios": "^1.7.7",
     "cloudinary": "^2.5.1",
     "color-namer": "^1.4.0",
+
+    "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
     "mdi-vue": "^3.0.13",
-    "three": "^0.171.0",
+    "three": "^0.169.0",
+
     "three-bvh-csg": "^0.0.16",
     "three-csg-ts": "^3.2.0",
     "tween.js": "^16.6.0",

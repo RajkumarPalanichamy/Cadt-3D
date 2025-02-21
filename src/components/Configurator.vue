@@ -22,7 +22,9 @@
           <v-list-item
             v-for="(value, i) in listItems"
             :key="i"
-            @click="selectedItem = value.label"
+
+            @click="navigation(value.label)"
+
           >
             <v-list-item-content
               :class="{
@@ -52,9 +54,12 @@
           class="px-0 py-0 mb-6"
         >
           <v-row no-gutters>
-            <v-col>{{ selectedItem.toUpperCase() }}</v-col>
+
+             <v-col class="font-weight-bold text-subtitle-2">{{
+              selectedItem ? selectedItem.toUpperCase() : ""
+            }}</v-col>
             <v-col class="text-end">
-              <v-btn color="#265678" disabled> Save</v-btn>
+              <v-btn color="#265678" @click="postdata" disabled> Save</v-btn>
             </v-col>
           </v-row>
         </v-container>
@@ -105,6 +110,7 @@
           </v-row>
                  </v-card>
 
+
         <v-card flat v-if="selectedItem === 'Dimensions'">
           <v-form>
             <v-row no-gutters>
@@ -138,77 +144,168 @@
         </v-card>
         <v-card
           flat
-          v-if="selectedItem === 'Colors'"
+
+          v-if="
+            selectedItem === 'Colors' ||
+            selectedItem === 'Materials' ||
+            selectedItem === 'Handel Bars'
+          "
+
           style="height: 65vh; overflow-y: scroll"
         >
           <v-row class="ga-7 d-flex flex-grow-1" no-gutters>
             <v-col md="3" sm="5">
-              <v-dialog max-width="500" v-model="isAddColor">
+
+              <v-dialog max-width="800px" persistent v-model="isAddColor">
                 <template v-slot:activator="{ props: activatorProps }">
                   <div
                     v-bind="activatorProps"
-                    class="d-flex align-center justify-center border rounded-lg"
-                    style="height: 70%"
+                    class="d-flex flex-column align-center justify-center border rounded-lg"
+                    style="height: 80%"
                   >
-                    <v-icon class="mdi mdi-plus"></v-icon>
+                    <v-icon class="mdi mdi-plus d-block"></v-icon>
+                    <v-card-title
+                      class="pa-0 ma-0 text-subtitle-2 text-center font-weight-bold mt-1"
+                    >
+                      Add {{ selectedItem }}
+                    </v-card-title>
                   </div>
                 </template>
                 <template v-slot:default>
-                  <v-card rounded="0">
-                    <v-container :fluid="true" class="px-0 py-0">
+                  <v-card
+                    rounded="0"
+                    :height="selectedItem === 'Colors' ? '450px' : '400px'"
+                    class="d-flex justify-space-between"
+                    flat
+                  >
+                    <v-container
+                      :fluid="true"
+                      class="px-4 py-4 text-white"
+                      style="background-color: #214966"
+                    >
                       <v-row no-gutters class="d-flex align-center">
                         <v-col>
-                          <v-icon
-                            @click="(isAddColor = false), (color = '')"
-                            class="mdi mdi-close"
-                          ></v-icon>
-                        </v-col>
-                        <v-col class="text-end">
-                          <v-btn
-                            variant=""
-                            @click="addColor"
-                            :disabled="color ? false : true"
+                          <v-card-title class="text-subtitle-1 pa-0"
+                            >ADD {{ selectedItem.toUpperCase() }}</v-card-title
                           >
-                            Add
-                          </v-btn>
+
                         </v-col>
                       </v-row>
                     </v-container>
                     <v-color-picker
+
+                      class="elevation-0"
+                      v-if="selectedItem === 'Colors'"
+
                       rounded="0"
                       v-model:mode="mode"
                       width="100%"
                       v-model="color"
                     >
                     </v-color-picker>
+
+                    <v-container
+                      :fluid="true"
+                      v-if="
+                        selectedItem === 'Materials' ||
+                        selectedItem === 'Handel Bars'
+                      "
+                    >
+                      <v-row>
+                        <v-col cols="5">
+                          <div>
+                            <img
+                              :src="objectURL ? objectURL : '/images/mo.jpg'"
+                              cover
+                              width="250px"
+                              height="200px"
+                            />
+                          </div>
+                        </v-col>
+                        <v-col cols="7">
+                          <v-text-field
+                            v-model="materialName"
+                            variant="underlined"
+                            label="Name"
+                            :append-icon="
+                              materialName ? '' : 'mdi mdi-exclamation'
+                            "
+                          >
+                          </v-text-field>
+                          <v-file-input
+                            v-model="materialModel"
+                            variant="underlined"
+                            @change="imgReceived"
+                            label="Upload File"
+                            :append-icon="
+                              materialModel ? '' : 'mdi mdi-exclamation'
+                            "
+                          >
+                          </v-file-input>
+                        </v-col>
+                      </v-row>
+                    </v-container>
+                    <v-card-actions>
+                      <v-btn
+                        density="compact"
+                        variant="text"
+                        @click="canceldialog"
+                      >
+                        <span class="font-weight-medium"> cancel</span>
+                      </v-btn>
+                      <v-btn density="compact" variant="text" @click="postData">
+                        <span class="font-weight-medium"> Save</span>
+                      </v-btn>
+                    </v-card-actions>
                   </v-card>
                 </template>
               </v-dialog>
 
-              <v-card-title class="pa-0 ma-0 text-subtitle-1 text-center">
-                Add Color
-              </v-card-title>
             </v-col>
             <v-col
               md="3"
               sm="5"
               class="text-center"
-              v-for="(color, i) in colors"
+
+              v-for="(data, i) in displayData"
               :key="i"
-              @click="colorChange(color)"
+              @click="colorChange(data)"
             >
-              <div
-                class="rounded-lg"
-                style="height: 75px"
-                :style="color ? { backgroundColor: color.code } : {}"
-              ></div>
-              <v-card-title class="pa-0 ma-0 text-subtitle-1">{{
-                color.name
-              }}</v-card-title>
-              <v-card-title
-                class="ma-0 pa-0 text-subtitle-2 text-grey-lighten-1"
-                >{{ color.code }}</v-card-title
-              >
+              <v-hover v-slot:default="{ isHovering, props }">
+                <div v-bind="props">
+                  <div
+                    class="rounded-lg mb-1 position-relative"
+                    style="height: 80px"
+                    :style="
+                      data?.colorCode
+                        ? { backgroundColor: data.colorCode }
+                        : {
+                            backgroundImage: `url(${data.imgUrl})`,
+                            backgroundSize: 'cover',
+                          }
+                    "
+                  >
+                    <!-- Dustbin icon appears only when hovered -->
+                    <v-icon
+                      v-if="isHovering"
+                      class="position-absolute"
+                      style="top: 5px; right: 5px; cursor: pointer; color: red"
+                      @click.stop="deleteItem(data)"
+                    >
+                      mdi-delete
+                    </v-icon>
+                  </div>
+                  <v-card-title class="pa-0 ma-0 text-subtitle-2">
+                    {{ data.name }}
+                  </v-card-title>
+                  <v-card-title
+                    class="ma-0 pa-0 text-subtitle-2 text-grey-lighten-1"
+                  >
+                    {{ data.code }}
+                  </v-card-title>
+                </div>
+              </v-hover>
+
             </v-col>
           </v-row>
         </v-card>
@@ -231,9 +328,16 @@ export default {
   data() {
     return {
       threeContainer: null,
+
+      displayData: null,
       threeScene: null,
       isAddColor: false,
+      materialName: "",
+      materialModel: null,
+      selectedItem: "Colors",
       color: null,
+      objectURL: null,
+
       mode: "hexa",
       listItems: [
         {
@@ -252,59 +356,146 @@ export default {
           label: "Handel Bars",
           icon: "mdi-chart-donut",
         },
-        {
+         {
           label: "Swing",
           icon: "mdi-chart-donut",
 
         }
+
       ],
-      selectedItem: "Colors",
-      colors: [
-        { name: "Dodger Blue", code: "#1E90FF" },
-        { name: "Classic Green", code: "#008000" },
-        { name: "Gray ", code: "#808080" },
-        { name: "Beige ", code: "#F5F5DC" },
-        { name: "Cyan", code: "#00FFFF" },
-        { name: "Saddle Brown", code: "#8B4513 " },
-        { name: "Olive Green ", code: "#6B8E23" },
-        { name: "Terracotta ", code: "#E2725B" },
-      ],
-      selectedItem: "Materials",
-      materials: [
-        { name: "MatOne", Material: "/images/ceil.jpeg" },
-        { name: "MatTwo", Material: "/images/floor.jpg" },
-        { name: "MatThree", Material: "/images/floor2.jpg" },
-        { name: "MatFour", Material: "/images/floor3.jpeg" },
-        { name: "MatFive", Material: "/images/f.jpg" },
-        { name: "MatSix", Material: "/images/f2.jpg" },
-        { name: "MatSeven", Material: "/images/wall.jpg" },
-        { name: "MatEight", Material: "/images/wood.jpg" },
-      ],
-      swings:[{name:'Outwards'},{name:'Inwards'}]
+      colors: [],
+      materials: [],
+       swings:[{name:'Outwards'},{name:'Inwards'}],
+      handlebars: [{ name: "MatOne", Material: "/images/ceil.jpeg" }],
+
     };
   },
   mounted() {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new Configurator(this.threeContainer);
+
+    this.getData();
+    this.getColor();
+
   },
   methods: {
     addColor() {
       let colorName = namer(this.color).pantone[0].name;
-      this.colors.push({ name: colorName, code: this.color });
+
+      console.log(typeof this.color);
+
+      this.$axios
+        .post(`${import.meta.env.VITE_API_LINK}/configurator/postColor`, {
+          name: colorName,
+          colorCode: this.color,
+        })
+        .then((response) => {
+          console.log("Color saved:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error saving color:", error);
+        });
+
       this.isAddColor = false;
       this.color = "";
     },
+    async getColor() {
+      try {
+        const response = await this.$axios.get(
+          `${import.meta.env.VITE_API_LINK}/configurator/getColor`
+        );
+        if (response.status) {
+          this.colors = response.data.colorData;
+          this.displayData = this.colors
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    imgReceived() {
+      this.objectURL = URL.createObjectURL(this.materialModel);
+    },
+    canceldialog() {
+      this.isAddColor = false;
+      (this.color = ""), (this.objectURL = "");
+      (this.materialModel = ""), (this.materialName = "");
+    },
+
     colorChange(color) {
       let type = "color";
       this.threeScene.door(color.code, type);
+    },
+
+    async postData() {
+      if (this.color) {
+        this.addColor();
+      }
+      const sendingData = new FormData();
+      sendingData.append("name", this.materialName);
+      sendingData.append("imgUrl", this.materialModel);
+
+      try {
+        const response = await this.$axios.post(
+          `${import.meta.env.VITE_API_LINK}/configurator/postMaterial`,
+          sendingData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        if (response.status) {
+          this.isAddColor = false;
+          this.getData();
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async getData() {
+      try {
+        const response = await this.$axios.get(
+          `${import.meta.env.VITE_API_LINK}/configurator/getMaterial`
+        );
+        if (response.status) {
+          this.materials = response.data.configData;
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    async deleteItem(data) {
+      try {
+        const response = await this.$axios.delete(
+          `${import.meta.env.VITE_API_LINK}/configurator/texture/${data._id}`
+        );
+        if (response.status === 200) {
+          this.getData();
+        }
+      } catch (err) {
+        console.log(err);
+      }
     },
 
     MaterialChange(texturePath) {
       let type = "material";
       this.threeScene.door(texturePath, type);
     },
+
     doorHeight() {
       console.log(this.height);
+    },
+    navigation(value) {
+      if (value) {
+        this.selectedItem = value;
+      }
+      if (this.selectedItem === "Colors") {
+        this.displayData = this.colors;
+      } else if (this.selectedItem === "Materials") {
+        this.displayData = this.materials;
+      } else {
+        this.displayData = this.handlebars;
+      }
     },
     swingDetails(swing){
       let type = "swing";
@@ -316,3 +507,4 @@ this.threeScene.door(swing, type);
   },
 };
 </script>
+

@@ -10,6 +10,13 @@ import { MathUtils, Vector3 } from "three";
 import store from "../Store/index.js";
 
 
+import { CSG } from 'three-csg-ts'; 
+import { Sky } from "three/addons/objects/Sky.js";
+import { MathUtils, Vector3 } from "three";
+import store from "../Store/index.js";
+
+
+
 export default class studio3dThreeScene {
 
     constructor(container) {
@@ -84,6 +91,7 @@ export default class studio3dThreeScene {
       this.camera.position.set(0, 15, 35);
 
  
+
 // this.dragControls = new DragControls(this.gltfArray, this.camera, this.renderer.domElement);
 // this.dragControls.transformGroup = true;
 
@@ -95,6 +103,7 @@ export default class studio3dThreeScene {
 //     console.log('event',event);
     
 //     event.object.userData.lastValidPosition = event.object.position.clone();
+
 
 //     boxHelper = new THREE.BoxHelper(event.object, 0x00ff00); 
 //     this.scene.add(boxHelper);
@@ -293,12 +302,14 @@ export default class studio3dThreeScene {
   
               let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
               gltf.scene.scale.setScalar(1 / (maxSize / 4));
+
               gltf.scene.traverse((node) => {
                 if (node.isMesh) {
                   node.castShadow = true;
                   node.receiveShadow = true;
                 }
               });   
+
               const model = gltf.scene;
               model.rotation.set(0, angleX, 0); 
 
@@ -352,6 +363,7 @@ export default class studio3dThreeScene {
 
   if (intersects.length > 0) {
         let intersectedObject = intersects[0].object
+
         while (
           intersectedObject.parent &&
           !this.gltfArray.includes(intersectedObject)
@@ -367,20 +379,11 @@ export default class studio3dThreeScene {
         this.transformModel()
         store.commit('studioFunctionality',{value:true,position:event,gltf:intersectedObject})
 
-
-
-
-
-
-
-
-
-        
-
   }
   else{
     this.scene.remove(this.gizmo);
     store.commit('studioFunctionality',{value:false,position:event})
+
   }
 })
 
@@ -401,6 +404,7 @@ export default class studio3dThreeScene {
       this.animate();
       this.create();
       this.gltfLoading()
+
       this.windowPD()
     // this.cube();
     }
@@ -473,6 +477,7 @@ export default class studio3dThreeScene {
       this.scene.add(intRes)
       this.camera.position.z = 5;
   }
+
 
   
     create(wallValues) {
@@ -752,6 +757,7 @@ export default class studio3dThreeScene {
         }
       );
     }
+
     deleteGltf(gltfObj){
       console.log('gltfObj',gltfObj);
       this.scene.remove(gltfObj)
@@ -763,6 +769,7 @@ export default class studio3dThreeScene {
       this.transformControls.detach(gltfObj)
 
     }
+
     
     
     animate() {

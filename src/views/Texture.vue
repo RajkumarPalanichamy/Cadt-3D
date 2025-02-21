@@ -1,48 +1,43 @@
 <template>
   <v-container class="py-0 px-0" :fluid="true">
     <v-container class="py-0 px-0" :fluid="true">
-      <v-card color="white" flat class="d-flex align-center mx-8">
-      <v-text-field
-        width="70%"
-        v-model="searchQuery"
-        class="mt-5 mr-5"
-        density="comfortable"
-        variant="outlined"
-        prepend-inner-icon="mdi-magnify"
-        label="Search"
-      ></v-text-field>
-      <v-spacer></v-spacer>
-      <v-btn
-        @click="isUpload = true"
-        width="200px"
-        prepend-icon="mdi-upload-outline"
-        color="#274E76"
-        size="large"
-        >Upload</v-btn
-      >
-    </v-card>
-      <v-card height="100vh" flat>
-        <!-- <v-row
-          @click="isUpload = true"
-          style="position: absolute; bottom: 100px; right: 80px"
-        >
-          <v-col>
-            <v-btn
-              size="x-large"
-              icon="mdi-upload-outline"
-              color="#274E76"
-            ></v-btn>
+
+      <v-container :fluid="true">
+        <v-row>
+          <v-col md="9" sm="6">
+            <v-text-field
+              v-model="searchQuery"
+              variant="outlined"
+              prepend-inner-icon="mdi-magnify"
+              label="Search"
+            ></v-text-field>
           </v-col>
-        </v-row> -->
+          <v-col md="3" sm="6">
+
+            <v-btn
+              block
+              class="linear-gradient text-white elevation-6"
+              @click="isUpload = true"
+              prepend-icon="mdi-upload"
+              size="xl-large"
+              ><v-card-text class="text-subtitle-1 font-weight-bold"
+                >UPLOAD</v-card-text
+              ></v-btn
+            >
+          </v-col>
+
+        </v-row>
+      </v-container>
+      <v-card height="100vh" flat>
+
         <v-data-table-virtual
-          height="94vh"
+          height="86vh"
           :items="filteredTextures"
-          density="compact"
           item-value="name"
           :loading="isLoading"
         >
           <!-- Search Bar -->
-         
+
           <template v-slot:item.Sno="{ index }">
             {{ index + 1 }}
           </template>
@@ -50,9 +45,10 @@
             <v-img :src="item.Textureimage" width="30px" class="hover"></v-img>
           </template>
 
-          <template v-slot:item.view="{ item }">
+          <template v-slot:item.Action="{ item }">
             <v-icon color="grey" @click="viewTexture(item)"
-              >mdi-eye-outline</v-icon
+              >mdi-open-in-new</v-icon
+
             >
           </template>
         </v-data-table-virtual>
@@ -88,7 +84,13 @@
               ></v-file-input>
               <v-row class="mt-6">
                 <v-col>
-                  <v-btn color="#274E76" block class="mr-3" @click="uploadTexture"
+
+                  <v-btn
+                    color="#274E76"
+                    block
+                    class="mr-3"
+                    @click="uploadTexture"
+
                     >Upload
                   </v-btn>
                 </v-col>
@@ -158,7 +160,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import gltfViewer from "@/components/gltfViewer.vue";
 
 export default {
@@ -217,7 +218,7 @@ export default {
     },
     async getTextures() {
       this.textureData = [];
-      const response = await axios.get(
+      const response = await this.$axios.get(
         `${import.meta.env.VITE_API_LINK}/texture/getTextures`
       );
 
@@ -233,7 +234,9 @@ export default {
             _id: eachTexture._id,
             TextureName: eachTexture.name,
             TextureType: eachTexture.type,
-            view: true,
+
+            Action: true,
+
           };
           this.textureData.push(textureObj);
         });
@@ -252,7 +255,9 @@ export default {
       formData.append("Texturesfiles", this.file);
 
       try {
-        const response = await axios.post(
+
+        const response = await this.$axios.post(
+
           `${import.meta.env.VITE_API_LINK}/texture/textures,
           formData`,
           {
@@ -318,4 +323,9 @@ export default {
 .search_bg_color {
   background-color: #fafafa;
 }
+
+.linear-gradient {
+  background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
+}
 </style>
+

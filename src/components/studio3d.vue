@@ -68,8 +68,11 @@
         <!-- loding -->
         <v-card
           flat
+
+
           class="d-flex flex-column align-center justify-center mt-16 pt-16"
           v-if="modelLoader"
+
         >
           <v-progress-circular color="primary" indeterminate>
           </v-progress-circular>
@@ -98,28 +101,37 @@
             v-if="!categoryCard"
             v-for="(model, i) in modelData"
             :key="i"
-            class="px-2 py-2 border draggable-card"
+
+            class="border draggable-card"
+
             height="120px"
             @dragstart="onDragStart(model)"
             :draggable="isDrag"
             flat
           >
             <v-sheet width="100%" height="80%" class="text-center px-0 py-0">
+
+              <v-img :src="model.modelImg" cover></v-img>
             </v-sheet>
-            <v-sheet class="text-center"> {{ model.modelType }}</v-sheet>
+            {{ model.modelType }}
+
           </v-card>
         </v-card>
       </v-container>
     </v-card>
     <v-btn
-    v-if="showModelIcon"
+
+      v-if="showModelIcon"
+
       icon
       v-for="(icon, index) in IconForModel"
       :key="index"
       size="3em"
       :style="getIconStyle(index)"
       v-tooltip="icon.text"
-      @click="selectedIcon(icon.text)"
+
+      @click="clickedIcon(icon.text)"
+
       class="position-absolute btn-hover"
     >
       <v-icon>{{ icon.icon }}</v-icon>
@@ -170,7 +182,11 @@
 <script>
 import studio3dThreeScene from "@/Three/studio3d.js";
 import axios from "axios";
+
+
 import { mapState } from "vuex";
+
+
 export default {
   name: "cadt3d-container",
   data() {
@@ -178,7 +194,9 @@ export default {
       threeContainer: null,
       threeScene: null,
       categoryCard: true,
-      showModelIcon:false,
+
+      showModelIcon: false,
+
       modelData: [],
       modelLoader: false,
       modelCategories: [
@@ -206,6 +224,7 @@ export default {
       depth: null,
       wallValues: null,
       isDrag: true,
+
       gltfObj:null,
 
 
@@ -242,14 +261,15 @@ export default {
       this.threeScene.create(this.wallValues);
     },
     studioButton(newValue) {
-      console.log('newValue.position',newValue.position);
 
       if (newValue.value == true) {
         this.showModelIcon = true;
 
         this.addingIcons(newValue.position);
+
         this.gltfObj = newValue.gltf
         
+
       } else {
         this.showModelIcon = false;
       }
@@ -375,6 +395,9 @@ export default {
        }
 
     }
+  },
+  computed: {
+    ...mapState(["studioButton"]),
   },
   computed: {
     ...mapState(["studioButton"]),

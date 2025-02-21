@@ -1,14 +1,17 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+
 import TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js'
 
 export default class Configurator {
     constructor(container) {
+
         this.container = container;
         this.scene = null;
         this.camera = null;
         this.renderer = null;
+
         this.angle = null;
         this.currentDoor = null; // Track the door in the scene
         this.init();
@@ -197,11 +200,13 @@ export default class Configurator {
         this.controls.update();
         TWEEN.update();
 
+
         this.angle += 0.01; // Speed of rotation
         const radius = 5; // Distance from center
         this.directionalLight.position.x = Math.cos(this.angle) * radius;
         this.directionalLight.position.z = Math.sin(this.angle) * radius;
         this.directionalLight.position.y = 2; // Keep height constant
+
 
         this.directionalLight.target.updateMatrixWorld(); // Update light direction
 
@@ -212,3 +217,4 @@ export default class Configurator {
         this.renderer.render(this.scene, this.camera);
     }
 }
+

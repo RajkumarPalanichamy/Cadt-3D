@@ -6,6 +6,9 @@ const store = createStore({
     loadSavedModel: null,
     wallValue: false,
     studioButton:false,
+
+    modelimg:null,
+
   },
   mutations: {
     changeTriggerMethod(state) {
@@ -15,7 +18,9 @@ const store = createStore({
       console.log("payload", payload);
       try {
         const response = await axios.post(
+
           `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene`,
+
           payload
         );
         console.log(response.data);
@@ -27,8 +32,7 @@ const store = createStore({
     },
     loadModel(state, model) {
       state.loadSavedModel = model;
-      // console.log('model',model);
-      
+
     },
     cancelModel(state) {
       state.loadSavedModel = null;
@@ -42,6 +46,13 @@ const store = createStore({
     },
     studioFunctionality(state,value){
       state.studioButton=value
+
+    },
+    modelimage(state,response){
+      state.modelimg = response
+      console.log(state.modelimg);
+      
+
     }
   },
 });
