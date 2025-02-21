@@ -10,6 +10,7 @@ import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import { Sky } from "three/addons/objects/Sky.js";
 import { MathUtils, Vector3 } from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import {  SUBTRACTION, Brush, Evaluator } from "three-bvh-csg";
 import store from "../Store/index.js";
 
 export default class ThreeScene {
@@ -24,7 +25,9 @@ export default class ThreeScene {
     this.mouse = new THREE.Vector2();
     this.intersects = null;
     this.controlPoints = [];
+
     this.vertMarkers = [];
+
     this.bbBoxes = [];
     this.plane = null;
     this.controls = null;
@@ -33,6 +36,7 @@ export default class ThreeScene {
     this.hel;
     this.gridSize = 100;
     this.lines = [];
+    this.helper;
     this.textMeshes = [];
     this.tempLine = null;
     this.Dragcontrols = null;
@@ -45,6 +49,7 @@ export default class ThreeScene {
     this.modelLoad = [];
     this.globalArray = [];
     this.group;
+
     this.model;
     this.modelBox;
     this.box;
@@ -53,6 +58,7 @@ export default class ThreeScene {
     this.initializeDragControls;
     this.disposeDragControls;
 
+
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.mouseover = this.mouseover.bind(this);
@@ -60,12 +66,14 @@ export default class ThreeScene {
     this.draggedObject = null;
 
     this.init();
+
      this.transformControls = new TransformControls(
        this.camera,
        this.renderer.domElement
      );
      this.transformControls.setMode("translate");
      this.scene.add(this.transformControls);
+
   }
 
   init() {
@@ -90,9 +98,11 @@ export default class ThreeScene {
     this.light = new THREE.AmbientLight(0xffffff);
     this.scene.add(this.light);
 
+
     let pointLight = new THREE.DirectionalLight("white", 10);
     pointLight.position.set(10, 10, 0);
     this.scene.add(pointLight);
+
 
     this.mesh();
     this.updateCamera();
@@ -115,7 +125,7 @@ export default class ThreeScene {
     this.scene.add(sky);
 
     this.renderer.domElement.addEventListener(
-      "mousemove",
+      "click",
       this.selectingProperty.bind(this)
     );
 
@@ -155,11 +165,10 @@ export default class ThreeScene {
             model.position.z = intersectPoint.z;
           }
 
+          model.userData.name = "model";
           this.gltf.push(model);
-          // this.bbBoxes.push(model);
           this.scene.add(model);
-        // this.collisionForModels()
-          
+
         },
         undefined,
         (error) => {
@@ -167,7 +176,7 @@ export default class ThreeScene {
         }
       );
     });
-    
+
     this.animate();
   }
   createListener() {
@@ -224,7 +233,17 @@ export default class ThreeScene {
     
 
     if (this.cam) {
-      this.AddGeometries();
+
+      this.polygons.forEach((polygonGroup) => {
+        polygonGroup.textMeshes.forEach((textMesh) => {
+          this.scene.add(textMesh);
+        });
+        polygonGroup.spheres.forEach((sphere) => {
+          this.scene.add(sphere);
+        });
+      });
+
+
       this.scene.background = new THREE.Color("white");
       this.scene.add(this.plane);
       this.objects.push(this.plane);
@@ -251,6 +270,22 @@ export default class ThreeScene {
       this.scene.add(this.gridHelper);
     } else {
       this.RemoveGeometries();
+
+
+      this.polygons.forEach((polygonGroup) => {
+        polygonGroup.textMeshes.forEach((textMesh) => {
+          this.scene.remove(textMesh);
+          if (textMesh.geometry) textMesh.geometry.dispose();
+          if (textMesh.material) textMesh.material.dispose();
+        });
+        polygonGroup.spheres.forEach((sphere) => {
+          this.scene.remove(sphere);
+          if (sphere.geometry) sphere.geometry.dispose();
+          if (sphere.material) sphere.material.dispose();
+        });
+      });
+
+
       this.scene.remove(this.gridHelper);
       this.scene.remove(this.plane);
       this.objects.pop(this.plane);
@@ -284,6 +319,8 @@ export default class ThreeScene {
       this.camera.updateProjectionMatrix();
     } else if (this.camera instanceof THREE.OrthographicCamera) {
 
+      this.addCollisionDetection();
+
       this.camera.zoom = 1;
       this.controls.minZoom = 0.2;
       this.controls.maxZoom = 3.0;
@@ -312,17 +349,140 @@ export default class ThreeScene {
     }
   }
 
-  collisionForModels() {
+
+// collisionForModels() {
+//   const loader = new THREE.GLTFLoader();
+
+//   loader.load('path_to_model.glb', (gltf) => {
+//     const model = gltf.scene;
+//     this.scene.add(model);
+//     this.gltf.push(model);
+
+//     // Initialize TransformControls
+//     this.transformControls = new THREE.TransformControls(this.camera, this.renderer.domElement);
+//     this.scene.add(this.transformControls);
+//     this.transformControls.attach(model);
+//     this.transformControls.enabled = true;
+
+//     // Mouse events
+//     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
+
+//     let lastValidPosition = new THREE.Vector3();
+
+//     // Handle dragging changes
+//     this.transformControls.addEventListener('dragging-changed', (event) => {
+//       if (event.value) {
+//         this.controls.enabled = false; // Disable OrbitControls
+//         lastValidPosition.copy(this.transformControls.object.position);
+//       } else {
+//         this.controls.enabled = true; // Re-enable OrbitControls
+//       }
+//     });
+
+//     // Handle object changes
+//     this.transformControls.addEventListener('objectChange', () => {
+//       const draggedObject = this.transformControls.object;
+
+//       // Check for collision with polygonGroup walls
+//       const collidedWall = this.checkCollisionWithWalls(draggedObject, this.polygonGroup.walls);
+
+//       if (collidedWall) {
+//         console.log('Collision detected with a wall. Performing CSG operation.');
+
+//         // Perform the CSG cut
+//         this.performCSGCut(draggedObject, collidedWall);
+
+//         // Update the scene with the new geometry
+//         this.transformControls.detach(); // Detach control to avoid issues
+//         lastValidPosition.copy(draggedObject.position); // Save valid position
+//       } else {
+//         lastValidPosition.copy(draggedObject.position); // Update last valid position
+//       }
+//     });
+//   });
+// }
+
+// checkCollisionWithWalls(draggedObject, walls) {
+//   const draggedBox = new THREE.Box3().setFromObject(draggedObject);
+
+//   for (const wall of walls) {
+//     const wallBox = new THREE.Box3().setFromObject(wall);
+//     this.performCSGCut(draggedObject, wall);
+//     if (draggedBox.intersectsBox(wallBox)) {
+//       return wall; // Return the first collided wall
+//     }
+//   }
+//   return null;
+// }
+
+
+
+ performCSGCut(draggedObject, wall) {
+    
+    const brush1 = new Brush(draggedObject.geometry);
+    const brush2 = new Brush(wall.geometry);
+
+    const evaluator = new Evaluator();
+    const result = evaluator.evaluate(brush1, brush2, SUBTRACTION);
+
+ 
+    const resultMesh = new THREE.Mesh(result.geometry); 
+    
+    this.scene.add(resultMesh);
+
+    this.transformControls.attach(resultMesh);
+
+
+    // this.scene.remove(wall);
+}
+
+
+  addTransformControlToGlobalArray(event) {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    const raycastTargets = [...this.globalArray, ...this.gltf];
+
+    const intersects = this.raycaster.intersectObjects(raycastTargets, true);
+
+    if (intersects.length > 0) {
+      let intersectedObject = intersects[0].object;
+
+      while (
+        intersectedObject.parent &&
+        !raycastTargets.includes(intersectedObject)
+      ) {
+        intersectedObject = intersectedObject.parent;
+      }
+
+      let box = new THREE.Box3().setFromObject(intersectedObject);
+      let center = new THREE.Vector3();
+      box.getCenter(center);
+
+      this.transformControls.detach();
+      this.transformControls.attach(intersectedObject);
+
+      let gizmo = this.transformControls.getHelper();
+      if (gizmo) {
+        gizmo.position.copy(center);
+        this.scene.add(gizmo);
+      }
+    } else {
+      this.transformControls.detach();
+    }
+  }
+  addCollisionDetection() {
     let lastValidPosition = new THREE.Vector3();
+    this.renderer.domElement.addEventListener("click", (event) => {
+      this.addTransformControlToGlobalArray(event);
+    });
+    if (!this.transformControls) return;
 
-  this.renderer.domElement.addEventListener("click", (event) => {
-        this.onMouseMove(event);
-      });
 
-    // this.boundingBoxArray = [];
-    // this.updateBoundingBoxes(this.globalArray, this.boundingBoxArray);
-
-  
     this.transformControls.addEventListener("dragging-changed", (event) => {
       if (event.value) {
         this.controls.enabled = false;
@@ -335,24 +495,32 @@ export default class ThreeScene {
     this.transformControls.addEventListener("objectChange", () => {
       const draggedObject = this.transformControls.object;
 
-      const collisionWithWalls = this.checkGroupCollisionWithWalls(
-        draggedObject,
-        this.bbBoxes
-      );
-      // const collisionWithGlobalArray =
-      //   this.checkGroupCollisionWithGlobalObjects(
-      //     draggedObject,
-      //     this.globalArray,
-      //     this.boundingBoxArray
-      //   );
+      const allObjects = [...this.globalArray, ...this.gltf];
+      let collisionWithObjects;
+      let collisionWithWalls;
 
-      if (collisionWithWalls || collisionWithGlobalArray) {
+      if ((draggedObject.userData.name = "model")) {
+        collisionWithWalls = this.checkCollisionWithWalls(
+          draggedObject,
+          this.bbBoxes
+        );
+      } else {
+        collisionWithObjects = this.checkCollisionWithObjects(
+          draggedObject,
+          allObjects
+        );
+      }
+
+      if (collisionWithWalls || collisionWithObjects) {
+       
+
         draggedObject.position.copy(lastValidPosition);
       } else {
         lastValidPosition.copy(draggedObject.position);
       }
     });
   }
+
 
   onMouseMove(event, lastValidPosition) {
     console.log(event);
@@ -411,6 +579,7 @@ export default class ThreeScene {
       if (otherGroup === draggedGroup) continue;
 
       const otherBox = boundingBoxArray[i];
+
       const expandedBox = otherBox.clone().expandByScalar(0.001);
 
       if (draggedBox.intersectsBox(expandedBox)) {
@@ -438,22 +607,81 @@ export default class ThreeScene {
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    this.intersects = this.raycaster.intersectObjects(this.walls);
+    this.intersectObject=[]
+    
+    
+    this.polygons.forEach((polygonGroup) => {
+      polygonGroup.walls.forEach((wall) => {
+          this.intersectObject.push(wall);
+      })
+    });
+    console.log(this.intersectObject);
+    
+      this.intersects = this.raycaster.intersectObjects(this.intersectObject);
+      if (this.intersects.length > 0) {
+        this.INTERSECTED = this.intersects[0].object;
+        if (this.INTERSECTED) {
+          store.commit("wall", e);
 
+          this.INTERSECTED.material[2] = new THREE.MeshBasicMaterial({
+            color: "green",
+          });
+        } else {
+          this.INTERSECTED.material[2] = new THREE.MeshLambertMaterial({
+            color: 0x3b3b3b,
+          });
+        }
+      }
+   
+  }
+  AddTexture(texture) {
+    let textures = new THREE.TextureLoader().load(texture);
     if (this.intersects.length > 0) {
-      if (this.INTERSECTED) {
-        this.INTERSECTED.material[2] = this.INTERSECTED.material[2];
-      }
+      console.log(texture);
+      
       this.INTERSECTED = this.intersects[0].object;
-      this.INTERSECTED.material[2] = new THREE.MeshBasicMaterial({
-        color: "green",
+  
+      this.INTERSECTED.material[4] = new THREE.MeshLambertMaterial({
+        map: textures,
       });
-    } else {
-      if (this.INTERSECTED) {
-        this.INTERSECTED.material[2] = new THREE.MeshLambertMaterial({
-          color: 0x3b3b3b,
-        });
-      }
+          console.log(this.INTERSECTED.material);
+      
+    }
+  }
+  AddVertices() {
+    if (this.intersects.length > 0) {
+   
+      this.INTERSECTED = this.intersects[0].object;
+      let point=this.intersects[0].point.clone();
+       let cp = new THREE.Mesh(
+         new THREE.SphereGeometry(0.2, 20, 20),
+         new THREE.MeshBasicMaterial({
+           color: "blue",
+           transparent: true,
+           opacity: 0.3,
+         })
+       );
+       cp.position.copy(point);
+      this.scene.add(cp);
+       this.polygons.forEach((polygonGroup) => {
+         polygonGroup.spheres.push(cp);
+       });
+    }
+  }
+  removeTheWall() {
+    if (this.intersects.length > 0) {
+      this.INTERSECTED = this.intersects[0].object;
+      this.group.remove(this.INTERSECTED)
+      
+    }
+  }
+  AddTextureToOutdoor(texture) {
+    let textures = new THREE.TextureLoader().load(texture);
+    if (this.intersects.length > 0) {
+      this.INTERSECTED = this.intersects[0].object;
+      this.INTERSECTED.material[4] = new THREE.MeshLambertMaterial({
+        map: textures,
+      });
     }
   }
 
@@ -537,8 +765,10 @@ export default class ThreeScene {
   }
   mouseover(e) {
     this.raycastDefined(e);
+
     this.disableDragControls();
     // this.disposeDragControls();
+
 
     if (this.intersects.length > 0) {
       if (!this.dragcontrols) {
@@ -547,11 +777,13 @@ export default class ThreeScene {
     }
   }
 
+
   disableDragControls() {
     if (this.dragControls) {
       this.dragControls.enabled = false;
     }
   }
+
 
   setupDragControls() {
     this.dragControls = new DragControls(
@@ -711,6 +943,13 @@ export default class ThreeScene {
       if (textMesh.material) textMesh.material.dispose();
     });
 
+
+    polygonGroup.textMeshes.forEach((textMesh) => {
+      this.scene.remove(textMesh);
+      if (textMesh.geometry) textMesh.geometry.dispose();
+      if (textMesh.material) textMesh.material.dispose();
+    });
+
     this.textMeshes = [];
 
     for (let i = 0; i < polygonGroup.controlPoints.length; i++) {
@@ -775,17 +1014,13 @@ export default class ThreeScene {
       shape.lineTo(this.controlPoints[i].x, this.controlPoints[i].z);
     }
 
-    let loader = new THREE.TextureLoader();
-    let texture = loader.load("./images/download.jpg", () => {
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(1, 1);
-    });
     let geometry = new THREE.ShapeGeometry(shape);
     geometry.rotateX(Math.PI / 2);
     let material = new THREE.MeshBasicMaterial({
-      // map: texture,
-      color: "lightgreen",
+
+      // color: texture,
+      color: "lightblue",
+
       side: THREE.DoubleSide,
     });
 
@@ -973,7 +1208,7 @@ export default class ThreeScene {
     let point1 = new THREE.Vector3();
     let point2 = new THREE.Vector3();
     let height = 2;
-    let thickness = 0.1;
+    let thickness = 0.15;
 
     for (let i = 0; i < this.controlPoints.length - 1; i++) {
       point1.set(this.controlPoints[i].x, 1, this.controlPoints[i].z);
@@ -984,12 +1219,12 @@ export default class ThreeScene {
         .subVectors(point2, point1)
         .normalize();
       let loader = new THREE.TextureLoader();
-      let texture = loader.load("./images/images.jpg", () => {
+      let texture = loader.load("./images/bric.jpg", () => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
       });
-      let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
+      let geometry = new THREE.BoxGeometry(length + 0.13, height, thickness);
       let material = [
         new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
         new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
@@ -1026,13 +1261,19 @@ export default class ThreeScene {
 
   addLight() {
     let box = new THREE.Box3().setFromObject(this.polygonMesh);
+    let size = new THREE.Vector3();
+    box.getSize(size);
+
     let centre = box.getCenter(new THREE.Vector3());
-    let spotlight = new THREE.PointLight(0xffffff, 10, 4);
+    let spotlight = new THREE.PointLight("white", size.x + size.y + size.z, 4);
     spotlight.position.set(centre.x, centre.y + 1, centre.z);
+    let helper = new THREE.PointLightHelper(spotlight);
+    // this.scene.add(helper);
     this.scene.add(spotlight);
     this.group.add(spotlight);
   }
   gltfLoader(modelLink) {
+
     const loader = new GLTFLoader();
     loader.load(modelLink, (gltf) => {
       this.box = new THREE.Box3().setFromObject(gltf.scene);
@@ -1085,7 +1326,9 @@ export default class ThreeScene {
     // this.transformControls.update();
     this.render();
     if (this.getImageData == true) {
+      
       this.dataURL = this.renderer.domElement.toDataURL();
+
       this.blob();
       this.getImageData = false;
     }

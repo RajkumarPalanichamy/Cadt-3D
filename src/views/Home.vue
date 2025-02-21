@@ -1,50 +1,40 @@
 <template>
   <v-container class="py-0 px-0 pl-5" :fluid="true">
     <!-- Search Bar -->
-    <v-sheet class="d-flex mt-5 px-16">
-            <v-sheet width="70%">
-              <v-text-field
-                v-model="searchedValue"
-                @input="searchSavedModels"
-                variant="outlined"
-                label="Search My Projects"
-                density="compact"
-                prepend-inner-icon="mdi-magnify"
-                clearable
-                class="mr-16"
-                style="height: 90px"
-              >
-              </v-text-field>
-            </v-sheet>
-            <v-sheet width="30%">
-              <v-btn
-                class="linear-gradient text-white elevation-5"
-                prepend-icon="mdi-plus"
-                variant="none"
-                block
-                @click="createProject"
-                size="x-large"
-              >
-                Create Project</v-btn
-              >
-            </v-sheet>
-          </v-sheet>
+    <v-container :fluid="true">
+      <v-row>
+        <v-col md="8" sm="6" xs="12">
+          <v-text-field
+            v-model="searchedValue"
+            @input="searchSavedModels"
+            variant="outlined"
+            label="Search My Projects"
+            density="compact"
+            prepend-inner-icon="mdi-magnify"
+            clearable
+            style="height: 90px"
+          >
+          </v-text-field>
+        </v-col>
+        <v-col md="4" sm="6" xs="12">
+          <v-btn
+            block
+            class="linear-gradient text-white elevation-5 d-flex align-center justify-center"
+            variant="none"
+            @click="createProject"
+            size="x-large"
+          >
+            <v-icon class="font-weight-bold" size="1.5em"> mdi-plus</v-icon>
+            <v-card-text class="px-0 text-h6 font-weight-bold"
+              >Create Project</v-card-text
+            >
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-container>
 
-    <!-- <v-text-field
-        v-model="searchedValue"
-        @input="searchSavedModels"
-        variant="outlined"
-        label="Search Your Projects"
-        density="compact"
-        prepend-inner-icon="mdi-magnify"
-        clearable
-        class="mt-6 mx-2"
-        rounded
-      >
-      </v-text-field> -->
-    <!-- No data found message -->
+    <!-- Error Msg -->
     <v-card
-     
       flat
       class="d-flex flex-column align-center justify-center mt-16"
       v-if="!isShow && filteredModels.length === 0"
@@ -52,43 +42,44 @@
       <v-icon color="error" size="2em">mdi-alert-circle-outline</v-icon>
       <v-card-title>No Project found</v-card-title>
     </v-card>
-      <v-card-title class="ml-10">My Projects</v-card-title>
+
+    <v-card-title v-if="isShow">My Projects</v-card-title>
+
+    <!-- Loading Effects -->
     <v-overlay
+      :model-value="true"
+      background="white"
       v-model="isProjectLoad"
       persistent
       class="d-flex justify-center align-center"
     >
-      <v-progress-circular indeterminate :size="70" :width="5" color="#274E76">
+      <v-progress-circular
+        indeterminate
+        :size="70"
+        :width="5"
+        class="ml-16 pl-16"
+        style="margin-left: 100px !important"
+        color="#274E76"
+      >
         {{ value }}
       </v-progress-circular>
-    </v-overlay>
-    <!-- Displaying Cards -->
-    <v-card
-      height="78vh"
-      class="grid-project px-2 py-2 mx-2 savedprojects overflow"
-      flat
-    >
-      <!-- <v-card
-        v-if="isShow"
-        @click="createProject()"
-        style="border-radius: 8px"
-        width="270px"
-        height="270px"
-        class="hoverCard d-flex flex-column align-center pt-16 blur"
+      <v-card-text class="text-white"
+        >Please Wait While loading Your Projects ..!</v-card-text
       >
-        <v-icon style="font-size: 2.5em">mdi-plus</v-icon>
-        <v-card-text
-          class="text-subtitle-1"
-          style="letter-spacing: 2px !important"
-          >Create Project</v-card-text
-        >
-      </v-card> -->
+    </v-overlay>
+
+    <!-- Displaying Cards -->
+    <v-container
+      :fluid="true"
+      height="77vh"
+      class="d-flex flex-wrap ga-14 justify-start overflow px-0"
+    >
       <v-card
-        class="px-3 py-3 blur"
-        style="border-radius: 8px"
+        class="px-3 py-3 blur flex-grow-1 card"
+        style="border-radius: 8px; justify-self: flex-start"
         v-for="(model, index) in filteredModels"
-        width="270px"
-        height="270px"
+        height="250px"
+        width="250px"
         :key="index"
       >
         <v-container class="px-0 py-0" height="65%">
@@ -108,7 +99,6 @@
             >
           </v-col>
           <v-col cols="2">
-            <!-- v-menu for menu list on dots icon hover -->
             <v-menu transition="scale-transition" offset-y open-on-hover>
               <template v-slot:activator="{ props }">
                 <v-icon v-bind="props" style="cursor: pointer"
@@ -134,7 +124,8 @@
           {{ model.createdAt }}</v-card-subtitle
         >
       </v-card>
-    </v-card>
+    </v-container>
+    
     <!-- Snack Bar -->
     <v-snackbar v-model="isSnackbar" :timeout="500">
       No Project Found
@@ -148,7 +139,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import Cookies from "js-cookie";
 import VueJwtDecode from "vue-jwt-decode";
 
@@ -168,6 +158,7 @@ export default {
       { text: "Open", icon: "mdi-open-in-new" },
       { text: "Rename", icon: "mdi-rename" },
       { text: "Delete", icon: "mdi-delete-empty-outline" },
+
     ],
     dialog: false,
     searchedValue: null,
@@ -209,8 +200,7 @@ export default {
       this.isProjectLoad = true;
       try {
         const data = Cookies.get("jwtToken");
-
-        const response = await axios.get(
+        const response = await this.$axios.get(
           `${import.meta.env.VITE_API_LINK}/dynamic/getdynamicscene`,
           {
             headers: {
@@ -235,7 +225,7 @@ export default {
         const data = Cookies.get("jwtToken");
         const userName = VueJwtDecode.decode(data);
 
-        const response = await axios.get(
+        const response = await this.$axios.get(
           `${import.meta.env.VITE_API_LINK}/dynamic/dynamicscene/${
             userName.name
           }`
@@ -261,8 +251,6 @@ export default {
       }
     },
     loadSavedModels(model) {
-      // this.$router.push("/createproject");
-      // ThreeScene.methods.loadSaved(model);\
       this.$store.commit("loadModel", model);
       this.$router.push("/createproject");
     },
@@ -274,7 +262,7 @@ export default {
           projectName: projectname,
         };
 
-        const response = await axios.delete(
+        const response = await this.$axios.delete(
           `${import.meta.env.VITE_API_LINK} /dynamic/dynamicscene
 `,
           {
@@ -293,15 +281,14 @@ export default {
 </script>
 
 <style scoped>
-.grid-project {
+/* .grid-project {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   justify-items: center;
   row-gap: 50px;
-}
+} */
 .overflow {
   overflow: scroll;
-  /* scrollbar-width: thin; */
   scrollbar-color: rgb(206, 206, 206) white;
 }
 
@@ -310,11 +297,11 @@ export default {
   left: 430px;
   cursor: pointer;
 }
-.hoverCard:hover {
+/* .hoverCard:hover {
   background-color: rgba(33, 150, 243, 0.2);
   border: 1px solid rgba(33, 150, 243, 0.6);
   transition: background-color 0.3s ease, border 0.3s ease;
-}
+} */
 .text-capitalize {
   text-transform: capitalize;
 }
