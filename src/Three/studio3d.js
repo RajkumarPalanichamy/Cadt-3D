@@ -1,9 +1,14 @@
 import * as THREE from "three";
 import TWEEN from 'https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.esm.js'
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DragControls } from 'three/addons/controls/DragControls.js';
+// import { DragControls } from 'three/addons/controls/DragControls.js';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
+import { CSG } from 'three-csg-ts'; 
+import { Sky } from "three/addons/objects/Sky.js";
+import { MathUtils, Vector3 } from "three";
+import store from "../Store/index.js";
+
 
 import { CSG } from 'three-csg-ts'; 
 import { Sky } from "three/addons/objects/Sky.js";
@@ -13,6 +18,7 @@ import store from "../Store/index.js";
 
 
 export default class studio3dThreeScene {
+
     constructor(container) {
       this.container = container;
       this.scene = null;
@@ -86,16 +92,8 @@ export default class studio3dThreeScene {
 
  
 
-      this.dragControls = new DragControls(  this.gltfArray, this.camera, this.renderer.domElement );
-      this.dragControls.addEventListener('dragstart', (event) => {
-        event.object.material.emissive.set(0xaaaaaa);
-        this.controls.enabled = false;
-        event.object.position.y = 0;
-        event.object.userData.lastValidPosition = event.object.position.clone();
-        this.roomBox = new THREE.Box3().setFromObject(this.group); 
-        this.modelBox = new THREE.Box3().setFromObject(event.object); 
-        // this.dragControls.transformGroup = true;
-
+// this.dragControls = new DragControls(this.gltfArray, this.camera, this.renderer.domElement);
+// this.dragControls.transformGroup = true;
 
 // let boxHelper;
 
@@ -104,21 +102,15 @@ export default class studio3dThreeScene {
 //     this.controls.enabled = false;
 //     console.log('event',event);
     
+//     event.object.userData.lastValidPosition = event.object.position.clone();
 
-    this.dragControls.addEventListener('drag', (event) => {
-      // this.dragControls.transformGroup = false;
-        this.modelBox.setFromObject(event.object);
 
-        if (!this.roomBox.containsBox(this.modelBox)) {
-            event.object.position.copy(event.object.userData.lastValidPosition);
-            event.object.material.emissive.set(0xff0000); 
-        } else {
-            event.object.userData.lastValidPosition.copy(event.object.position);
-            event.object.material.emissive.set(0xaaaaaa); 
-        }
-        event.object.position.y = 0;
-        // this.dragControls.transformGroup = true;
+//     boxHelper = new THREE.BoxHelper(event.object, 0x00ff00); 
+//     this.scene.add(boxHelper);
 
+//     this.roomBox = new THREE.Box3().setFromObject(this.group); 
+//     this.modelBox = new THREE.Box3().setFromObject(event.object); 
+// });
 
 // this.dragControls.addEventListener('drag', (event) => {
 //     this.modelBox.setFromObject(event.object);
@@ -153,13 +145,6 @@ export default class studio3dThreeScene {
 //         boxHelper = null;
 //     }
 // });
-
-
-        event.object.material.emissive.set(0x000000);
-        this.controls.enabled = true;
-        event.object.position.y = 0;
-      //   this.dragControls.transformGroup = false;
-
 
 
     
@@ -378,8 +363,7 @@ export default class studio3dThreeScene {
 
   if (intersects.length > 0) {
         let intersectedObject = intersects[0].object
-        console.log("inter",intersectedObject);
-        
+
         while (
           intersectedObject.parent &&
           !this.gltfArray.includes(intersectedObject)
@@ -394,7 +378,7 @@ export default class studio3dThreeScene {
         this.transformControls.attach(intersectedObject)
         this.transformModel()
         store.commit('studioFunctionality',{value:true,position:event,gltf:intersectedObject})
-        
+
   }
   else{
     this.scene.remove(this.gizmo);
@@ -773,6 +757,19 @@ export default class studio3dThreeScene {
         }
       );
     }
+
+    deleteGltf(gltfObj){
+      console.log('gltfObj',gltfObj);
+      this.scene.remove(gltfObj)
+      this.transformControls.detach(gltfObj)
+
+    }
+    rotateGltf(gltfObj){
+      gltfObj.rotateY(Math.PI/2)
+      this.transformControls.detach(gltfObj)
+
+    }
+
     
     
     animate() {

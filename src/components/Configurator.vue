@@ -22,7 +22,9 @@
           <v-list-item
             v-for="(value, i) in listItems"
             :key="i"
+
             @click="navigation(value.label)"
+
           >
             <v-list-item-content
               :class="{
@@ -52,7 +54,8 @@
           class="px-0 py-0 mb-6"
         >
           <v-row no-gutters>
-            <v-col class="font-weight-bold text-subtitle-2">{{
+
+             <v-col class="font-weight-bold text-subtitle-2">{{
               selectedItem ? selectedItem.toUpperCase() : ""
             }}</v-col>
             <v-col class="text-end">
@@ -60,6 +63,54 @@
             </v-col>
           </v-row>
         </v-container>
+
+        <v-card
+          flat
+          v-if="selectedItem === 'Materials'"
+          class="mt-6"
+          style="height: 65vh; overflow-y: scroll"
+        >
+          <v-row class="ga-4" no-gutters>
+            <v-col
+              md="3"
+              sm="5"
+              class="text-center"
+              v-for="(material, i) in materials"
+              :key="i"
+              @click="MaterialChange(material.Material)"
+            >
+              <v-img cover style="height: 75px" :src="material.Material" />
+              <v-card-title class="pa-0 ma-0 text-subtitle-1">{{
+                material.name
+              }}</v-card-title>
+            </v-col>
+          </v-row>
+                 </v-card>
+
+          <v-card
+          flat
+          v-if="selectedItem === 'Swing'"
+          class="mt-6"
+          style="height: 65vh; overflow-y: scroll"
+        >
+          <v-row class="ga-4" no-gutters>
+            <v-col
+              md="3"
+              sm="5"
+              class="text-center"
+              v-for="(swing, i) in swings"
+              :key="i"
+              @click="swingDetails(swing)"
+            >
+            <!-- <v-img cover style="height: 75px" :src="material.Material" /> -->
+              <v-card-title class="pa-0 ma-0 text-subtitle-1">{{
+                swing.name
+              }}</v-card-title>
+            </v-col>
+          </v-row>
+                 </v-card>
+
+
         <v-card flat v-if="selectedItem === 'Dimensions'">
           <v-form>
             <v-row no-gutters>
@@ -93,15 +144,18 @@
         </v-card>
         <v-card
           flat
+
           v-if="
             selectedItem === 'Colors' ||
             selectedItem === 'Materials' ||
             selectedItem === 'Handel Bars'
           "
+
           style="height: 65vh; overflow-y: scroll"
         >
           <v-row class="ga-7 d-flex flex-grow-1" no-gutters>
             <v-col md="3" sm="5">
+
               <v-dialog max-width="800px" persistent v-model="isAddColor">
                 <template v-slot:activator="{ props: activatorProps }">
                   <div
@@ -134,18 +188,22 @@
                           <v-card-title class="text-subtitle-1 pa-0"
                             >ADD {{ selectedItem.toUpperCase() }}</v-card-title
                           >
+
                         </v-col>
                       </v-row>
                     </v-container>
                     <v-color-picker
+
                       class="elevation-0"
                       v-if="selectedItem === 'Colors'"
+
                       rounded="0"
                       v-model:mode="mode"
                       width="100%"
                       v-model="color"
                     >
                     </v-color-picker>
+
                     <v-container
                       :fluid="true"
                       v-if="
@@ -202,11 +260,13 @@
                   </v-card>
                 </template>
               </v-dialog>
+
             </v-col>
             <v-col
               md="3"
               sm="5"
               class="text-center"
+
               v-for="(data, i) in displayData"
               :key="i"
               @click="colorChange(data)"
@@ -245,6 +305,7 @@
                   </v-card-title>
                 </div>
               </v-hover>
+
             </v-col>
           </v-row>
         </v-card>
@@ -267,6 +328,7 @@ export default {
   data() {
     return {
       threeContainer: null,
+
       displayData: null,
       threeScene: null,
       isAddColor: false,
@@ -275,6 +337,7 @@ export default {
       selectedItem: "Colors",
       color: null,
       objectURL: null,
+
       mode: "hexa",
       listItems: [
         {
@@ -293,21 +356,32 @@ export default {
           label: "Handel Bars",
           icon: "mdi-chart-donut",
         },
+         {
+          label: "Swing",
+          icon: "mdi-chart-donut",
+
+        }
+
       ],
       colors: [],
       materials: [],
+       swings:[{name:'Outwards'},{name:'Inwards'}],
       handlebars: [{ name: "MatOne", Material: "/images/ceil.jpeg" }],
+
     };
   },
   mounted() {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new Configurator(this.threeContainer);
+
     this.getData();
     this.getColor();
+
   },
   methods: {
     addColor() {
       let colorName = namer(this.color).pantone[0].name;
+
       console.log(typeof this.color);
 
       this.$axios
@@ -346,10 +420,12 @@ export default {
       (this.color = ""), (this.objectURL = "");
       (this.materialModel = ""), (this.materialName = "");
     },
+
     colorChange(color) {
       let type = "color";
       this.threeScene.door(color.code, type);
     },
+
     async postData() {
       if (this.color) {
         this.addColor();
@@ -400,9 +476,14 @@ export default {
         console.log(err);
       }
     },
+
     MaterialChange(texturePath) {
       let type = "material";
       this.threeScene.door(texturePath, type);
+    },
+
+    doorHeight() {
+      console.log(this.height);
     },
     navigation(value) {
       if (value) {
@@ -416,6 +497,14 @@ export default {
         this.displayData = this.handlebars;
       }
     },
+    swingDetails(swing){
+      let type = "swing";
+
+this.threeScene.door(swing, type);
+
+
+    }
   },
 };
 </script>
+

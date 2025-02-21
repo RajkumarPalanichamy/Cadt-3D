@@ -17,8 +17,13 @@ export default class gltfThreeScene {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color("#D8D8D8");
 
-    this.renderer = new THREE.WebGLRenderer({antialias: true,
-      preserveDrawingBuffer: true});
+
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      preserveDrawingBuffer: true,
+    });
+    this.renderer.physicallyCorrectLights = true;
+
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setSize(
@@ -120,7 +125,7 @@ export default class gltfThreeScene {
     const material = new THREE.MeshStandardMaterial({
       color: "white",
       side: THREE.FrontSide,
-      roughness: 0,
+      roughness: 0.1,
     });
     const plane = new THREE.Mesh(geometry, material);
     plane.receiveShadow = true;

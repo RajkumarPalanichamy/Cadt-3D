@@ -69,6 +69,7 @@
         <v-card
           flat
 
+
           class="d-flex flex-column align-center justify-center mt-16 pt-16"
           v-if="modelLoader"
 
@@ -100,29 +101,37 @@
             v-if="!categoryCard"
             v-for="(model, i) in modelData"
             :key="i"
+
             class="border draggable-card"
+
             height="120px"
             @dragstart="onDragStart(model)"
             :draggable="isDrag"
             flat
           >
             <v-sheet width="100%" height="80%" class="text-center px-0 py-0">
+
               <v-img :src="model.modelImg" cover></v-img>
             </v-sheet>
             {{ model.modelType }}
+
           </v-card>
         </v-card>
       </v-container>
     </v-card>
     <v-btn
+
       v-if="showModelIcon"
+
       icon
       v-for="(icon, index) in IconForModel"
       :key="index"
       size="3em"
       :style="getIconStyle(index)"
       v-tooltip="icon.text"
+
       @click="clickedIcon(icon.text)"
+
       class="position-absolute btn-hover"
     >
       <v-icon>{{ icon.icon }}</v-icon>
@@ -174,7 +183,9 @@
 import studio3dThreeScene from "@/Three/studio3d.js";
 import axios from "axios";
 
+
 import { mapState } from "vuex";
+
 
 export default {
   name: "cadt3d-container",
@@ -183,7 +194,9 @@ export default {
       threeContainer: null,
       threeScene: null,
       categoryCard: true,
+
       showModelIcon: false,
+
       modelData: [],
       modelLoader: false,
       modelCategories: [
@@ -211,6 +224,9 @@ export default {
       depth: null,
       wallValues: null,
       isDrag: true,
+
+      gltfObj:null,
+
 
       IconForModel: [
         { icon: "mdi-delete", text: "Delete" },
@@ -245,12 +261,15 @@ export default {
       this.threeScene.create(this.wallValues);
     },
     studioButton(newValue) {
-      console.log("newValue.position", newValue.position);
 
       if (newValue.value == true) {
         this.showModelIcon = true;
 
         this.addingIcons(newValue.position);
+
+        this.gltfObj = newValue.gltf
+        
+
       } else {
         this.showModelIcon = false;
       }
@@ -364,6 +383,21 @@ export default {
       }
       this.modelLoader = false;
     },
+    selectedIcon(value){
+       if(value == "Rotate"){
+        this.threeScene.rotateGltf(this.gltfObj)
+        this.showModelIcon=false
+
+
+       }else{
+           this.threeScene.deleteGltf(this.gltfObj)
+           this.showModelIcon=false
+       }
+
+    }
+  },
+  computed: {
+    ...mapState(["studioButton"]),
   },
   computed: {
     ...mapState(["studioButton"]),

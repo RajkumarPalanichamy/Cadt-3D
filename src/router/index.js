@@ -8,6 +8,9 @@ import Texture from "@/views/Texture.vue";
 import Profile from "@/views/Profile.vue";
 import Createproject from "@/views/Createproject.vue";
 import Employee from "@/views/Employee.vue"
+
+import Configurator from "@/components/Configurator.vue";
+
 import Web from "@/views/web.vue";
 import Configurator from "@/components/Configurator.vue";
 import studio3d from "@/components/studio3d.vue";

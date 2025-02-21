@@ -66,24 +66,39 @@ export default {
     },
     saveFile(projectname, userName) {
       console.log(this.threeScene);
+
       this.threeScene.saveFile(projectname, userName);
     },
     loadSaved(model) {
+      console.log('final', model);
+
       const array = []
       model.coordinates.forEach((eachCoordinates) => {
-        console.log("first",eachCoordinates);
-        eachCoordinates.forEach((each) => {
-          console.log("each",each);
-          const obj = {
-            x: each.x,
-            y: each.y,
-            z: each.z,
-          };
-          array.push(obj)
-        
-        });
+        console.log("first", eachCoordinates);
+        // eachCoordinates.forEach((each) => {
+        //   const obj = {
+        //     x: each.x,
+        //     y: each.y,
+        //     z: each.z,
+        //   };
+          array.push(eachCoordinates)
+          console.log("array", array);
+
+        // });
       });
       this.threeScene.predefined(array);
+      console.log("awd",model);
+      
+      model.gltfObjects
+      .forEach((val) => {
+        console.log('jsv b',val);
+        
+        this.threeScene.gltfLoader(val.gltfLink, val.gltfScene)
+
+
+      })
+      // const modelLink = model.gltfObjects[0].gltfLink
+      // const modelArea = model.gltfObjects[0].gltfScene
     },
     backHome() {
       // this.$parent.methods.return()

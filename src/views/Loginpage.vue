@@ -55,7 +55,9 @@
           <v-row>
             <v-col>
               <v-card-subtitle class="text-no-wrap"
+
                 >___________________________________________or___________________________________________</v-card-subtitle
+
               >
             </v-col>
           </v-row>

@@ -31,6 +31,7 @@
       <!-- <v-data-table
         height="86vh"
 
+
         :loading="isLoading"
         :items="filteredModels"
         item-value="name"
@@ -78,14 +79,17 @@
         <v-card class="d-flex justify-center" flat>
           <v-card width="40%" class="px-4 py-6" flat>
             <v-form>
+
               <v-text-field
 
                 variant="underlined"
                 label="Enter Model Name"
+
                 v-model="uploadModelType"
               >
               </v-text-field>
               <v-select
+
                 v-model="uploadModelCategories"
                 variant="underlined"
                 label="Select Model Category"
@@ -99,7 +103,9 @@
                 :items="['Top', 'Bottom']"
               ></v-select>
 
+
               <v-file-input
+                append-icon="mdi-exclamation"
                 accept=".glb"
                 label="Add Model"
                 variant="underlined"
@@ -135,6 +141,7 @@
     </v-dialog>
     <!-- view Dialog -->
 
+
     <v-dialog v-model="isView" persistent max-width="1000px" height="550px">
       <v-card rounded="0" flat>
         <!-- LOADING -->
@@ -160,6 +167,7 @@
         </v-card>
         <v-toolbar density="compact" color="#274E76">
           <v-icon @click="closeView" class="px-5">mdi-close</v-icon>
+
         </v-toolbar>
         <v-card class="d-flex" height="100vh" flat>
           <v-card width="70%" flat rounded="0" class="px-3 py-3">
@@ -191,6 +199,7 @@
                   ></v-text-field>
                 </v-col>
               </v-row>
+
               <v-row>
                 <v-col>
                   <v-text-field
@@ -205,12 +214,14 @@
               <v-row v-if="isEdit">
                 <v-col>
                   <!-- <v-btn
+
                     variant="outlined"
                     @click="triggerFileInput"
                     color="#274E76"
                     block
                   >
                     Update GLTF File
+
                   </v-btn> -->
                   <v-file-input
                     label="Select File"
@@ -220,6 +231,7 @@
                   >
                   </v-file-input>
                   <input ref="updateFileInput" type="file" class="d-none" />
+
                 </v-col>
               </v-row>
               <v-row>
@@ -262,7 +274,9 @@
         </v-card>
       </v-card>
 
+
     </v-dialog>
+
 
     <!-- Error snackbar -->
     <v-snackbar v-model="isUploadError">
@@ -299,7 +313,9 @@ export default {
       isSaveChange: false,
 
       uploadModelType: "",
+
       uploadVariant: "",
+
       uploadModelCategories: "",
       isUpload: false,
 
@@ -312,6 +328,7 @@ export default {
       selectedFile: null,
       modelId: undefined,
       categoriesList: ["Living Room", "Bed Room"],
+
     };
   },
   computed: {
@@ -337,6 +354,7 @@ export default {
   methods: {
 
     async getModel() {
+      
       this.displayModel = [];
       this.isLoading = true;
       try {
@@ -346,7 +364,9 @@ export default {
 
         if (response.status == 200) {
 
+
           this.displayModel = response.data;
+
           this.isLoading = false;
 
         }
@@ -360,6 +380,7 @@ export default {
     },
 
     async postModel() {
+
       this.isLoading = true;      
       if (
         !this.file ||
@@ -367,6 +388,7 @@ export default {
         !this.uploadModelType ||
         !this.uploadVariant
       ) {
+
         this.uploadErrorText = "All fields are required.";
         this.isUploadError = true;
         return;
@@ -376,6 +398,7 @@ export default {
       formData.append("category", this.uploadModelCategories);
       formData.append("modelType", this.uploadModelType);
       formData.append("file", this.file);
+
       formData.append("variant", this.uploadVariant);
       formData.append("modelImg", this.modelimg);
 
@@ -383,6 +406,7 @@ export default {
 
         const response = await this.$axios.post(
           `${import.meta.env.VITE_API_LINK}/glb/glbloaders`,
+
 
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
@@ -450,14 +474,15 @@ export default {
 
         (model) => model._id === viewFile._id
       );
-      console.log(selectedModel);
 
       if (selectedModel) {
         // this.modelId = selectedModel._id;
         this.modelType = selectedModel.modelType;
         this.modelCategory = selectedModel.category;
 
+
         this.variantType = selectedModel.variant;
+
 
 
         this.$nextTick(() => {
@@ -483,4 +508,17 @@ export default {
 .linear-gradient {
   background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
+
+.active {
+  color: #274e76;
+  border-bottom: 2px solid #274e76;
+}
+.hover:hover {
+  transform: scale(3);
+  height: 150px;
+}
+.linear-gradient {
+  background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
+}
+</style>
 

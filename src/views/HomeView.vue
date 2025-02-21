@@ -138,7 +138,7 @@ export default {
         const value = clickedValue.split(" ").join("").toLowerCase();
         this.$router.push(`/homeview/${value}`);
       }
-    },
+    }, 
   },
 };
 </script>
