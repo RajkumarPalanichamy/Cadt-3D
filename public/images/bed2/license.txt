@@ -1,0 +1,11 @@
+Model Information:
+* title:	Blockman GO Bed
+* source:	https://sketchfab.com/3d-models/blockman-go-bed-4ac7339023894c7d864157415d8fc47d
+* author:	Squidweird (https://sketchfab.com/avyuktbg)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Blockman GO Bed" (https://sketchfab.com/3d-models/blockman-go-bed-4ac7339023894c7d864157415d8fc47d) by Squidweird (https://sketchfab.com/avyuktbg) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -120,6 +120,7 @@
 </template>
 <script>
 import studio3dThreeScene from "@/Three/studio3d.js";
+import axios from "axios";
 export default {
   name: "cadt3d-container",
   data() {

@@ -969,3 +969,88 @@ export default class ThreeScene {
   //   }
   // }
 */
+
+
+
+
+// performCSGCut() {
+//     let draggedGeometry = null;
+
+//     this.draggedobjects.traverse((child) => {
+//         if (child.isMesh && !draggedGeometry) {
+//             draggedGeometry = child.geometry.clone();
+//             draggedGeometry.applyMatrix4(this.draggedobjects.matrixWorld);
+//         }
+//     });
+//   // if (!this.wallGeo) return;
+//   //  this.wallGeo.geometry.copy(this.originalWallGeo.geometry);
+
+//     const draggedBox = new THREE.Box3().setFromObject(this.draggedobjects);
+
+
+
+//         const wallBox = new THREE.Box3().setFromObject(this.wallGeo);
+//         const intersectionBox = wallBox.intersect(draggedBox);
+
+//             const intersectionSize = new THREE.Vector3();
+//             intersectionBox.getSize(intersectionSize);
+
+//             const intersectionCenter = new THREE.Vector3();
+//             intersectionBox.getCenter(intersectionCenter);
+
+//             const cuttingBox = new THREE.BoxGeometry(intersectionSize.x + 1, intersectionSize.y, intersectionSize.z);
+//             const cuttingMesh = new THREE.Mesh(cuttingBox);
+
+//             cuttingMesh.position.copy(intersectionCenter);
+//             cuttingMesh.rotation.copy(this.draggedobjects.rotation); 
+//             cuttingMesh.updateMatrixWorld();
+
+//             const wallCSG = CSG.fromGeometry(this.wallGeo.geometry.clone());
+//             const cuttingCSG = CSG.fromGeometry(cuttingMesh.geometry.clone());
+//             const subRes = CSG.subtract(this.wallGeo, cuttingMesh);
+//             subRes.position.copy(this.wallGeo.position);
+//             subRes.rotation.copy(this.wallGeo.rotation);
+//             subRes.scale.copy(this.wallGeo.scale);
+ 
+//             subRes.userData.name = "sub";
+//             subRes.updateMatrixWorld();
+
+//             if (this.wallGeo.isMesh) {
+//                 this.scene.remove(this.wallGeo);
+//                 this.group.remove(this.wallGeo);
+//                 this.bbBoxes = this.bbBoxes.filter((wall) => wall !== this.wallGeo);
+
+//                 this.scene.add(subRes);
+//                 this.bbBoxes.push(subRes);
+//             }
+//           this.wallGeo = subRes;
+          
+        
+// }
+
+//   addCollisionDetection() {
+  
+//     this.renderer.domElement.addEventListener("click", (event) => {
+//         this.addTransformControlToGlobalArray(event);
+//     });
+//     if (!this.transformControls) return;
+// let isIntersectingWall
+//     this.transformControls.addEventListener("objectChange", () => {
+//       let draggedobject=this.transformControls.object
+//       this.bbBoxes.forEach((wall) => {
+//         if (wall && wall.geometry) {
+//                        this.wallGeo = wall;
+//                         const wallBox = new THREE.Box3().setFromObject(wall);
+//                         const draggedBox = new THREE.Box3().setFromObject(draggedobject);
+//                          this.draggedobjects = this.transformControls.object;
+//                         if (wallBox.intersectsBox(draggedBox)) {
+//                             isIntersectingWall = true;
+//                         }
+//                     }
+//                 });
+//       if (isIntersectingWall) {
+//             this.performCSGCut();
+        
+//        }
+//     });
+//   }

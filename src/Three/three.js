@@ -28,6 +28,8 @@ export default class ThreeScene {
     this.bbBoxes = [];
     this.plane = null;
     this.controls = null;
+    this.material
+    this.gltfbox;
     this.spheres = [];
     this.walls = [];
     this.gridSize = 100;
@@ -48,20 +50,30 @@ export default class ThreeScene {
     this.group;
     this.polygons = [];
     this.polygonGroup;
+    this.height = 4;
+    this.thickness = 0.2;
+    this.angle
+    this.originalWallGeometries
+    this.originalWallGeometries = {
+      horizontal: null,
+      vertical: null,
+    };
+  
+this.originalWalls = new Map(); // Track the original wall objects
+this.activeWall = null; 
+
+
+    
 
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.mouseover = this.mouseover.bind(this);
+    this.onPointerDown = this.onPointerDown.bind(this);
+    this.onPointerUp = this.onPointerUp.bind(this);
     this.isDragging = false;
     this.draggedObject = null;
 
     this.init();
-    this.transformControls = new TransformControls(
-      this.camera,
-      this.renderer.domElement
-    );
-    this.transformControls.setMode("translate");
-    this.scene.add(this.transformControls);
   }
 
   init() {
@@ -76,16 +88,27 @@ export default class ThreeScene {
       antialias: true,
       preserveDrawingBuffer: true,
     });
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.physicallyCorrectLights = true;
     this.renderer.setSize(
       this.container.clientWidth,
       this.container.clientHeight
     );
     this.container.appendChild(this.renderer.domElement);
+    
 
     this.light = new THREE.AmbientLight(0xffffff);
     this.scene.add(this.light);
+    let dir = new THREE.DirectionalLight("white",2);
+    // let dirhel = new THREE.DirectionalLightHelper(dir,1,"red");
+    dir.position.set(-7,5,0)
+    dir.castShadow=true
+    // this.scene.add(dirhel);
+    this.scene.add(dir);
 
+
+    
     this.mesh();
     this.updateCamera();
     window.addEventListener("resize", () => {
@@ -111,42 +134,197 @@ export default class ThreeScene {
       this.selectingProperty.bind(this)
     );
 
-    window.addEventListener("model-drop", (event) => {
-      let { droppedText, mouse } = event.detail;
+   let placeholder;
+      let angleX;
+      window.addEventListener("model-drag-start", (event) => {
+        this.camera.position.set(0,10,0)
+        const { droppedText, mouse } = event.detail;
 
-      //  if (placeholder) {
-      //    this.scene.remove(placeholder);
-      //    placeholder = null;
-      //  }
+          const filePath = droppedText.match(/"filePath":"(.*?)"/)?.[1];
+                    
+        const loader = new GLTFLoader();
+        loader.load(
+          filePath,
+          (gltf) => {
+            if (placeholder) {
+              this.scene.remove(placeholder);
+            }
+      
+            placeholder = gltf.scene;
+                 this.gltfbox = new THREE.Box3().setFromObject(gltf.scene);
+              this.size = new THREE.Vector3();
+              this.center = new THREE.Vector3();
+              this.gltfbox.getSize(this.size);
+              this.gltfbox.getCenter(this.center);
+  
+              let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
+              gltf.scene.scale.setScalar(1 / (maxSize / 2));
+              gltf.scene.traverse((node) => {
+                if (node.isMesh) {
+                  node.castShadow = true;
+                  node.receiveShadow = true;
+                }
+              });  
+      
+            let box = new THREE.Box3().setFromObject(placeholder);
+            let size = new THREE.Vector3();
+            box.getSize(size);
+      
+            // let maxSize = Math.max(size.x, size.y, size.z);
+            // placeholder.scale.setScalar(1 / (maxSize / 4));
+      
+            this.raycaster.setFromCamera(mouse, this.camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const intersectPoint = new THREE.Vector3();
+            if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+              // placeholder.position.copy(intersectPoint);
+                    const adjustedBox = new THREE.Box3().setFromObject(placeholder);
+                    const adjustedSize = new THREE.Vector3();
+                    const adjustedCenter = new THREE.Vector3();
+                    adjustedBox.getSize(adjustedSize);
+                    adjustedBox.getCenter(adjustedCenter);
 
-      let loader = new GLTFLoader();
-      loader.load(
-        droppedText,
-        (gltf) => {
-          let box = new THREE.Box3().setFromObject(gltf.scene);
-          let size = new THREE.Vector3();
-          box.getSize(size);
-
-          let maxSize = Math.max(size.x, size.y, size.z);
-          gltf.scene.scale.setScalar(1 / (maxSize / 2));
-
-          let model = gltf.scene;
-
-          let modelBox = new THREE.Box3().setFromObject(model);
-          let minY = modelBox.min.y;
-
-          let groundY = 0;
-
-          model.position.y += groundY - minY;
-
-          this.raycaster.setFromCamera(mouse, this.camera);
-          let plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-          let intersectPoint = new THREE.Vector3();
-          if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
-            model.position.x = intersectPoint.x;
-            model.position.z = intersectPoint.z;
+                    const bottomY = adjustedBox.min.y;
+                    const offsetY = -bottomY;
+                    //offsetY-(-this.groundValue)-1
+                    placeholder.position.set(intersectPoint.x, offsetY-3, intersectPoint.z);
+          
+            }
+            this.scene.add(placeholder);
+          },
+          undefined,
+          (error) => {
+            console.error("Error loading GLTF model:", error);
           }
-          model.userData.name = "model";
+        );
+      });
+      
+      window.addEventListener("model-drag-move", (event) => {
+        const { mouse } = event.detail;
+        const dampingFactor = 1.2;
+        if (placeholder) {
+            if (!placeholder.userData.lastValidPosition) {
+                if (!this.roomBox || this.group.needsUpdate) {
+                    this.roomBox = new THREE.Box3().setFromObject(this.group);
+                }
+                this.roomBox.clampPoint(placeholder.position, placeholder.position);
+                placeholder.userData.lastValidPosition = placeholder.position.clone();
+            }
+    
+            this.raycaster.setFromCamera(mouse, this.camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const intersectPoint = new THREE.Vector3();
+    
+            if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+                placeholder.position.set(intersectPoint.x, intersectPoint.y - 2.5, intersectPoint.z);
+                this.roomBox.clampPoint(placeholder.position, placeholder.position); 
+                const placeholderBox = new THREE.Box3().setFromObject(placeholder);
+                let isIntersectingWall = false;
+    
+                this.bbBoxes.forEach((wall) => {
+                    if (wall && wall.geometry) {
+                        const wallBox = new THREE.Box3().setFromObject(wall);
+                        if (wallBox.intersectsBox(placeholderBox)) {
+                            isIntersectingWall = true;
+                        }
+                    }
+                });
+                if (isIntersectingWall) {
+
+                  if(placeholder.position.z > placeholder.position.x){
+                    angleX = Math.abs(placeholder.position.z) > Math.abs(placeholder.position.x) ? -Math.PI / 2 : -Math.PI;
+                    placeholder.rotation.set(0, angleX, 0);
+                   
+                  }
+                  else{
+                    angleX = Math.abs(placeholder.position.z) > Math.abs(placeholder.position.x) ? Math.PI / 2 : 0;
+                    placeholder.rotation.set(0, angleX, 0); 
+                         
+                  }
+                    placeholder.position.lerp(placeholder.userData.lastValidPosition, dampingFactor);
+                    if (this.placeholderBoxHelper) {
+                        this.placeholderBoxHelper.material.color.set(0xff0000); 
+                    }
+                } else {
+                    placeholder.userData.lastValidPosition.copy(placeholder.position);
+                    this.roomBox.clampPoint(placeholder.position, placeholder.position); 
+    
+                    if (this.placeholderBoxHelper) {
+                        this.scene.remove(this.placeholderBoxHelper);
+                    }
+                    this.placeholderBoxHelper = new THREE.Box3Helper(placeholderBox, 0x00ff00);
+                    this.scene.add(this.placeholderBoxHelper);
+                }
+            }
+        }
+    });
+    
+    
+    window.addEventListener("model-drop", (event) => {
+      this.scene.remove(this.placeholderBoxHelper); 
+      const { droppedText, mouse } = event.detail;
+    
+      let finalPosition = null;
+      if (placeholder) {
+        finalPosition = placeholder.position.clone();
+        this.scene.remove(placeholder);
+        placeholder = null;
+      }
+    
+      let ceiling = null;
+      const loader = new GLTFLoader();
+      loader.load(
+        droppedText.filePath,
+        (gltf) => {
+          gltf.scene.userData.name = droppedText.variant;
+          if (droppedText.variant === "Top") {
+            ceiling = +3;
+          } else {
+            ceiling = -3;
+          }
+    
+          this.gltfbox = new THREE.Box3().setFromObject(gltf.scene);
+          this.size = new THREE.Vector3();
+          this.center = new THREE.Vector3();
+          this.gltfbox.getSize(this.size);
+          this.gltfbox.getCenter(this.center);
+    
+          let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
+          gltf.scene.scale.setScalar(1 / (maxSize / 2));
+          gltf.scene.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = true;
+              node.receiveShadow = true;
+            }
+          });
+    
+          const model = gltf.scene;
+          model.rotation.set(0, angleX, 0);
+          this.angle = model.rotation;
+    
+          const floorBox = new THREE.Box3().setFromObject(this.polygonMesh);
+          const floorHeight = floorBox.max.y;
+    
+          this.raycaster.setFromCamera(mouse, this.camera);
+          const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+          const intersectPoint = new THREE.Vector3();
+    
+          if (this.raycaster.ray.intersectPlane(plane, intersectPoint)) {
+            const adjustedBox = new THREE.Box3().setFromObject(model);
+            const bottomY = adjustedBox.min.y; 
+            const offsetY = floorHeight - bottomY + ceiling;
+    
+            if (finalPosition) {
+              model.position.set(finalPosition.x, offsetY, finalPosition.z);
+              this.roomBox.clampPoint(model.position, model.position);
+            } else {
+              model.position.set(intersectPoint.x, offsetY, intersectPoint.z);
+              this.roomBox.clampPoint(model.position, model.position);
+            }
+          }
+          model.receiveShadow=true
+          model.castShadow=true
+    
           this.gltf.push(model);
           this.scene.add(model);
         },
@@ -157,8 +335,53 @@ export default class ThreeScene {
       );
     });
 
+
+
+
+      const loader = new GLTFLoader();
+      loader.load(
+        "./door.glb",
+        (gltf) => {
+            this.gltfbox = new THREE.Box3().setFromObject(gltf.scene);
+              this.size = new THREE.Vector3();
+              this.center = new THREE.Vector3();
+              this.gltfbox.getSize(this.size);
+              this.gltfbox.getCenter(this.center);
+              gltf.scene.userData.name="Middle"
+  
+              let maxSize = Math.max(this.size.x, this.size.y, this.size.z);
+          gltf.scene.scale.setScalar(1 / (maxSize / 3));
+          gltf.scene.receiveShadow=true
+          gltf.scene.castShadow=true
+          this.gltf.push(gltf.scene);
+          console.log(gltf.scene.children[0].children[0].children[0].children);
+          gltf.scene.children[0].children[0].children[0].children[0].children[0].material.color.set("blue")
+          
+          this.scene.add(gltf.scene);
+        })
+    this.addCollisionDetection();
     this.animate();
   }
+  MouseOverForBox(event) {
+        const rect = this.renderer.domElement.getBoundingClientRect();
+
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+     const raycastTargets = [...this.globalArray, ...this.gltf];
+
+    const intersects = this.raycaster.intersectObjects(this.gltf, true);
+
+    if (intersects.length > 0) {
+      let intersectedObject = intersects[0].object;
+      const objectBox = new THREE.Box3().setFromObject(intersectedObject);
+      helper = new THREE.Box3Helper(objectBox);
+      this.scene.add(this.helper);
+    }
+  }
+ 
+  
   createListener() {
     if (!this.listenersActive) {
       this.startDrawing();
@@ -168,6 +391,7 @@ export default class ThreeScene {
       this.listenersActive = false;
     }
   }
+
 
   startDrawing() {
     this.isDrawing = true;
@@ -181,16 +405,21 @@ export default class ThreeScene {
 
   addListeners() {
     if (!this.listenersActive) {
-      this.renderer.domElement.addEventListener(
-        "mousemove",
-        this.onPointerMove
-      );
-      this.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
+      // this.renderer.domElement.addEventListener(
+      //   "mousemove",
+      //   this.onPointerMove
+      // );
+      // this.renderer.domElement.addEventListener("mousedown", this.onMouseDown);
+       this.renderer.domElement.addEventListener('mousedown',this.onPointerDown);
+    this.renderer.domElement.addEventListener('mouseup',  this.onPointerUp);
       this.listenersActive = true;
     }
   }
 
   removeListeners() {
+       this.renderer.domElement.addEventListener("click", (event) => {
+        this.MouseOverForBox(event);
+    });
     this.renderer.domElement.addEventListener("click", this.mouseover);
 
     if (this.listenersActive) {
@@ -210,7 +439,7 @@ export default class ThreeScene {
     if (this.controls) {
       this.controls.dispose();
     }
-    this.addCollisionDetection();
+   
     if (this.cam) {
       this.polygons.forEach((polygonGroup) => {
         polygonGroup.textMeshes.forEach((textMesh) => {
@@ -283,6 +512,8 @@ export default class ThreeScene {
     }
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.autoRotateSpeed  =0.5
+    this.controls.enableDamping=true
 
     if (this.camera instanceof THREE.PerspectiveCamera) {
       this.controls.minDistance = 0.2;
@@ -320,223 +551,271 @@ export default class ThreeScene {
     }
   }
 
-  // performCSGCut() {
-  //   let draggedGeometry = null;
+  onPointerDown(e) {
+  // console.log("fg");
+  
+  // if (!this.isDrawing) return;
 
-  //   this.draggedobjects.traverse((child) => {
-  //     if (child.isMesh && !draggedGeometry) {
-  //       draggedGeometry = child.geometry.clone();
-  //     }
-  //   });
-  //   const draggedBox = new THREE.Box3().setFromObject(this.draggedobjects);
+  this.raycastDefined(e);
+  
 
-  //   const boxSize = new THREE.Vector3();
-  //   draggedBox.getSize(boxSize);
+  if (this.intersects.length > 0) {
+    let point = this.intersects[0].point.clone();
+    this.startPoint = point; // Store the starting point
+    this.isCreatingRectangle = true;
+  }
+}
 
-  //   const boxGeometry = new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z);
+onPointerUp(e) {
+  // if ( !this.isCreatingRectangle) return;
 
-  //   const boxMesh = new THREE.Mesh(boxGeometry);
-  //   boxMesh.position.copy(this.draggedobjects.position);
-  //   boxMesh.rotation.copy(this.draggedobjects.rotation);
-  //   boxMesh.updateWorldMatrix();
+  this.raycastDefined(e);
 
-  //   const draggedCSG = CSG.fromGeometry(boxMesh.geometry.clone());
+  if (this.intersects.length > 0) {
+    let point = this.intersects[0].point.clone();
+    this.endPoint = point; // Store the ending point
+    this.createRectangleWall(this.startPoint, this.endPoint);
+    this.isCreatingRectangle = false;
+  }
+}
 
-  //   const wallCSG = CSG.fromGeometry(this.wallGeo.geometry.clone());
+createRectangleWall(startPoint, endPoint) {
+  let width = Math.abs(endPoint.x - startPoint.x);
+  let height = Math.abs(endPoint.y - startPoint.y);
+  let depth = Math.abs(endPoint.z - startPoint.z);
 
-  //   const cutWallCSG = wallCSG.subtract(draggedCSG);
-  //   // const combinedCSG = cutWallCSG.intersect(draggedCSG);
+  // Create geometry
+  let geometry = new THREE.BoxGeometry(width, this.height, depth);
+  let loader = new THREE.TextureLoader();
+  let texture = loader.load("./images/images.jpg", () => {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(1, 1);
+  });
+  // let material = new THREE.MeshBasicMaterial({ map: texture });
+   let material = [
+        new THREE.MeshMatcapMaterial({transparent: true,opacity: 0.5}),
+        new THREE.MeshMatcapMaterial({ transparent: true,opacity: 0.5,}),
+        new THREE.MeshMatcapMaterial({  }),
+        new THREE.MeshMatcapMaterial({ }),
+         new THREE.MeshMatcapMaterial({transparent: true,opacity: 0.5,}),
+          new THREE.MeshMatcapMaterial({transparent: true,opacity: 0.5,}),
+      ];
 
-  //   const combinedMesh = CSG.toMesh(
-  //     cutWallCSG,
-  //     new THREE.Matrix4(),
-  //     this.wallGeo.material
-  //   );
+  let wall = new THREE.Mesh(geometry, material);
 
-  //   combinedMesh.position.copy(this.wallGeo.position);
-  //   combinedMesh.rotation.copy(this.wallGeo.rotation);
-  //   combinedMesh.scale.copy(this.wallGeo.scale);
+  let center = new THREE.Vector3().addVectors(startPoint, endPoint).divideScalar(2);
+  wall.position.copy(center);
 
-  //   this.group.remove(this.wallGeo);
-  //   this.scene.remove(this.wallGeo);
-  //   this.scene.add(combinedMesh);
+  // wall.lookAt(endPoint);
 
-  //   this.wallGeo = combinedMesh;
-  // }
-  performCSGCut() {
-    // Extract the geometry of the GLTF object in world space
-    let draggedGeometry = null;
+  wall.castShadow = true;
+  wall.receiveShadow = true;
 
-    this.draggedobjects.traverse((child) => {
-      if (child.isMesh && !draggedGeometry) {
-        draggedGeometry = child.geometry.clone();
-        draggedGeometry.applyMatrix4(child.matrixWorld); // Convert to world space
-      }
-    });
+  this.scene.add(wall);
+  this.walls.push(wall);
+      this.polygonGroup.walls.push(wall);
+ 
+}
 
-    const draggedBox = new THREE.Box3().setFromObject(this.draggedobjects);
+restoreWallGeometry(wall) {
+  if (!wall) return;
 
-    const boxSize = new THREE.Vector3();
-    draggedBox.getSize(boxSize);
+  const originalGeometry = this.originalWallGeometries.get(wall.uuid);
+  if (originalGeometry) {
+    wall.geometry.dispose();
+    wall.geometry = originalGeometry.clone();
 
-    const boxGeometry = new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z);
+    wall.geometry.attributes.position.needsUpdate = true;
+    wall.geometry.computeBoundingBox();
+    wall.geometry.computeBoundingSphere();
 
-    const boxMesh = new THREE.Mesh(boxGeometry);
-    boxMesh.position.copy(this.draggedobjects.position);
-    boxMesh.rotation.copy(this.draggedobjects.rotation);
-    boxMesh.updateWorldMatrix();
+    this.renderer.render(this.scene, this.camera);
 
-    const draggedCSG = CSG.fromGeometry(boxMesh.geometry.clone());
+    console.log("Wall geometry restored successfully.");
+  } else {
+    console.warn("Original geometry not found for wall:", wall.uuid);
+  }
+}
 
-    const wallCSG = CSG.fromGeometry(this.wallGeo.geometry.clone());
 
-    const cutWallCSG = wallCSG.subtract(draggedCSG);
+getSnappedPositionToWall(object, wall) {
+  const wallBox = new THREE.Box3().setFromObject(wall);
+  const objectBox = new THREE.Box3().setFromObject(object);
+  const snappedPosition = new THREE.Vector3();
 
-    const combinedCSG = cutWallCSG.union(draggedGeometry);
+  const wallOrientation = this.getWallOrientation(wall);
 
-    const combinedMesh = CSG.toMesh(
-      combinedCSG,
-      new THREE.Matrix4(),
-      new THREE.MeshNormalMaterial()
+  if (wallOrientation === "horizontal") {
+    snappedPosition.set(
+      THREE.MathUtils.clamp(objectBox.min.x, wallBox.min.x, wallBox.max.x),
+      object.position.y,
+      wall.position.z
     );
-
-    combinedMesh.position.copy(this.wallGeo.position);
-    combinedMesh.rotation.copy(this.wallGeo.rotation);
-    combinedMesh.scale.copy(this.wallGeo.scale);
-
-    this.scene.remove(this.wallGeo);
-    this.scene.add(combinedMesh);
-    this.wallGeo = combinedMesh;
+  } else if (wallOrientation === "vertical") {
+    snappedPosition.set(
+      wall.position.x,
+      object.position.y,
+      THREE.MathUtils.clamp(objectBox.min.z, wallBox.min.z, wallBox.max.z)
+    );
+  } else {
+    snappedPosition.set(
+      THREE.MathUtils.clamp(objectBox.min.x, wallBox.min.x, wallBox.max.x),
+      object.position.y,
+      THREE.MathUtils.clamp(objectBox.min.z, wallBox.min.z, wallBox.max.z)
+    );
   }
 
-  addTransformControlToGlobalArray(event) {
-    const rect = this.renderer.domElement.getBoundingClientRect();
+  return snappedPosition;
+}
+addTransformControlToGlobalArray(event) {
+  const rect = this.renderer.domElement.getBoundingClientRect();
 
-    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    this.raycaster.setFromCamera(this.mouse, this.camera);
+  this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    const raycastTargets = [...this.globalArray, ...this.gltf];
+  const raycastTargets = [...this.globalArray, ...this.gltf];
+  const intersects = this.raycaster.intersectObjects(raycastTargets, true);
 
-    const intersects = this.raycaster.intersectObjects(raycastTargets, true);
+  if (intersects.length > 0) {
+    let intersectedObject = intersects[0].object;
+    while (intersectedObject.parent && !raycastTargets.includes(intersectedObject)) {
+      intersectedObject = intersectedObject.parent;
+    }
 
-    if (intersects.length > 0) {
-      let intersectedObject = intersects[0].object;
+    this.draggedobjects = intersectedObject;
 
-      while (
-        intersectedObject.parent &&
-        !raycastTargets.includes(intersectedObject)
-      ) {
-        intersectedObject = intersectedObject.parent;
-      }
+    this.transformControls.detach();
+    this.transformControls.attach(intersectedObject);
+    let giz=this.transformControls.getHelper()
+    this.scene.add(giz)
 
-      let box = new THREE.Box3().setFromObject(intersectedObject);
-      let center = new THREE.Vector3();
-      box.getCenter(center);
+  } else {
+    this.transformControls.detach();
+  }
+}
 
-      this.transformControls.detach();
-      this.transformControls.attach(intersectedObject);
+performCSGCut(draggedObject, wall) {
+  if (this.activeWall && this.activeWall.uuid !== wall.uuid) {
+    this.restoreWallGeometry(this.activeWall);
+  }
 
-      let gizmo = this.transformControls.getHelper();
-      if (gizmo) {
-        gizmo.position.copy(center);
-        this.scene.add(gizmo);
-      }
+  this.activeWall = wall;
+
+  // Restore or save the original wall geometry
+  if (this.originalWallGeometries.has(wall.uuid)) {
+    wall.geometry.dispose();
+    wall.geometry = this.originalWallGeometries.get(wall.uuid).clone();
+  } else {
+    this.originalWallGeometries.set(wall.uuid, wall.geometry.clone());
+  }
+
+  // Determine wall orientation (horizontal or vertical)
+  const wallOrientation = this.getWallOrientation(wall);
+  const wallRotationY = wall.rotation.y;
+
+  if (wallOrientation === "vertical") {
+    draggedObject.rotation.y = Math.PI / 2; 
+    draggedObject.updateMatrixWorld(true);
+  } else if (wallOrientation === "horizontal") {
+    draggedObject.rotation.y = 0; 
+    draggedObject.updateMatrixWorld(true);
+  }
+
+  const draggedBox = new THREE.Box3().setFromObject(draggedObject);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  draggedBox.getSize(size);
+  draggedBox.getCenter(center);
+
+  const cuttingMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(size.x + 1, size.y, size.z), 
+    new THREE.MeshStandardMaterial({ color: 0xff0000, visible: false })
+  );
+
+  cuttingMesh.position.copy(center);
+  cuttingMesh.rotation.copy(wall.rotation); 
+  cuttingMesh.updateMatrixWorld(true);
+  
+
+  try {
+    const result = CSG.subtract(wall, cuttingMesh);
+
+    if (result) {
+      wall.geometry.dispose();
+      wall.geometry = result.geometry.clone();
+      wall.geometry.computeBoundingBox();
     } else {
-      this.transformControls.detach();
+      console.error("CSG operation failed: No result returned.");
     }
+  } catch (error) {
+    console.error("CSG operation error:", error);
   }
-  addCollisionDetection() {
-    let lastValidPosition = new THREE.Vector3();
-    this.renderer.domElement.addEventListener("click", (event) => {
-      this.addTransformControlToGlobalArray(event);
-    });
-    if (!this.transformControls) return;
+}
 
-    this.transformControls.addEventListener("dragging-changed", (event) => {
-      if (event.value) {
-        this.controls.enabled = false;
-        lastValidPosition.copy(this.transformControls.object.position);
-      } else {
-        this.controls.enabled = true;
+
+
+addCollisionDetection() {
+  this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+  this.scene.add(this.transformControls);
+
+  this.renderer.domElement.addEventListener("click", (event) => {
+    this.addTransformControlToGlobalArray(event);
+  });
+
+  this.transformControls.addEventListener("objectChange", () => {
+    const draggedObject = this.transformControls.object;
+  
+    if (draggedObject.userData.name === "Middle" || draggedObject.userData.name === "intermid") {
+      let isIntersecting = false;
+  
+      for (const wall of this.bbBoxes) {
+        const wallBox = new THREE.Box3().setFromObject(wall);
+        const draggedBox = new THREE.Box3().setFromObject(draggedObject);
+  
+        if (wallBox.intersectsBox(draggedBox)) {
+          isIntersecting = true;
+  
+          if (draggedObject.userData.name === "Middle") {
+            this.performCSGCut(draggedObject, wall);
+          } else if (draggedObject.userData.name === "intermid") {
+            const snappedPosition = this.getSnappedPositionToWall(draggedObject, wall);
+            draggedObject.position.copy(snappedPosition);
+          }
+        }
       }
-    });
-
-    this.transformControls.addEventListener("objectChange", () => {
-      const draggedObject = this.transformControls.object;
-      const allObjects = [...this.globalArray, ...this.gltf];
-      let collisionWithObjects;
-      let collisionWithWalls;
-
-      if ((draggedObject.userData.name = "model")) {
-        collisionWithWalls = this.checkCollisionWithWalls(
-          draggedObject,
-          this.bbBoxes
-        );
-      } else {
-        collisionWithObjects = this.checkCollisionWithObjects(
-          draggedObject,
-          allObjects
-        );
+  
+      if (!isIntersecting) {
+        console.log("No intersection detected. Restoring original geometry...");
+  
+        if (this.activeWall) {
+          // Restore original geometry and update the scene
+          this.restoreWallGeometry(this.activeWall);
+  
+          // Clear the active wall reference
+          this.activeWall = null;
+        }
       }
+    }
+  });
+  
+}
 
-      if (collisionWithWalls || collisionWithObjects) {
-        // this.draggedobjects.position = lastValidPosition;
-        this.performCSGCut();
-        draggedObject.position.copy(lastValidPosition);
-      } else {
-        lastValidPosition.copy(draggedObject.position);
-      }
-    });
+getWallOrientation(wall) {
+  const rotationY = wall.rotation.y;
+  const threshold = 0.1;
+
+  if (Math.abs(rotationY % Math.PI) < threshold || Math.abs(rotationY % Math.PI - Math.PI) < threshold) {
+    return "horizontal";
   }
-  checkCollisionWithWalls(object, walls) {
-    if (this.helper) {
-      this.scene.remove(this.helper);
-    }
-
-    const objectBox = new THREE.Box3().setFromObject(object);
-    this.helper = new THREE.Box3Helper(objectBox);
-    this.scene.add(this.helper);
-
-    let collidedWall = null;
-
-    for (const wall of walls) {
-      const wallBox = new THREE.Box3().setFromObject(wall);
-
-      if (objectBox.intersectsBox(wallBox)) {
-        collidedWall = wall;
-        break;
-      }
-    }
-
-    if (collidedWall) {
-      this.wallGeo = collidedWall;
-      this.draggedobjects = object;
-      return true;
-    }
-
-    return false;
+  if (Math.abs(rotationY % Math.PI - Math.PI / 2) < threshold || Math.abs(rotationY % Math.PI + Math.PI / 2) < threshold) {
+    return "vertical";
   }
+  return "unknown";
+}
 
-  checkCollisionWithObjects(draggedObject, allObjects) {
-    const draggedBox = new THREE.Box3().setFromObject(draggedObject);
-    this.draggedobjects = draggedObject;
-    for (const otherObject of allObjects) {
-      if (otherObject === draggedObject) continue;
-
-      const otherBox = new THREE.Box3().setFromObject(otherObject);
-      this.wallGeo = otherObject;
-
-      const expandedBox = otherBox.clone().expandByScalar(0.001);
-
-      if (draggedBox.intersectsBox(expandedBox)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 
   mesh() {
     this.gridHeight = 1000;
@@ -549,6 +828,7 @@ export default class ThreeScene {
     this.plane.receiveShadow = true;
     this.scene.add(this.plane);
   }
+
 
   selectingProperty(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -567,8 +847,9 @@ export default class ThreeScene {
     if (this.intersects.length > 0) {
       this.INTERSECTED = this.intersects[0].object;
       if (this.INTERSECTED) {
-        store.commit("wall", e);
-
+        console.log( this.intersects[0].object);
+        let wall= this.intersects[0].object
+        store.commit("wall", [e,wall.userData.units[0],wall.userData.units[1],wall.userData.units[2]]);
         this.INTERSECTED.material[2] = new THREE.MeshBasicMaterial({
           color: "green",
         });
@@ -582,8 +863,6 @@ export default class ThreeScene {
   AddTextureForOudoor(texture) {
     let textures = new THREE.TextureLoader().load(texture);
     if (this.intersects.length > 0) {
-      console.log(texture);
-
       this.INTERSECTED = this.intersects[0].object;
 
       this.INTERSECTED.material[4] = new THREE.MeshLambertMaterial({
@@ -628,13 +907,26 @@ export default class ThreeScene {
     }
   }
   ApplyFeatures(dimension) {
-    this.INTERSECTED.geometry = new THREE.BoxGeometry(
+    const newGeometry = new THREE.BoxGeometry(
       dimension.width,
       dimension.height,
       dimension.thickness
     );
-    this.INTERSECTED.geometry.rotateY(Math.PI / 2);
+    
+    newGeometry.rotateY(Math.PI / 2);
+ 
+    const floorBox = new THREE.Box3().setFromObject(this.polygonMesh);
+    const floorTopY = floorBox.max.y; 
+  
+    
+    newGeometry.computeBoundingBox(); 
+    const geometryBox = newGeometry.boundingBox;
+    const geometryBottomY = geometryBox.min.y;
+    const offsetY = floorTopY - geometryBottomY;
+    this.INTERSECTED.position.y = offsetY; 
+    this.INTERSECTED.geometry = newGeometry;
   }
+  
 
   meshSelect(e) {
     const rect = this.renderer.domElement.getBoundingClientRect();
@@ -689,7 +981,7 @@ export default class ThreeScene {
         point.copy(this.controlPoints[0]);
         this.controlPoints.push(point);
         this.addControlPoint(point);
-        this.addArc(this.controlPoints[this.controlPoints.length - 2], point);
+        this.addLine(this.controlPoints[this.controlPoints.length - 2], point);
         this.finalizePolygon();
         this.stopDrawing();
         this.getImageData = true;
@@ -697,41 +989,13 @@ export default class ThreeScene {
         this.controlPoints.push(point);
         this.addControlPoint(point);
         if (this.controlPoints.length > 1) {
-          this.addArc(this.controlPoints[this.controlPoints.length - 2], point);
+          this.addLine(this.controlPoints[this.controlPoints.length - 2], point);
         }
       }
     }
   }
 
-  addArc(startPoint, endPoint) {
-    const midpoint = new THREE.Vector3()
-      .addVectors(startPoint, endPoint)
-      .multiplyScalar(0.5);
 
-    const perpendicular = new THREE.Vector3()
-      .subVectors(endPoint, startPoint)
-      .cross(new THREE.Vector3(0, 1, 0))
-      .normalize()
-      .multiplyScalar(5);
-
-    const arcControlPoint = new THREE.Vector3().addVectors(
-      midpoint,
-      perpendicular
-    );
-
-    const curve = new THREE.QuadraticBezierCurve3(
-      startPoint,
-      arcControlPoint,
-      endPoint
-    );
-    const points = curve.getPoints(50);
-
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-    const arcLine = new THREE.Line(geometry, material);
-
-    this.scene.add(arcLine);
-  }
   findNearestPoint(currentPoint, threshold) {
     for (let i = 0; i < this.controlPoints.length; i++) {
       if (currentPoint.distanceTo(this.controlPoints[i]) < threshold) {
@@ -828,6 +1092,8 @@ export default class ThreeScene {
 
     polygonGroup.polygonMesh.geometry.dispose();
     polygonGroup.polygonMesh.geometry = geometry;
+    polygonGroup.ceil.geometry.dispose();
+    polygonGroup.ceil.geometry = geometry;
 
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
@@ -859,8 +1125,6 @@ export default class ThreeScene {
   }
 
   updateWallsInGroup(polygonGroup) {
-    let height = 2;
-    let thickness = 0.1;
 
     polygonGroup.controlPoints.forEach((point1, i) => {
       let point2 =
@@ -871,8 +1135,8 @@ export default class ThreeScene {
       let wall = polygonGroup.walls[i];
 
       if (!wall) {
-        let length = point1.distanceTo(point2);
-        let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
+        this.length = point1.distanceTo(point2);
+        let geometry = new THREE.BoxGeometry(this.length , this.height, this.thickness).translate(0,0, -this.thickness/2)
         let material = [
           new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
           new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
@@ -897,8 +1161,9 @@ export default class ThreeScene {
       wall.position.y = 1;
 
       wall.geometry.dispose();
-      wall.geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
+      wall.geometry = new THREE.BoxGeometry(this.length , this.height, this.thickness).translate(0,0, -this.thickness/2)
       wall.geometry.rotateY(Math.PI / 2);
+      wall.position.y=2
     });
   }
   updateTextMeshesInGroup(polygonGroup) {
@@ -978,6 +1243,8 @@ export default class ThreeScene {
       shape.lineTo(this.controlPoints[i].x, this.controlPoints[i].z);
     }
 
+    
+ 
     let loader = new THREE.TextureLoader();
     let texture = loader.load("./images/floor3.jpeg", () => {
       texture.wrapS = THREE.RepeatWrapping;
@@ -993,8 +1260,11 @@ export default class ThreeScene {
 
     this.polygonMesh = new THREE.Mesh(geometry, material);
     this.polygonMesh.position.y = 0.01;
-    this.polygonMesh.receiveShadow = true;
+    this.polygonMesh.receiveShadow=true
     this.group.add(this.polygonMesh);
+ 
+    
+   
 
     this.polygonGroup = {
       spheres: [...this.spheres],
@@ -1003,15 +1273,19 @@ export default class ThreeScene {
       textMeshes: [...this.textMeshes],
       controlPoints: [...this.controlPoints],
       polygonMesh: this.polygonMesh,
+      ceil: null
     };
 
     this.polygons.push(this.polygonGroup);
     this.threeDimension();
-    // this.ceil(geometry);
+    this.ceil(geometry);
+    
     this.walls.forEach((wall) => {
+      this.polygonGroup.walls.push(wall);
       this.group.add(wall);
       this.scene.remove(wall);
     });
+    
 
     this.globalArray.push(this.group);
     this.scene.add(this.group);
@@ -1048,7 +1322,8 @@ export default class ThreeScene {
     });
 
     let ceil = new THREE.Mesh(geometry, material);
-    ceil.position.y = 2;
+    ceil.position.y = 4;
+    this.polygonGroup.ceil=ceil
     this.scene.add(ceil);
     this.group.add(ceil);
   }
@@ -1062,109 +1337,55 @@ export default class ThreeScene {
   }
 
   createNewTemporaryLine(newPoint) {
-    if (this.controlPoints.length === 0) {
-      console.error("No previous control point to create a line from.");
-      return;
-    }
+    let points = [
+      this.controlPoints[this.controlPoints.length - 1].x,
+      this.controlPoints[this.controlPoints.length - 1].y + 0.5,
+      this.controlPoints[this.controlPoints.length - 1].z,
+      newPoint.x,
+      newPoint.y + 0.5,
+      newPoint.z,
+    ];
 
-    const startPoint = this.controlPoints[this.controlPoints.length - 1];
+    let geometry = new LineGeometry();
+    geometry.setPositions(points);
 
-    const midpoint = new THREE.Vector3()
-      .addVectors(startPoint, newPoint)
-      .multiplyScalar(0.5);
+    let material = new LineMaterial({
+      color: "blue",
+      transparent: true,
+      opacity: 0.5,
+      linewidth: 10,
+      resolution: new THREE.Vector2(this.width, this.height),
+    });
 
-    const perpendicular = new THREE.Vector3()
-      .subVectors(newPoint, startPoint)
-      .cross(new THREE.Vector3(0, 1, 0))
-      .normalize()
-      .multiplyScalar(5);
-
-    const arcControlPoint = new THREE.Vector3().addVectors(
-      midpoint,
-      perpendicular
-    );
-
-    const curve = new THREE.QuadraticBezierCurve3(
-      startPoint,
-      arcControlPoint,
-      newPoint
-    );
-
-    const points = curve.getPoints(50);
-
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-
-    this.tempLine = new THREE.Line(geometry, material);
+    this.tempLine = new Line2(geometry, material);
+    this.tempLine.computeLineDistances();
     this.scene.add(this.tempLine);
 
-    this.addMeasurementLabel(startPoint, newPoint);
-
-    // let points = [
-    //   this.controlPoints[this.controlPoints.length - 1].x,
-    //   this.controlPoints[this.controlPoints.length - 1].y + 0.5,
-    //   this.controlPoints[this.controlPoints.length - 1].z,
-    //   newPoint.x,
-    //   newPoint.y + 0.5,
-    //   newPoint.z,
-    // ];
-
-    // let geometry = new LineGeometry();
-    // geometry.setPositions(points);
-
-    // let material = new LineMaterial({
-    //   color: "blue",
-    //   transparent: true,
-    //   opacity: 0.5,
-    //   linewidth: 10,
-    //   resolution: new THREE.Vector2(this.width, this.height),
-    // });
-
-    // this.tempLine = new Line2(geometry, material);
-    // this.tempLine.computeLineDistances();
-    // this.scene.add(this.tempLine);
-
-    // this.addMeasurementLabel(
-    //   this.controlPoints[this.controlPoints.length - 1],
-    //   newPoint
-    // );
+    // this.tempLine = line;
+    this.addMeasurementLabel(
+      this.controlPoints[this.controlPoints.length - 1],
+      newPoint
+    );
   }
 
   updateExistingTemporaryLine(newPoint) {
-    if (!this.tempLine) {
-      console.error("No temporary line to update.");
-      return;
-    }
+    let points = [
+      this.controlPoints[this.controlPoints.length - 1].x,
+      this.controlPoints[this.controlPoints.length - 1].y + 0.5,
+      this.controlPoints[this.controlPoints.length - 1].z,
+      newPoint.x,
+      newPoint.y + 0.5,
+      newPoint.z,
+    ];
 
-    const startPoint = this.controlPoints[this.controlPoints.length - 1];
+    this.tempLine.geometry.setPositions(points);
 
-    const midpoint = new THREE.Vector3()
-      .addVectors(startPoint, newPoint)
-      .multiplyScalar(0.5);
+    this.tempLine.geometry.attributes.position.needsUpdate = true;
 
-    const perpendicular = new THREE.Vector3()
-      .subVectors(newPoint, startPoint)
-      .cross(new THREE.Vector3(0, 1, 0))
-      .normalize()
-      .multiplyScalar(5);
-    const arcControlPoint = new THREE.Vector3().addVectors(
-      midpoint,
-      perpendicular
-    );
-
-    const curve = new THREE.QuadraticBezierCurve3(
-      startPoint,
-      arcControlPoint,
+    this.addMeasurementLabel(
+      this.controlPoints[this.controlPoints.length - 1],
       newPoint
     );
-
-    const points = curve.getPoints(50);
-
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    this.tempLine.geometry.dispose();
-    this.tempLine.geometry = geometry;
-
-    this.addMeasurementLabel(startPoint, newPoint);
   }
   addMeasurementLabel(point1, point2) {
     let distance = point1.distanceTo(point2).toFixed(2);
@@ -1194,39 +1415,6 @@ export default class ThreeScene {
     );
   }
 
-  // addLine(point1, point2) {
-  //   // Calculate the midpoint for the arc
-  //   const midpoint = new THREE.Vector3()
-  //     .addVectors(point1, point2)
-  //     .multiplyScalar(0.5);
-
-  //   // Raise the midpoint to form the arc (adjust arc height as needed)
-  //   const arcHeight = 5; // Adjust this value for the arc's curvature
-  //   const normal = new THREE.Vector3(0, 1, 0); // Normal for upward direction
-  //   midpoint.add(normal.multiplyScalar(arcHeight));
-
-  //   // Create a curve using a Quadratic Bezier Curve
-  //   const curve = new THREE.QuadraticBezierCurve3(point1, midpoint, point2);
-
-  //   // Generate points along the curve
-  //   const points = curve.getPoints(50); // Increase points for smoother arcs
-
-  //   // Create geometry and material for the line
-  //   const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  //   const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
-  //   geometry.rotateX(-Math.PI / 2);
-
-  //   // Create the arc line
-  //   const arcLine = new THREE.Line(geometry, material);
-
-  //   // Add the arc line to the scene
-  //   this.scene.add(arcLine);
-
-  //   // Optionally, add measurements or labels
-  //   this.addMeasurementLabel(point1, point2);
-
-  //   console.log("Arc line added between points:", point1, point2);
-  // }
 
   updateMeasurementLabels() {
     this.textMeshes.forEach((textMesh) => this.scene.remove(textMesh));
@@ -1259,136 +1447,16 @@ export default class ThreeScene {
 
     this.addMeasurementLabel(point1, point2);
   }
-
-  // threeDimension() {
-  //   let height = 2; // Wall height
-  //   let thickness = 0.15; // Wall thickness
-
-  //   for (let i = 0; i < this.controlPoints.length - 1; i++) {
-  //     let point1 = this.controlPoints[i];
-  //     let point2 = this.controlPoints[i + 1];
-
-  //     // Define a curved path using a quadratic bezier curve
-  //     let curve = new THREE.QuadraticBezierCurve3(
-  //       point1,
-  //       new THREE.Vector3(
-  //         (point1.x + point2.x) / 2,
-  //         (point1.y + point2.y) / 2 + 2, // Adjust midpoint height for the arc
-  //         (point1.z + point2.z) / 2
-  //       ),
-  //       point2
-  //     );
-
-  //     // Get points along the curve for the shape
-  //     let curvePoints = curve.getPoints(50);
-
-  //     // Create a 2D shape representing the cross-section of the wall
-  //     let shape = new THREE.Shape();
-  //     shape.moveTo(-thickness / 2, 0);
-  //     shape.lineTo(thickness / 2, 0);
-  //     shape.lineTo(thickness / 2, height);
-  //     shape.lineTo(-thickness / 2, height);
-  //     shape.closePath();
-
-  //     // Create extrude settings for the curved wall
-  //     let extrudeSettings = {
-  //       steps: 50, // Number of curve subdivisions
-  //       bevelEnabled: false,
-  //       extrudePath: new THREE.CatmullRomCurve3(curvePoints),
-  //     };
-
-  //     // Extrude the shape along the curved path
-  //     let geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-
-  //     // Material for the wall
-  //     let material = new THREE.MeshLambertMaterial({
-  //       color: 0x3b3b3b,
-  //       transparent: true,
-  //       opacity: 0.8,
-  //     });
-
-  //     // Create the wall mesh
-  //     let wall = new THREE.Mesh(geometry, material);
-
-  //     // Add to the scene
-  //     this.scene.add(wall);
-
-  //     // Track the wall for collision detection and further use
-  //     this.bbBoxes.push(wall);
-  //     this.walls.push(wall);
-
-  //     // Add the wall to the polygon group
-  //     this.polygonGroup.walls.push(wall);
-  //   }
-
-  //   // Remove the temporary line
-  //   if (this.tempLine) {
-  //     this.scene.remove(this.tempLine);
-  //     this.tempLine = null;
-  //   }
-
-  //   this.addLight();
-  // }
-  // threeDimension() {
-  //   if (this.controlPoints.length < 2) {
-  //     console.warn("Not enough control points to create geometry.");
-  //     return;
-  //   }
-
-  //   let height = 2; 
-  //   let thickness = 0.1; 
-
-  //   const curve = new THREE.CatmullRomCurve3(
-  //     this.controlPoints.map((point) => new THREE.Vector3(point.x, 1, point.z)),
-  //     true,
-  //     "centripetal"
-  //   );
-
-  //   const tubeGeometry = new THREE.TubeGeometry(
-  //     curve,
-  //     100,
-  //     thickness,
-  //     8,
-  //     false
-  //   );
-  //   const loader = new THREE.TextureLoader();
-
-  //   const texture = loader.load("./images/images.jpg", () => {
-  //     texture.wrapS = THREE.RepeatWrapping;
-  //     texture.wrapT = THREE.RepeatWrapping;
-  //     texture.repeat.set(1, 1); 
-  //   });
-
-  //   const material = new THREE.MeshLambertMaterial({
-  //     // map: texture,
-  //     color: "white",
-  //     transparent: true,
-  //     opacity: 0.8,
-  //   });
-
-  //   const wall = new THREE.Mesh(tubeGeometry, material);
-  //   wall.castShadow = true;
-  //   wall.receiveShadow = true;
-
-  //   this.scene.add(wall);
-
-  //   this.bbBoxes.push(wall);
-  //   this.walls.push(wall);
-
-  //   this.scene.remove(this.tempLine);
-  //   this.tempLine = null;
-  // }
   threeDimension() {
     let point1 = new THREE.Vector3();
     let point2 = new THREE.Vector3();
-    let height = 2;
-    let thickness = 0.1;
-
+    
+   
     for (let i = 0; i < this.controlPoints.length - 1; i++) {
-      point1.set(this.controlPoints[i].x, 1, this.controlPoints[i].z);
-      point2.set(this.controlPoints[i + 1].x, 1, this.controlPoints[i + 1].z);
+      point1.set(this.controlPoints[i].x, 2, this.controlPoints[i].z);
+      point2.set(this.controlPoints[i + 1].x, 2, this.controlPoints[i + 1].z);
 
-      let length = point1.distanceTo(point2);
+      this.length = point1.distanceTo(point2);
       let direction = new THREE.Vector3()
         .subVectors(point2, point1)
         .normalize();
@@ -1398,25 +1466,29 @@ export default class ThreeScene {
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
       });
-      let geometry = new THREE.BoxGeometry(length + 0.08, height, thickness);
-      // let material = [
-      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-      //   new THREE.MeshLambertMaterial({ color: 0x3b3b3b }),
-      //   new THREE.MeshLambertMaterial({
-      //     map: texture,
-      //   }),
-      //   new THREE.MeshLambertMaterial({ color: "white" }),
-      // ];
-      let material = new THREE.MeshMatcapMaterial({
-        // color: "white",
-        // transparent: true,
-        // opacity: 0.6,
-      });
+      let geometry = new THREE.BoxGeometry(this.length , this.height, this.thickness).translate(0,0, -this.thickness/2)
+     
+      this.material = [
+        new THREE.MeshMatcapMaterial({ transparent: true,
+              opacity: 0.8,}),
+        new THREE.MeshMatcapMaterial({transparent: true,
+          opacity: 0.8,}),
+        new THREE.MeshMatcapMaterial({transparent: true,
+          opacity: 0.8,  }),
+        new THREE.MeshMatcapMaterial({ transparent: true,
+          opacity: 0.8,}),
+         new THREE.MeshMatcapMaterial({ transparent: true,
+          opacity: 0.8,}),
+          new THREE.MeshMatcapMaterial({color:0xebf590,}),
+      ];
+    //  this.material = new THREE.MeshMatcapMaterial({
+    //     color: "white",
+    //     transparent: true,
+    //     opacity: 0.8,
+    //   });
       geometry.rotateY(Math.PI / 2);
 
-      let wall = new THREE.Mesh(geometry, material);
+      let wall = new THREE.Mesh(geometry, this.material);
 
       let midpoint = new THREE.Vector3()
         .addVectors(point1, point2)
@@ -1430,6 +1502,7 @@ export default class ThreeScene {
       let box = new THREE.Box3().setFromObject(wall);
       this.bbBoxes.push(wall);
       this.scene.add(wall);
+      wall.userData.units=[this.length,this.height,this.thickness]
 
       this.walls.push(wall);
     }
@@ -1437,17 +1510,16 @@ export default class ThreeScene {
 
     this.tempLine = null;
   }
-
   addLight() {
     let box = new THREE.Box3().setFromObject(this.polygonMesh);
     let size = new THREE.Vector3();
     box.getSize(size);
 
     let centre = box.getCenter(new THREE.Vector3());
-    let spotlight = new THREE.PointLight("white", size.x + size.y + size.z, 4);
+    let spotlight = new THREE.PointLight("black");
     spotlight.position.set(centre.x, centre.y + 1, centre.z);
     let helper = new THREE.PointLightHelper(spotlight);
-    // this.scene.add(helper);
+    this.scene.add(helper);
     this.scene.add(spotlight);
     this.group.add(spotlight);
   }
@@ -1500,8 +1572,7 @@ export default class ThreeScene {
 
   animate() {
     requestAnimationFrame(() => this.animate());
-    // this.controls.update();
-    // this.transformControls.update();
+    this.controls.update();
     this.render();
     if (this.getImageData == true) {
       this.dataURL = this.renderer.domElement.toDataURL();

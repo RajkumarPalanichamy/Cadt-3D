@@ -46,6 +46,9 @@ export default {
 
       this.threeScene.updateCamera();
     },
+    ApplyFeature(params) {
+      this.threeScene.ApplyFeatures(params);
+    },
     modelLoad(model) {
       console.log("model", model);
       this.threeScene.predefined(model.cordinates);

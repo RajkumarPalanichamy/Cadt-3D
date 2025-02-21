@@ -31,6 +31,8 @@ const store = createStore({
       state.loadSavedModel = null;
     },
     wall(state, value) {
+      console.log(value);
+      
       state.wallValue = value;
       console.log("value,", state.wallValue);
     },

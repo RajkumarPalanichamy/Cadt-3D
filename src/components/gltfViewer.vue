@@ -16,6 +16,7 @@ export default {
   mounted() {
     this.threeContainer = this.$refs.threeContainer;
     this.threeScene = new gltfThreeScene(this.threeContainer);
+    
   },
 
   methods: {
@@ -25,6 +26,7 @@ export default {
     Texture(textureLink) {
       this.threeScene.texture(textureLink);
     },
+
   },
 };
 </script>
