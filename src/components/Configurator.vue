@@ -356,6 +356,8 @@ this.threeContainer = this.$refs.threeContainer;
 
     colorChange(color) {
       let type = "color";
+      console.log("fd");
+      
       this.threeScene.material(color.code, type);
     },
 
