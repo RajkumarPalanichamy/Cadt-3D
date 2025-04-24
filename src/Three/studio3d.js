@@ -95,7 +95,7 @@ export default class studio3dThreeScene {
         this.roomBox = new THREE.Box3().setFromObject(this.group); 
         this.modelBox = new THREE.Box3().setFromObject(event.object); 
         // this.dragControls.transformGroup = true;
-
+      })
 
 // let boxHelper;
 
@@ -159,7 +159,7 @@ export default class studio3dThreeScene {
         this.controls.enabled = true;
         event.object.position.y = 0;
       //   this.dragControls.transformGroup = false;
-
+    })
 
 
     
