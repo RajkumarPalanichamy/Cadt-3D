@@ -483,4 +483,4 @@ export default {
 .linear-gradient {
   background: linear-gradient(13deg, #0c2539, #1d4f72, #0c2539);
 }
-
+</style>

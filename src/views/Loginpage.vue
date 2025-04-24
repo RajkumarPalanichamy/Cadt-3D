@@ -221,7 +221,6 @@ export default {
           setTimeout(() => {
             this.errMsg = false;
             this.username = null;
-            this.password = null;
           }, 2000);
           this.errMsg = true;
           console.error("ERROR IN POST", error);
