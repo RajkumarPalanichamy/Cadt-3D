@@ -449,7 +449,7 @@ export default {
       modelsList: [
         {
           modelname: "Living Room",
-          modelimg: "/public/images/livingroom.jpg",
+          modelimg: "/images/livingroom.jpg",
         },
         {
           modelname: "Kitchen",

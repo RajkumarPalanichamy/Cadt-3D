@@ -84,7 +84,7 @@
       >
         <v-container class="px-0 py-0" height="65%">
           <v-img
-            src="/public/images/model_display.jpg"
+            src="/images/model_display.jpg"
             cover
             style="border-radius: 10px"
           >
